@@ -1,0 +1,839 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "hero_slideshow": {
+      "type": "hero-slideshow",
+      "blocks": {
+        "slide_XzJ9aU": {
+          "type": "slide",
+          "settings": {
+            "media_type": "video",
+            "direct_video_url": "",
+            "video_url": "",
+            "eyebrow": "Custom teamwear",
+            "heading": "Custom teamwear for grassroots clubs",
+            "subheading": "From 10 pieces · 3–4 weeks · Free design",
+            "cta_primary_label": "Get a free kit mockup",
+            "cta_primary_url": "",
+            "cta_secondary_label": "Shop ready-to-buy",
+            "cta_secondary_url": "shopify://collections/all",
+            "show_club_card": false,
+            "club_name": "",
+            "club_subtitle": ""
+          }
+        },
+        "slide_1": {
+          "type": "slide",
+          "settings": {
+            "media_type": "image",
+            "image": "shopify://shop_images/ronaldo-inspired-soccer-action.png",
+            "direct_video_url": "",
+            "video_url": "",
+            "eyebrow": "Ready to buy",
+            "heading": "ORBIT Training Football",
+            "subheading": "£10.99 · Sizes 3, 4 and 5 · Express next working day if ordered before 1pm",
+            "cta_primary_label": "Shop ORBIT",
+            "cta_primary_url": "",
+            "cta_secondary_label": "Shop all equipment",
+            "cta_secondary_url": "shopify://collections/all",
+            "show_club_card": false,
+            "club_name": "",
+            "club_subtitle": ""
+          }
+        },
+        "slide_2": {
+          "type": "slide",
+          "settings": {
+            "media_type": "image",
+            "image": "shopify://shop_images/3_cd895827-ec26-4658-8350-d9f42f5c7a39.webp",
+            "direct_video_url": "",
+            "video_url": "",
+            "eyebrow": "Match bundles",
+            "heading": "Pulse & APEX Match Bundles",
+            "subheading": "£149.99 each · Team prices from 10+",
+            "cta_primary_label": "Shop bundles",
+            "cta_primary_url": "",
+            "cta_secondary_label": "Get a team quote",
+            "cta_secondary_url": "",
+            "show_club_card": false,
+            "club_name": "",
+            "club_subtitle": ""
+          }
+        },
+        "slide_3": {
+          "type": "slide",
+          "disabled": true,
+          "settings": {
+            "media_type": "image",
+            "direct_video_url": "",
+            "video_url": "",
+            "eyebrow": "Club shops",
+            "heading": "A free kit shop for your club",
+            "subheading": "Free setup · Players and parents order direct",
+            "cta_primary_label": "Set up a club shop",
+            "cta_primary_url": "",
+            "cta_secondary_label": "Find your club",
+            "cta_secondary_url": "",
+            "show_club_card": true,
+            "club_name": "Your club kit shop",
+            "club_subtitle": "Players order direct"
+          }
+        }
+      },
+      "block_order": [
+        "slide_XzJ9aU",
+        "slide_1",
+        "slide_2",
+        "slide_3"
+      ],
+      "settings": {
+        "padding_top": 32,
+        "padding_bottom": 88,
+        "image_position": "center center",
+        "container_width": "page",
+        "overlay_color": "#181818",
+        "overlay_opacity": 0,
+        "autoplay": true,
+        "autoplay_speed": 6.5,
+        "aria_label": "Featured"
+      }
+    },
+    "trust_row": {
+      "type": "trust-row",
+      "blocks": {
+        "crest_1": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "crest_2": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "crest_3": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "crest_4": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "crest_5": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "crest_6": {
+          "type": "crest",
+          "settings": {
+            "crest_alt": ""
+          }
+        },
+        "fact_1": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "From 10",
+            "fact_value": "pieces"
+          }
+        },
+        "fact_2": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "Free",
+            "fact_value": "design tool"
+          }
+        },
+        "fact_3": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "48hrs",
+            "fact_value": "turnaround"
+          }
+        },
+        "fact_4": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "100%",
+            "fact_value": "sublimated"
+          }
+        }
+      },
+      "block_order": [
+        "crest_1",
+        "crest_2",
+        "crest_3",
+        "crest_4",
+        "crest_5",
+        "crest_6",
+        "fact_1",
+        "fact_2",
+        "fact_3",
+        "fact_4"
+      ],
+      "settings": {
+        "color_background": "#ffffff",
+        "color_text": "#181818",
+        "color_muted": "#6b7280",
+        "color_line": "#e5e7eb",
+        "color_surface": "#f4f4f5",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "rating_score": "4.9",
+        "rating_label": "from 2,400+ reviews",
+        "rating_aria_suffix": "out of 5",
+        "aria_label": "Why clubs choose us"
+      }
+    },
+    "sport_tiles": {
+      "type": "sport-tiles",
+      "blocks": {
+        "tile_1": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Football",
+            "tile_url": "",
+            "price_tag": "From £12 per player"
+          }
+        },
+        "tile_2": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Rugby",
+            "tile_url": "",
+            "price_tag": "From £14 per player"
+          }
+        },
+        "tile_3": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Cricket",
+            "tile_url": "",
+            "price_tag": "From £15 per player"
+          }
+        },
+        "tile_4": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Golf",
+            "tile_url": "",
+            "price_tag": "From £18 per player"
+          }
+        },
+        "tile_5": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Darts",
+            "tile_url": "",
+            "price_tag": "From £12 per player"
+          }
+        },
+        "tile_6": {
+          "type": "sport_tile",
+          "settings": {
+            "collection": "",
+            "custom_title": "",
+            "fallback_title": "Bowls",
+            "tile_url": "",
+            "price_tag": "From £13 per player"
+          }
+        }
+      },
+      "block_order": [
+        "tile_1",
+        "tile_2",
+        "tile_3",
+        "tile_4",
+        "tile_5",
+        "tile_6"
+      ],
+      "settings": {
+        "eyebrow": "Shop by sport",
+        "heading": "Kit for every club",
+        "link_label": "Find your club shop",
+        "link_url": "",
+        "padding_top": 96,
+        "padding_bottom": 112
+      }
+    },
+    "how_it_works": {
+      "type": "how-it-works",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "step_num": "01",
+            "title": "Tell us what you need",
+            "description": "<p>Sport, items, team size and deadline.</p>"
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "step_num": "02",
+            "title": "Get a free mockup",
+            "description": "<p>We design your kit with your crest and colours, and send a quote.</p>"
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "step_num": "03",
+            "title": "Approve and order",
+            "description": "<p>Tweak it until it’s right, then confirm sizes. From 10 pieces.</p>"
+          }
+        },
+        "step_4": {
+          "type": "step",
+          "settings": {
+            "step_num": "04",
+            "title": "Kit in 3–4 weeks",
+            "description": "<p>Made for your club. Add a free club shop so players order their own.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "step_1",
+        "step_2",
+        "step_3",
+        "step_4"
+      ],
+      "settings": {
+        "eyebrow": "How it works",
+        "heading": "Four steps to <em>match day</em>",
+        "subtext": "",
+        "btn_label": "",
+        "btn_url": "",
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "composite_bundle_builder_GgFFVW": {
+      "type": "composite-bundle-builder",
+      "blocks": {
+        "addon_item_YQraLL": {
+          "type": "addon_item",
+          "settings": {
+            "addon_product": "kljhgdfs"
+          }
+        },
+        "addon_item_py8FnK": {
+          "type": "addon_item",
+          "settings": {
+            "addon_product": "kljhgdfs"
+          }
+        },
+        "addon_item_MhVC3q": {
+          "type": "addon_item",
+          "settings": {
+            "addon_product": "lk-jhgfds"
+          }
+        },
+        "bundle_option_BwiGL8": {
+          "type": "bundle_option",
+          "settings": {
+            "tab_label": "APEX",
+            "bundle_title": "APEX MATCH BUNDLE",
+            "team_label": "Team price",
+            "team_note": "",
+            "bundle_contents_label": "",
+            "price_text": "",
+            "core_product_1": "",
+            "core_product_2": "",
+            "core_product_3": "",
+            "button_url": ""
+          }
+        }
+      },
+      "block_order": [
+        "addon_item_YQraLL",
+        "addon_item_py8FnK",
+        "addon_item_MhVC3q",
+        "bundle_option_BwiGL8"
+      ],
+      "name": "Bundle builder",
+      "settings": {
+        "pitch_image": "shopify://shop_images/3_cd895827-ec26-4658-8350-d9f42f5c7a39.webp",
+        "subheading": "MATCH BUNDLES",
+        "heading": "ONE BUNDLE. WHOLE KIT.",
+        "tab_label": "Pulse",
+        "bundle_title": "PULSE MATCH BUNDLE",
+        "team_label": "Team price",
+        "team_note": "",
+        "bundle_contents_label": "",
+        "price_text": "",
+        "core_product_1": "jhkgjhdfsazdf",
+        "core_product_2": "kljhgdfs",
+        "core_product_3": "lk-jhgfds",
+        "button_label": "Shop the bundle",
+        "button_url": "",
+        "quote_label": "Get a team quote",
+        "quote_url": "",
+        "addons_heading": "Add to your order",
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "shop_the_look": {
+      "type": "shop-the-look",
+      "blocks": {
+        "product_card_L997Tk": {
+          "type": "product_card",
+          "settings": {
+            "product": "lk-jhgfds",
+            "custom_badge": ""
+          }
+        },
+        "product_card_f8NXKB": {
+          "type": "product_card",
+          "settings": {
+            "product": "kljhgdfs",
+            "custom_badge": ""
+          }
+        },
+        "product_card_BTfimG": {
+          "type": "product_card",
+          "settings": {
+            "product": "jhkgjhdfsazdf",
+            "custom_badge": ""
+          }
+        },
+        "hotspot_1": {
+          "type": "hotspot",
+          "settings": {
+            "x_pos": 100,
+            "y_pos": 42,
+            "label": "Urban Camo top",
+            "product": ""
+          }
+        },
+        "hotspot_2": {
+          "type": "hotspot",
+          "settings": {
+            "x_pos": 27,
+            "y_pos": 36,
+            "label": "Track jacket",
+            "product": ""
+          }
+        },
+        "hotspot_3": {
+          "type": "hotspot",
+          "settings": {
+            "x_pos": 62,
+            "y_pos": 62,
+            "label": "Training top",
+            "product": ""
+          }
+        },
+        "hotspot_4": {
+          "type": "hotspot",
+          "settings": {
+            "x_pos": 50,
+            "y_pos": 21,
+            "label": "Headband",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "product_card_L997Tk",
+        "product_card_f8NXKB",
+        "product_card_BTfimG",
+        "hotspot_1",
+        "hotspot_2",
+        "hotspot_3",
+        "hotspot_4"
+      ],
+      "settings": {
+        "lifestyle_image": "shopify://shop_images/Timelessly_rare____Shop_at.jpg",
+        "eyebrow": "Shop the Look",
+        "heading": "Urban Camo",
+        "subheading": "",
+        "image_fit": "contain",
+        "link_label": "Shop the full look",
+        "link_url": "",
+        "background": "ash",
+        "show_rule": true,
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "finish_the_kit": {
+      "type": "finish-the-kit",
+      "blocks": {
+        "item_1": {
+          "type": "item",
+          "settings": {
+            "title": "Headbands",
+            "subtext": "£5.99",
+            "link": "",
+            "category": "accessories",
+            "icon": "band"
+          }
+        },
+        "item_2": {
+          "type": "item",
+          "settings": {
+            "title": "Wristbands",
+            "subtext": "£[X]",
+            "link": "",
+            "category": "accessories",
+            "icon": "wrist"
+          }
+        },
+        "item_3": {
+          "type": "item",
+          "settings": {
+            "title": "Towels",
+            "subtext": "£[X]",
+            "link": "",
+            "category": "accessories",
+            "icon": "towel"
+          }
+        },
+        "item_4": {
+          "type": "item",
+          "settings": {
+            "title": "Footballs",
+            "subtext": "From £10.99",
+            "link": "",
+            "category": "equipment",
+            "icon": "ball"
+          }
+        },
+        "item_5": {
+          "type": "item",
+          "settings": {
+            "title": "Goalkeeper Gloves",
+            "subtext": "£[X]",
+            "link": "",
+            "category": "equipment",
+            "icon": "glove"
+          }
+        },
+        "item_6": {
+          "type": "item",
+          "settings": {
+            "title": "Bags & Backpacks",
+            "subtext": "£[X]",
+            "link": "",
+            "category": "equipment",
+            "icon": "bag"
+          }
+        },
+        "item_7": {
+          "type": "item",
+          "settings": {
+            "title": "Custom Accessories",
+            "subtext": "From 10 pieces",
+            "link": "",
+            "category": "accessories",
+            "icon": "star"
+          }
+        }
+      },
+      "block_order": [
+        "item_1",
+        "item_2",
+        "item_3",
+        "item_4",
+        "item_5",
+        "item_6",
+        "item_7"
+      ],
+      "settings": {
+        "eyebrow": "Accessories & equipment",
+        "heading": "Finish the kit",
+        "show_filters": true,
+        "label_all": "All",
+        "label_accessories": "Accessories",
+        "label_equipment": "Equipment",
+        "show_rule": true,
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "pre_season_banner": {
+      "type": "pre-season-banner",
+      "settings": {
+        "eyebrow": "Pre-season",
+        "heading": "Order by [date] for pre-season",
+        "description": "3–4 week turnaround, free design and quote. First order? Take 10% off with <strong>ROSTER10</strong>.",
+        "button_label": "Start your kit",
+        "button_url": "",
+        "link_label": "Or set up a club shop",
+        "link_url": "",
+        "caption": "Photo: squad warming up in training kit",
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "community_grid_JTpDkJ": {
+      "type": "community-grid",
+      "blocks": {
+        "reel_card_MrhUpH": {
+          "type": "reel_card",
+          "settings": {
+            "video": "shopify://files/videos/Create_video_using_character_1080p_20260927120518.mp4",
+            "video_url": "",
+            "handle": "@roster.teamwear",
+            "badge": "MATCH DAY",
+            "caption": "Full sublimated match kit, custom crests, squad numbers — from 10 pieces.",
+            "product": ""
+          }
+        },
+        "reel_card_rWY4Hn": {
+          "type": "reel_card",
+          "settings": {
+            "video": "shopify://files/videos/Create_video_shoot_1080p_20260927120324.mp4",
+            "video_url": "",
+            "handle": "@grassroots_fc",
+            "badge": "TRAINING",
+            "caption": "Training tops in club colours delivered in under 4 weeks.",
+            "product": ""
+          }
+        },
+        "reel_card_wPKkwa": {
+          "type": "reel_card",
+          "settings": {
+            "video_url": "",
+            "handle": "@urbanrugby",
+            "badge": "RUGBY",
+            "caption": "Custom sublimated rugby jerseys — built tough, looks elite.",
+            "product": ""
+          }
+        },
+        "reel_card_9qGdz4": {
+          "type": "reel_card",
+          "settings": {
+            "video_url": "",
+            "handle": "@cricketclub_uk",
+            "badge": "CRICKET",
+            "caption": "Club whites with embroidered crests. Pro finish, grassroots price.",
+            "product": ""
+          }
+        },
+        "reel_card_LKazNa": {
+          "type": "reel_card",
+          "settings": {
+            "video_url": "",
+            "handle": "@darts_kings",
+            "badge": "DARTS",
+            "caption": "Custom darts shirts for your team — bold prints, quick turnaround.",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "reel_card_MrhUpH",
+        "reel_card_rWY4Hn",
+        "reel_card_wPKkwa",
+        "reel_card_9qGdz4",
+        "reel_card_LKazNa"
+      ],
+      "name": "Community Reels",
+      "settings": {
+        "color_background": "#181818",
+        "color_text": "#ffffff",
+        "color_muted": "#9ca3af",
+        "color_accent": "#d4ff3a",
+        "color_line": "#2f2f2f",
+        "color_surface": "#242424",
+        "padding_top": 96,
+        "padding_bottom": 96,
+        "eyebrow": "Community",
+        "heading": "Worn on the pitch",
+        "description": "Real clubs. Real kit. See how teams wear it on match day.",
+        "cards_per_view": 3
+      }
+    },
+    "reviews_wall_ErNXPU": {
+      "type": "reviews-wall",
+      "blocks": {
+        "review_7Q9rMV": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "date": "1 week ago",
+            "title": "Unreal quality for the price.",
+            "body": "Ordered a full set of match kits for our squad. The sublimation is crisp, colours are vibrant, and the fabric breathes incredibly well during 90 minutes.",
+            "author": "James T.",
+            "location": "London, UK",
+            "verified": true,
+            "discipline": "Central Midfielder",
+            "product": ""
+          }
+        },
+        "review_4J7c3V": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "date": "3 weeks ago",
+            "title": "Best fit I've ever worn.",
+            "body": "Usually struggle with rugby jerseys being too boxy. The athletic fit on these is perfect. Snug where it needs to be, but full range of motion in the shoulders.",
+            "author": "Marcus R.",
+            "location": "London, UK",
+            "verified": true,
+            "discipline": "Rugby Union / Flanker",
+            "product": ""
+          }
+        },
+        "review_7pft8q": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "date": "1 month ago",
+            "title": "Survived a full season",
+            "body": "These kits have been slide-tackled, muddy, and washed 40+ times. Not a single thread loose, and the sponsor logos haven't peeled because they are fully sublimated. 10/10.",
+            "author": "Dave W.",
+            "location": "London, UK",
+            "verified": true,
+            "discipline": "Sunday League Coach",
+            "product": ""
+          }
+        },
+        "review_ma3yPR": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "date": "2 months ago",
+            "title": "Lightning fast delivery",
+            "body": "Needed emergency kits for a tournament after our old supplier let us down. ROSTER delivered custom sublimated shirts in exactly 3 weeks. Saved our tour.",
+            "author": "Sarah M.",
+            "location": "London, UK",
+            "verified": true,
+            "discipline": "Netball Centre",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "review_7Q9rMV",
+        "review_4J7c3V",
+        "review_7pft8q",
+        "review_ma3yPR"
+      ],
+      "name": "Reviews Wall",
+      "settings": {
+        "color_background": "#ffffff",
+        "color_text": "#181818",
+        "color_muted": "#6b7280",
+        "color_accent": "#d4ff3a",
+        "color_line": "#e5e7eb",
+        "color_surface": "#f4f4f5",
+        "padding_top": 96,
+        "padding_bottom": 96,
+        "eyebrow": "Tested by athletes",
+        "heading": "Don't just take our word for it",
+        "rating_score": "4.9",
+        "total_reviews": "from 1,200+ Verified Athletes"
+      }
+    },
+    "faq_accordion": {
+      "type": "faq-accordion",
+      "blocks": {
+        "faq_1": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do I care for my latex goalkeeper gloves?",
+            "answer": "",
+            "category": "Gear Care"
+          }
+        },
+        "faq_2": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is the turnaround time for custom kits?",
+            "answer": "",
+            "category": "Shipping & Delivery"
+          }
+        },
+        "faq_3": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is the optimal PSI for match footballs?",
+            "answer": "",
+            "category": "Gear Care"
+          }
+        },
+        "faq_4": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do your rugby jerseys fit compared to high street brands?",
+            "answer": "",
+            "category": "Sizing & Fit"
+          }
+        },
+        "faq_5": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I order replacements for new squad members later?",
+            "answer": "",
+            "category": "Orders & Returns"
+          }
+        }
+      },
+      "block_order": [
+        "faq_1",
+        "faq_2",
+        "faq_3",
+        "faq_4",
+        "faq_5"
+      ],
+      "settings": {
+        "bg_style": "default",
+        "color_background": "#ffffff",
+        "color_surface": "#f4f4f5",
+        "color_text": "#181818",
+        "color_accent": "#d4ff3a",
+        "color_muted": "#6b7280",
+        "color_line": "#e5e7eb",
+        "padding_top": 96,
+        "padding_bottom": 96,
+        "eyebrow": "GEAR INTELLIGENCE",
+        "heading": "Frequently Asked Questions",
+        "subheading": "Everything you need to know about our custom teamwear process, fabrics, and care instructions.",
+        "cta_label": "Have another question? Contact Us",
+        "cta_link": ""
+      }
+    }
+  },
+  "order": [
+    "hero_slideshow",
+    "trust_row",
+    "sport_tiles",
+    "how_it_works",
+    "composite_bundle_builder_GgFFVW",
+    "shop_the_look",
+    "finish_the_kit",
+    "pre_season_banner",
+    "community_grid_JTpDkJ",
+    "reviews_wall_ErNXPU",
+    "faq_accordion"
+  ]
+}

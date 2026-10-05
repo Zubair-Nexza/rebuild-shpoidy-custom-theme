@@ -1,0 +1,292 @@
+/*
+  assets/n90-product-card.css
+  Clean Sport product card — reference .pc / .pc-media / .pc-alt / .pc-name / .pc-price / .dots / .qadd
+  Markup: snippets/n90-product-card.liquid (+ card-color-swatches.liquid). Used across the catalog.
+*/
+
+.n90-pc { position: relative; }
+.n90-pc__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  perspective: 900px;
+}
+.n90-pc__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--n90-radius);
+  background: var(--n90-surface);
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .6s var(--n90-ease);
+}
+.n90-pc__media img,
+.n90-pc__ph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .8s var(--n90-ease), opacity .35s ease;
+}
+.n90-pc__ph { fill: var(--n90-line-strong); background: var(--n90-surface); }
+.n90-pc__link:hover .n90-pc__media img { transform: scale(1.03); }
+/* ref .pc-alt — secondary image fades in */
+.n90-pc__alt { opacity: 0; }
+.n90-pc__link:hover .n90-pc__alt { opacity: 1; }
+.n90-pc.is-swatched .n90-pc__alt { display: none; }
+
+/* Badges: snippets/product-badge.liquid, styled in n90-tokens.css.
+   Badges on the right → quick add swaps to the top-left corner. */
+.n90-pc:has(.n90-badges--right) .n90-pc__qadd { right: auto; left: 12px; }
+
+/* ref .pc-name — underline sweeps in on hover */
+.n90-pc__title { display: block; margin-top: 16px; line-height: 1.15; }
+.n90-pc__name {
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  padding-bottom: 2px;
+  transition: background-size .45s var(--n90-ease);
+}
+.n90-pc__link:hover .n90-pc__name { background-size: 100% 1px; }
+
+/* ref .pc-price */
+.n90-pc__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--n90-muted);
+}
+.n90-pc__now { color: var(--n90-carbon); font-weight: 600; }
+.n90-pc__was { text-decoration-thickness: 1px; }
+
+/* Colour swatches (snippets/card-color-swatches.liquid) */
+.n90-sw { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 6px 0 0 -5px; }
+.n90-sw__dot {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.n90-sw__dot::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--sw, var(--n90-surface));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+  transition: transform .3s var(--n90-spring);
+}
+.n90-sw__dot::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px transparent;
+  transition: box-shadow .2s;
+}
+.n90-sw__dot:hover::before { transform: scale(1.12); }
+.n90-sw__dot:hover::after { box-shadow: 0 0 0 1.5px var(--n90-line-strong); }
+.n90-sw__dot[aria-pressed="true"]::after { box-shadow: 0 0 0 2px var(--n90-carbon); }
+.n90-sw__dot:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 0; }
+.n90-sw__more {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--n90-carbon);
+  color: var(--n90-volt);
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .04em;
+  text-decoration: none;
+  transition: background .2s, color .2s;
+}
+.n90-sw__more:hover { background: var(--n90-volt); color: var(--n90-carbon); }
+
+/* Quick view button — slides up over the bottom of the media on hover */
+.n90-pc__qv-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  padding: 12px;
+  pointer-events: none;
+}
+.n90-pc__qv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--n90-carbon);
+  color: var(--n90-canvas);
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .3s var(--n90-ease), transform .35s var(--n90-ease), background .2s, color .2s;
+}
+.n90-pc__qv svg { width: 18px; height: 18px; }
+.n90-pc:hover .n90-pc__qv,
+.n90-pc__qv:focus-visible { opacity: 1; transform: none; }
+.n90-pc__qv:hover { background: var(--n90-volt); color: var(--n90-carbon); }
+.n90-pc__qv:focus-visible { outline: 2px solid var(--n90-volt); outline-offset: 2px; }
+
+/* ref .dots */
+.n90-pc__dots { display: flex; gap: 6px; margin-top: 10px; }
+.n90-pc__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--n90-line-strong);
+  transition: transform .3s var(--n90-spring);
+}
+.n90-pc__link:hover .n90-pc__dot { transform: scale(1.2); }
+
+/* ref .qadd — pops in on hover, Volt on hover */
+.n90-pc__qadd {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--n90-line);
+  background: var(--n90-canvas);
+  color: var(--n90-carbon);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity .35s var(--n90-spring), transform .35s var(--n90-spring), background .2s, border-color .2s;
+}
+.n90-pc:hover .n90-pc__qadd,
+.n90-pc__qadd:focus-visible,
+.n90-pc__qadd.is-loading,
+.n90-pc__qadd.is-added { opacity: 1; transform: scale(1); }
+.n90-pc__qadd:hover,
+.n90-pc__qadd.is-added { background: var(--n90-volt); border-color: var(--n90-volt); }
+.n90-pc__qadd:active { transform: scale(.92); }
+.n90-pc__qadd svg { width: 16px; height: 16px; }
+.n90-pc__qadd-check,
+.n90-pc__qadd-spin,
+.n90-pc__qadd.is-loading .n90-pc__qadd-plus,
+.n90-pc__qadd.is-added .n90-pc__qadd-plus { display: none; }
+.n90-pc__qadd.is-added .n90-pc__qadd-check { display: block; }
+.n90-pc__qadd.is-loading .n90-pc__qadd-spin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: n90-spin .8s linear infinite;
+}
+@keyframes n90-spin { to { transform: rotate(360deg); } }
+
+.n90-pc--placeholder .n90-pc__link { cursor: default; }
+.n90-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Touch devices: actions always visible, 44px targets */
+@media (hover: none) {
+  .n90-pc__qadd { opacity: 1; transform: none; width: 44px; height: 44px; top: 8px; right: 8px; }
+  .n90-pc:has(.n90-badges--right) .n90-pc__qadd { right: auto; left: 8px; }
+  .n90-pc__link:hover .n90-pc__media img { transform: none; }
+  .n90-pc__link:hover .n90-pc__alt { opacity: 0; }
+  .n90-pc__qv-wrap { display: none; }
+}
+
+/* Mobile 320–767 */
+@media screen and (max-width: 767px) {
+  .n90-pc__title { margin-top: 10px; }
+  .n90-pc__name { font-size: 17px; }
+  .n90-pc__price { font-size: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .n90-pc__media,
+  .n90-pc__media img,
+  .n90-pc__name,
+  .n90-pc__dot,
+  .n90-pc__qadd,
+  .n90-pc__qv,
+  .n90-sw__dot::before { transition: none; }
+  .n90-pc__media { transform: none; }
+}
+
+/* Mock card art (reference KitArt) */
+.n90-pc__art {
+  position: absolute;
+  inset: 8%;
+  display: block;
+}
+.n90-pc__art .n90-kit-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: transform .8s var(--n90-ease);
+}
+.n90-pc__link:hover .n90-pc__art .n90-kit-art { transform: scale(1.03); }
+
+/* Custom-made teamwear (quote only) */
+.n90-pc__kit {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 5px 10px 4px;
+  border-radius: 4px;
+  background: var(--n90-carbon);
+  color: var(--n90-volt);
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.n90-pc__team { font-size: 13px; color: var(--n90-muted); }

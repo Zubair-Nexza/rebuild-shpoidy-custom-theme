@@ -1,0 +1,222 @@
+/*
+  assets/n90-cart-drawer.css
+  Clean Sport skin + extras for Dawn's cart drawer (snippets/cart-drawer.liquid,
+  snippets/n90-cart-extras.liquid). Reference: .drawer / .ship .prog / .ci / .upsell / .kv0.
+*/
+
+@keyframes n90-cx-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes n90-cx-spin { to { transform: rotate(360deg); } }
+
+#CartDrawer .drawer__inner {
+  font-family: var(--n90-font-body);
+  color: var(--n90-carbon);
+  background: var(--n90-canvas);
+}
+#CartDrawer .drawer__heading,
+#CartDrawer .totals__total {
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+#CartDrawer .totals__total-value {
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: 2.2rem;
+}
+#CartDrawer .cart-item__name {
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+#CartDrawer .cart-item__image { border-radius: 8px; background: var(--n90-surface); }
+
+/* Volt checkout (ref .btn) */
+#CartDrawer .cart__checkout-button {
+  min-height: 52px;
+  border-radius: var(--n90-radius);
+  background: var(--n90-volt);
+  color: var(--n90-carbon);
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  transition: transform .35s var(--n90-ease);
+}
+#CartDrawer .cart__checkout-button::before,
+#CartDrawer .cart__checkout-button::after { box-shadow: none; }
+#CartDrawer .cart__checkout-button:hover { transform: translateY(-2px); }
+#CartDrawer .cart__checkout-button:active { transform: scale(.98); }
+#CartDrawer .cart__checkout-button[disabled] { background: var(--n90-surface); color: var(--n90-muted); }
+
+/* ── Free delivery progress (ref .ship .prog) ── */
+.n90-cx-ship {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0 16px;
+  border-bottom: 1px solid var(--n90-line);
+}
+.n90-cx-ship__msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+.n90-cx-ship__msg strong { font-weight: 700; }
+.n90-cx-ship__msg svg { width: 16px; height: 16px; flex: none; padding: 2px; border-radius: 50%; background: var(--n90-volt); }
+.n90-cx-ship__track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--n90-surface);
+  box-shadow: inset 0 0 0 1px var(--n90-line);
+}
+.n90-cx-ship__fill {
+  display: block;
+  width: var(--n90-cx-pct, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--n90-volt);
+  box-shadow: inset 0 0 0 1px rgba(var(--n90-carbon-rgb), .12);
+  transform-origin: left;
+  animation: n90-cx-fill .8s var(--n90-ease) both;
+}
+.n90-cx-ship.is-unlocked .n90-cx-ship__track { background: var(--n90-carbon); box-shadow: none; }
+
+/* ── Finish the kit upsells ── */
+.n90-cx-up {
+  flex: none;
+  padding: 14px 0 12px;
+  border-top: 1px solid var(--n90-line);
+}
+.n90-cx-up__title {
+  margin: 0 0 10px;
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.n90-cx-up__list {
+  display: flex;
+  gap: 10px;
+  margin: 0 -2px;
+  padding: 2px 2px 6px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.n90-cx-up__list::-webkit-scrollbar { display: none; }
+.n90-cx-up__item {
+  flex: 0 0 min(260px, 82%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--n90-line);
+  border-radius: 8px;
+  scroll-snap-align: start;
+  transition: border-color .2s;
+}
+.n90-cx-up__item:hover { border-color: var(--n90-carbon); }
+.n90-cx-up__thumb {
+  flex: none;
+  width: 56px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--n90-surface);
+}
+.n90-cx-up__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.n90-cx-up__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.n90-cx-up__name {
+  overflow: hidden;
+  color: var(--n90-carbon);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.n90-cx-up__name:hover { text-decoration: underline; }
+.n90-cx-up__price { font-size: 1.2rem; color: var(--n90-muted); }
+.n90-cx-up__add {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--n90-line);
+  border-radius: 50%;
+  background: var(--n90-canvas);
+  color: var(--n90-carbon);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, transform .35s var(--n90-spring);
+}
+.n90-cx-up__add:hover { background: var(--n90-volt); border-color: var(--n90-volt); }
+.n90-cx-up__add:active { transform: scale(.92); }
+.n90-cx-up__add svg { width: 16px; height: 16px; }
+.n90-cx-up__add .is-spin { display: none; }
+.n90-cx-up__add.is-loading .is-plus { display: none; }
+.n90-cx-up__add.is-loading .is-spin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: n90-cx-spin .8s linear infinite;
+}
+.n90-cx-up__error { margin: 6px 0 0; font-size: 1.2rem; color: #B42318; }
+.n90-cx-up__error:empty { display: none; }
+
+/* ── Savings + trust ── */
+.n90-cx-save {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: var(--n90-radius);
+  background: var(--n90-volt);
+  color: var(--n90-carbon);
+  font-size: 1.4rem;
+}
+.n90-cx-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+.n90-cx-trust__lock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--n90-muted);
+}
+.n90-cx-trust__lock svg { width: 14px; height: 14px; }
+.n90-cx-trust__pay { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.n90-cx-trust__pay svg { display: block; width: 34px; height: 22px; }
+
+#CartDrawer :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .n90-cx-ship__fill,
+  .n90-cx-up__add.is-loading .is-spin { animation: none; }
+  #CartDrawer .cart__checkout-button,
+  .n90-cx-up__add { transition: none; }
+}

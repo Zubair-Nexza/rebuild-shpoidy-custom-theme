@@ -1,0 +1,130 @@
+/*
+  assets/n90-complete-kit.css
+  PDP "Complete the look // Match gear" strip (snippets/n90-kit-item.liquid).
+  4 cards across the info column on desktop, swipeable strip below that.
+*/
+
+@keyframes n90-ck-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes n90-ck-spin { to { transform: rotate(360deg); } }
+
+.n90-ck { padding: 24px 0 4px; border-top: 1px solid rgba(0, 0, 0, .08); }
+.n90-ck[hidden] { display: none; }
+.n90-ck__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.n90-ck__title {
+  margin: 0;
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.n90-ck__title span { color: var(--n90-muted); font-weight: 600; }
+
+.n90-ck__list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 36px) / 4);
+  gap: 12px;
+  margin: 0;
+  padding: 0 0 6px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  transition: opacity .2s ease;
+}
+.n90-ck__list::-webkit-scrollbar { display: none; }
+.n90-ck__list.is-swapping { opacity: 0; }
+.n90-ck__item { min-width: 0; scroll-snap-align: start; animation: n90-ck-up .5s var(--n90-ease) both; }
+.n90-ck__item:nth-child(2) { animation-delay: .05s; }
+.n90-ck__item:nth-child(3) { animation-delay: .1s; }
+.n90-ck__item:nth-child(4) { animation-delay: .15s; }
+
+.n90-ck__frame { position: relative; }
+.n90-ck__media {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--n90-surface);
+}
+.n90-ck__media img,
+.n90-ck__ph { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s var(--n90-ease); }
+.n90-ck__item:hover .n90-ck__media img { transform: scale(1.05); }
+
+.n90-ck__add {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--n90-volt);
+  color: var(--n90-carbon);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  transition: transform .35s var(--n90-spring), background .2s, color .2s;
+}
+.n90-ck__add:hover { transform: scale(1.1); }
+.n90-ck__add:active { transform: scale(.92); }
+.n90-ck__add svg { width: 16px; height: 16px; }
+.n90-ck__check,
+.n90-ck__spin,
+.n90-ck__add.is-loading .n90-ck__plus,
+.n90-ck__add.is-added .n90-ck__plus { display: none; }
+.n90-ck__add.is-added { background: var(--n90-carbon); color: var(--n90-volt); }
+.n90-ck__add.is-added .n90-ck__check { display: block; }
+.n90-ck__add.is-loading .n90-ck__spin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: n90-ck-spin .8s linear infinite;
+}
+
+.n90-ck__name {
+  display: -webkit-box;
+  margin-top: 8px;
+  overflow: hidden;
+  color: var(--n90-carbon);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.n90-ck__name:hover { text-decoration: underline; text-decoration-color: var(--n90-volt); text-decoration-thickness: 2px; text-underline-offset: 2px; }
+.n90-ck__price { display: flex; flex-wrap: wrap; gap: 0 6px; margin-top: 2px; font-family: var(--n90-font-display); font-weight: 600; font-size: 16px; }
+.n90-ck__was { color: var(--n90-muted); font-weight: 500; }
+.n90-ck__error { margin: 8px 0 0; font-size: 13px; color: #B42318; }
+.n90-ck__error:empty { display: none; }
+
+.n90-ck :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+@media screen and (min-width: 1024px) and (max-width: 1279px) {
+  .n90-ck__list { grid-auto-columns: calc((100% - 24px) / 3); }
+}
+@media screen and (max-width: 1023px) {
+  .n90-ck__list { grid-auto-columns: calc((100% - 36px) / 4); }
+}
+@media screen and (max-width: 767px) {
+  .n90-ck__list { grid-auto-columns: 40%; }
+  .n90-ck__add { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .n90-ck__item,
+  .n90-ck__add.is-loading .n90-ck__spin { animation: none; }
+  .n90-ck__list,
+  .n90-ck__media img,
+  .n90-ck__add { transition: none; }
+}

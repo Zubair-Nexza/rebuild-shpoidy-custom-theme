@@ -1,0 +1,62 @@
+/*
+  assets/n90-kit-inquiry.css
+  Custom kit inquiry button + dialog (snippets/n90-kit-inquiry.liquid).
+*/
+@keyframes n90-ki-in { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes n90-ki-sheet { from { transform: translateY(100%); } to { transform: none; } }
+
+.n90-ki__btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: 56px; padding: 0 28px; border: 0; border-radius: 4px;
+  background: var(--n90-volt); color: #181818;
+  font-family: var(--n90-font-display); font-weight: 700; font-size: 18px; letter-spacing: .07em; text-transform: uppercase;
+  cursor: pointer; transition: transform .35s var(--n90-ease);
+}
+.n90-ki__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-spring); }
+.n90-ki__btn:hover { transform: translateY(-2px); }
+.n90-ki__btn:hover svg { transform: translateX(4px); }
+.n90-ki__btn:active { transform: scale(.98); }
+
+.n90-ki {
+  width: min(640px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 48px);
+  margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: 12px;
+  background: var(--n90-canvas); color: var(--n90-carbon); font-family: var(--n90-font-body);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .25);
+}
+.n90-ki[open] { display: flex; flex-direction: column; animation: n90-ki-in .35s var(--n90-ease) both; }
+.n90-ki::backdrop { background: rgba(10, 10, 10, .55); }
+.n90-ki__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 16px 16px 24px; border-bottom: 1px solid var(--n90-line); }
+.n90-ki__eyebrow { margin: 0 0 6px; font-family: var(--n90-font-display); font-weight: 700; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--n90-muted); }
+.n90-ki__title { margin: 0; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(24px, 3vw, 32px); line-height: 1; text-transform: uppercase; }
+.n90-ki__close { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--n90-line); border-radius: 50%; background: none; color: inherit; font-size: 16px; cursor: pointer; }
+.n90-ki__close:hover { background: var(--n90-volt); border-color: var(--n90-volt); }
+.n90-ki__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px 24px; }
+.n90-ki__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+.n90-ki__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.n90-ki__field--full { grid-column: 1 / -1; }
+.n90-ki__field label { font-size: 13px; font-weight: 600; }
+.n90-ki__field label span { font-weight: 400; color: var(--n90-muted); }
+.n90-ki__field input, .n90-ki__field select, .n90-ki__field textarea {
+  width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--n90-line-strong); border-radius: 4px;
+  background: var(--n90-surface); color: var(--n90-carbon); font: 500 15px var(--n90-font-body);
+}
+.n90-ki__field textarea { min-height: 88px; resize: vertical; }
+.n90-ki__field input:focus, .n90-ki__field select:focus, .n90-ki__field textarea:focus { outline: none; border-color: var(--n90-carbon); background: var(--n90-canvas); box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); }
+.n90-ki__hint { margin: 0; font-size: 12px; color: var(--n90-muted); }
+.n90-ki__submit { width: 100%; min-height: 54px; margin-top: 20px; border: 0; border-radius: 4px; background: var(--n90-carbon); color: var(--n90-volt); font-family: var(--n90-font-display); font-weight: 700; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.n90-ki__submit:hover { background: #000; }
+.n90-ki__success { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 8px; text-align: center; font-size: 16px; }
+.n90-ki__success svg { width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: var(--n90-volt); }
+.n90-ki__success p { margin: 0; max-width: 360px; }
+.n90-ki__error { margin-bottom: 14px; padding: 12px 14px; border-radius: 4px; background: #FDECEA; color: #B42318; font-size: 14px; }
+.n90-ki :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+@media screen and (max-width: 599px) {
+  .n90-ki { width: 100%; max-height: 92dvh; margin: auto 0 0; border-radius: 12px 12px 0 0; }
+  .n90-ki[open] { animation-name: n90-ki-sheet; }
+  .n90-ki__grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .n90-ki[open] { animation: none; }
+  .n90-ki__btn, .n90-ki__btn svg { transition: none; }
+}

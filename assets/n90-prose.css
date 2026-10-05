@@ -1,0 +1,138 @@
+/*
+  assets/n90-prose.css
+  Clean Sport reading typography for standard pages (sections/main-page.liquid)
+  and Shopify policy pages (.shopify-policy__container, loaded from layout/theme.liquid).
+  Mirrors the article body in sections/main-article.liquid.
+*/
+
+@keyframes n90-prose-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+.n90-pg,
+body .shopify-policy__container {
+  box-sizing: border-box;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 20px;
+  color: var(--n90-carbon);
+  font-family: var(--n90-font-body);
+}
+
+/* Title */
+.n90-pg__eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--n90-muted);
+}
+.n90-pg__title,
+.shopify-policy__title h1 {
+  margin: 0 0 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(0, 0, 0, .08);
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  font-size: clamp(44px, 6vw, 80px);
+  line-height: .92;
+  letter-spacing: .005em;
+  text-align: left;
+  text-transform: uppercase;
+  animation: n90-prose-up .6s var(--n90-ease) both;
+}
+.shopify-policy__title { text-align: left; }
+
+/* Body */
+.n90-prose,
+.shopify-policy__body .rte,
+.shopify-policy__body {
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--n90-carbon);
+}
+.n90-prose > :first-child,
+.shopify-policy__body .rte > :first-child { margin-top: 0; }
+.n90-prose p,
+.shopify-policy__body p { margin: 0 0 1.4em; }
+.n90-prose h1,
+.n90-prose h2,
+.n90-prose h3,
+.n90-prose h4,
+.shopify-policy__body h1,
+.shopify-policy__body h2,
+.shopify-policy__body h3,
+.shopify-policy__body h4 {
+  font-family: var(--n90-font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  color: var(--n90-carbon);
+}
+.n90-prose h1,
+.n90-prose h2,
+.shopify-policy__body h1,
+.shopify-policy__body h2 { margin: 2em 0 .6em; font-size: clamp(30px, 3vw, 40px); }
+.n90-prose h3,
+.shopify-policy__body h3 { margin: 1.8em 0 .5em; font-size: clamp(24px, 2.2vw, 30px); }
+.n90-prose h4,
+.shopify-policy__body h4 { margin: 1.6em 0 .4em; font-size: 20px; }
+.n90-prose strong,
+.shopify-policy__body strong { font-weight: 700; }
+.n90-prose a,
+.shopify-policy__body a {
+  color: var(--n90-carbon);
+  text-decoration: underline;
+  text-decoration-color: var(--n90-volt);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color .2s;
+}
+.n90-prose a:hover,
+.shopify-policy__body a:hover { text-decoration-color: var(--n90-carbon); }
+.n90-prose ul,
+.n90-prose ol,
+.shopify-policy__body ul,
+.shopify-policy__body ol { margin: 0 0 1.4em; padding-left: 1.3em; }
+.n90-prose li,
+.shopify-policy__body li { margin-bottom: .4em; }
+.n90-prose li::marker,
+.shopify-policy__body li::marker { color: var(--n90-carbon); font-weight: 700; }
+.n90-prose blockquote,
+.shopify-policy__body blockquote {
+  margin: 2em 0;
+  padding: 8px 0 8px 28px;
+  border-left: 6px solid var(--n90-volt);
+  font-family: var(--n90-font-display);
+  font-weight: 600;
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.n90-prose blockquote p:last-child,
+.shopify-policy__body blockquote p:last-child { margin-bottom: 0; }
+.n90-prose img { max-width: 100%; height: auto; border-radius: 12px; }
+.n90-prose figure { margin: 2em 0; }
+.n90-prose figcaption { margin-top: 8px; font-size: 13px; color: var(--n90-muted); }
+.n90-prose hr,
+.shopify-policy__body hr { margin: 3em 0; border: 0; border-top: 1px solid rgba(0, 0, 0, .08); }
+.n90-prose table,
+.shopify-policy__body table { width: 100%; margin: 0 0 1.4em; border-collapse: collapse; font-size: 16px; }
+.n90-prose th,
+.n90-prose td,
+.shopify-policy__body th,
+.shopify-policy__body td { padding: 10px 12px; border: 0; border-bottom: 1px solid rgba(0, 0, 0, .08); text-align: left; }
+.n90-prose th,
+.shopify-policy__body th { font-family: var(--n90-font-display); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.n90-prose iframe { max-width: 100%; border-radius: 12px; }
+
+@media (max-width: 749px) {
+  .n90-prose,
+  .shopify-policy__body .rte,
+  .shopify-policy__body { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .n90-pg__title,
+  .shopify-policy__title h1 { animation: none; }
+}

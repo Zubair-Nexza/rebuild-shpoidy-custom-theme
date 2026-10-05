@@ -1,0 +1,1050 @@
+{%- comment -%}
+  sections/header.liquid
+  ROSTER — Header + sport mega menus
+  Reference: .hdr / .hdr-in / .logo / .nav .navlink / .hdr-r .ibtn .count / .mega (sport + Shop) /
+  .search / .drawer.left (MobileMenu) + motion layer (.m-prog, scrolled header, mega stagger, m-bump)
+
+  Desktop (1024px+): wordmark · 6 sports + Shop + Club Shops · search, account, cart, Free Quote.
+  Sport / Shop menus open on hover or focus and lock open on click; Escape or a click
+  outside closes and returns focus. Below 1024px: hamburger → left drawer with sport
+  and Shop accordions. Utility strip: sections/utility-bar.liquid. Sport data:
+  snippets/header-sport.liquid · Shop groups: snippets/header-shop-groups.liquid ·
+  Cart count: snippets/header-cart-bubble.liquid (also re-rendered by Dawn's cart JS).
+{%- endcomment -%}
+
+{%- liquid
+  assign quote_url = section.settings.quote_url | default: routes.all_products_collection_url
+  assign club_url = section.settings.club_shops_url
+  if club_url == blank and pages['club-shops'] != blank
+    assign club_url = pages['club-shops'].url
+  endif
+  assign shop_feature_url = section.settings.shop_feature_url | default: routes.all_products_collection_url
+  assign sports = section.blocks | where: 'type', 'sport'
+-%}
+
+{%- if settings.cart_type == 'notification' -%}
+  {{ 'component-cart-notification.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+<style>
+  #shopify-section-{{ section.id }} { position: sticky; top: 0; z-index: 30; }
+
+  @keyframes n90-hdr-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes n90-hdr-mega { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-hdr-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-hdr-in-left { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes n90-hdr-bump { 0% { transform: scale(1); } 35% { transform: scale(1.5); } 100% { transform: scale(1); } }
+
+  /* ref .m-prog — page progress */
+  .n90-prog { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: 3px; pointer-events: none; }
+  .n90-prog span {
+    display: block;
+    height: 100%;
+    background: var(--n90-volt);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* ref .hdr */
+  .n90-hdr { position: relative; color: var(--n90-carbon); font-family: var(--n90-font-body); }
+  .n90-hdr__bar {
+    position: relative;
+    z-index: 3;
+    background: var(--n90-canvas);
+    border-bottom: 1px solid var(--n90-line);
+    transition: background .3s, backdrop-filter .3s;
+  }
+  .n90-hdr.is-scrolled .n90-hdr__bar {
+    background: rgba(255, 255, 255, .88);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    backdrop-filter: saturate(1.4) blur(14px);
+  }
+  .n90-hdr__in {
+    max-width: var(--n90-page-width);
+    height: 76px;
+    margin: 0 auto;
+    padding: 0 var(--n90-gutter);
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    transition: height .35s var(--n90-ease);
+  }
+  .n90-hdr.is-scrolled .n90-hdr__in { height: 64px; }
+
+  /* ref .logo (dir-c) */
+  .n90-hdr__logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 23px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .n90-hdr__logo img { display: block; height: auto; }
+
+  /* ref .nav / .navlink */
+  .n90-hdr__nav { flex: 1; align-self: stretch; display: flex; }
+  .n90-hdr__nav ul {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-hdr__nav li { display: flex; }
+  .n90-hdr__navlink {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .n90-hdr__navlink::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--n90-carbon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-hdr__navlink:hover::after,
+  .n90-hdr__navlink[aria-expanded="true"]::after,
+  .n90-hdr__navlink[aria-current="page"]::after { transform: scaleX(1); }
+
+  /* ref .hdr-r / .ibtn / .count */
+  .n90-hdr__r { display: flex; align-items: center; gap: 2px; }
+  .n90-hdr__ibtn {
+    position: relative;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--n90-radius);
+    background: none;
+    color: var(--n90-carbon);
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .n90-hdr__ibtn:hover,
+  .n90-hdr__ibtn[aria-expanded="true"] { background: var(--n90-surface); }
+  .ref-cart-count {
+    position: absolute;
+    top: 5px;
+    right: 3px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px var(--n90-canvas);
+  }
+  .ref-cart-count.is-bump { animation: n90-hdr-bump .55s var(--n90-spring); }
+
+  /* ref .btn-line.btn-sm */
+  .n90-hdr__quote {
+    margin-left: 12px;
+    min-height: 44px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--n90-carbon);
+    border-radius: var(--n90-radius);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .2s, color .2s, transform .3s var(--n90-ease);
+  }
+  .n90-hdr__quote:hover { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-hdr__quote:active { transform: scale(.97); }
+
+  /* ref .mega-shade */
+  .n90-hdr__shade {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    height: 100vh;
+    background: rgba(17, 17, 17, .14);
+    animation: n90-hdr-fade .2s ease;
+  }
+  .n90-hdr__shade[hidden] { display: none; }
+
+  /* ref .mega */
+  .n90-hdr__mega,
+  .n90-hdr__search {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    background: var(--n90-canvas);
+    border-bottom: 1px solid var(--n90-line);
+    animation: n90-hdr-mega .24s ease both;
+  }
+  .n90-hdr__mega[hidden],
+  .n90-hdr__search[hidden] { display: none; }
+  .n90-hdr__mega-in {
+    max-width: var(--n90-page-width);
+    margin: 0 auto;
+    padding: 40px var(--n90-gutter) 48px;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+  .n90-hdr__eyebrow {
+    margin: 0 0 12px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-hdr__mega-list { grid-column: 1 / span 4; display: flex; flex-direction: column; }
+  /* ref .mega-link — arrow slides in, hint hides */
+  .n90-hdr__mega-link {
+    min-height: 56px;
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--n90-line);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: 24px;
+    line-height: 1.1;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: padding .2s;
+  }
+  .n90-hdr__mega-link:hover { padding-left: 6px; }
+  .n90-hdr__mega-link::after {
+    content: '\2192';
+    font-family: var(--n90-font-body);
+    font-size: 18px;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity .3s var(--n90-ease), transform .3s var(--n90-ease);
+  }
+  .n90-hdr__mega-link:hover::after,
+  .n90-hdr__mega-link:focus-visible::after { opacity: 1; transform: none; }
+  .n90-hdr__mega-link:hover .n90-hdr__mega-hint,
+  .n90-hdr__mega-link:focus-visible .n90-hdr__mega-hint { display: none; }
+  .n90-hdr__mega-hint {
+    font-family: var(--n90-font-body);
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--n90-muted);
+  }
+  .n90-hdr__mega-side { grid-column: 6 / span 2; display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
+  .n90-hdr__facts { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--n90-muted); }
+  .n90-hdr__mega-feat { grid-column: 8 / span 5; display: flex; flex-direction: column; gap: 8px; }
+  .n90-hdr__mega-groups {
+    grid-column: 1 / span 8;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 36px 24px;
+  }
+  .n90-hdr__group-t {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-hdr__mg-link {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    color: var(--n90-carbon);
+    font-size: 15px;
+    text-decoration: none;
+    transition: padding .2s;
+  }
+  .n90-hdr__mg-link:hover { padding-left: 4px; text-decoration: underline; text-underline-offset: 5px; }
+  .n90-hdr__mega-feat-s { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 8px; }
+  .n90-hdr__feat-title { margin: 0; font-size: 14px; font-weight: 600; }
+
+  /* ref .slot + .mega-slot */
+  .n90-hdr__slot {
+    position: relative;
+    display: block;
+    height: 300px;
+    overflow: hidden;
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-muted);
+    transition: transform .8s var(--n90-ease);
+  }
+  .n90-hdr__mega-feat:hover .n90-hdr__slot,
+  .n90-hdr__mega-feat-s:hover .n90-hdr__slot { transform: scale(1.02); }
+  .n90-hdr__slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .n90-hdr__slot-label {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.35;
+    letter-spacing: .02em;
+  }
+
+  /* ref .tlink */
+  .n90-hdr__tlink {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    text-decoration-thickness: 1px;
+    transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+  }
+  .n90-hdr__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+  /* ref mega + search stagger (mUp .5s) */
+  .n90-hdr__mega-link,
+  .n90-hdr__mega-groups > div,
+  .n90-hdr__mega-side,
+  .n90-hdr__mega-feat,
+  .n90-hdr__mega-feat-s,
+  .n90-hdr__chips > * { animation: n90-hdr-up .5s var(--n90-ease) both; }
+  .n90-hdr__mega-link:nth-of-type(1) { animation-delay: .03s; }
+  .n90-hdr__mega-link:nth-of-type(2) { animation-delay: .07s; }
+  .n90-hdr__mega-link:nth-of-type(3) { animation-delay: .11s; }
+  .n90-hdr__mega-link:nth-of-type(4) { animation-delay: .15s; }
+  .n90-hdr__mega-link:nth-of-type(5) { animation-delay: .19s; }
+  .n90-hdr__mega-link:nth-of-type(6) { animation-delay: .23s; }
+  .n90-hdr__mega-groups > div:nth-child(2) { animation-delay: .05s; }
+  .n90-hdr__mega-groups > div:nth-child(3) { animation-delay: .1s; }
+  .n90-hdr__mega-groups > div:nth-child(4) { animation-delay: .15s; }
+  .n90-hdr__mega-groups > div:nth-child(5) { animation-delay: .2s; }
+  .n90-hdr__mega-groups > div:nth-child(6) { animation-delay: .25s; }
+  .n90-hdr__mega-side { animation-delay: .12s; }
+  .n90-hdr__mega-feat,
+  .n90-hdr__mega-feat-s { animation-delay: .18s; }
+
+  /* ref .search */
+  .n90-hdr__search-in {
+    max-width: var(--n90-page-width);
+    margin: 0 auto;
+    padding: 32px var(--n90-gutter) 40px;
+  }
+  .n90-hdr__search-row { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--n90-carbon); }
+  .n90-hdr__search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    border: 0;
+    border-radius: 0;
+    outline: none;
+    background: transparent;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-size: 40px;
+    text-transform: uppercase;
+  }
+  .n90-hdr__search-input::placeholder { color: var(--n90-muted); }
+  .n90-hdr__search-input::-webkit-search-cancel-button { display: none; }
+  .n90-hdr__search .n90-hdr__eyebrow { margin: 24px 0 0; }
+  .n90-hdr__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .n90-hdr__chip {
+    min-height: 40px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+    color: var(--n90-carbon);
+    font-size: 14px;
+    text-decoration: none;
+    transition: background .15s;
+  }
+  .n90-hdr__chip:hover { background: var(--n90-surface); }
+  .n90-hdr__chips > :nth-child(2) { animation-delay: .04s; }
+  .n90-hdr__chips > :nth-child(3) { animation-delay: .08s; }
+  .n90-hdr__chips > :nth-child(4) { animation-delay: .12s; }
+  .n90-hdr__chips > :nth-child(5) { animation-delay: .16s; }
+
+  /* ref .shade + .drawer.left (MobileMenu) */
+  .n90-hdr__dshade {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(10, 10, 10, .34);
+    animation: n90-hdr-fade .2s ease;
+  }
+  .n90-hdr__drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 51;
+    width: min(440px, 100%);
+    display: flex;
+    flex-direction: column;
+    background: var(--n90-canvas);
+    border-right: 1px solid var(--n90-line);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+    animation: n90-hdr-in-left .55s var(--n90-spring) both;
+  }
+  .n90-hdr__dshade[hidden],
+  .n90-hdr__drawer[hidden] { display: none; }
+  .n90-hdr__drawer-h {
+    flex: none;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 0 16px;
+    border-bottom: 1px solid var(--n90-line);
+  }
+  .n90-hdr__drawer-b { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 20px 16px; }
+  .n90-hdr__drawer-b .n90-hdr__eyebrow { margin-bottom: 4px; }
+  .n90-hdr__drawer-b .n90-hdr__eyebrow--shop { margin-top: 32px; }
+  .n90-hdr__drawer-f {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-top: 1px solid var(--n90-line);
+  }
+  .n90-hdr__drawer-loc:empty { display: none; }
+  .n90-hdr__drawer-loc .n90-loc { justify-content: center; }
+  .n90-hdr__drawer-loc .n90-loc__btn { min-height: 44px; border-color: var(--n90-line); }
+  /* ref .mrow — sports as accordions */
+  .n90-hdr__mrow > summary,
+  .n90-hdr__macc-sum,
+  .n90-hdr__mrow2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid var(--n90-line);
+    color: var(--n90-carbon);
+    text-decoration: none;
+    list-style: none;
+    cursor: pointer;
+  }
+  .n90-hdr__mrow > summary::-webkit-details-marker,
+  .n90-hdr__macc-sum::-webkit-details-marker { display: none; }
+  .n90-hdr__mrow > summary {
+    min-height: 60px;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: 26px;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-hdr__macc-sum,
+  .n90-hdr__mrow2 { min-height: 52px; font-size: 16px; font-weight: 500; }
+  .n90-hdr__mrow > summary .ref-ic-s,
+  .n90-hdr__macc-sum::after { transition: transform .3s var(--n90-ease); }
+  .n90-hdr__mrow[open] > summary .ref-ic-s { transform: rotate(90deg); }
+  .n90-hdr__macc-sum::after { content: '+'; font-size: 20px; font-weight: 400; }
+  .n90-hdr__macc[open] .n90-hdr__macc-sum::after { transform: rotate(45deg); }
+  .n90-hdr__macc-body { display: flex; flex-direction: column; padding: 4px 0 12px; border-bottom: 1px solid var(--n90-line); }
+  .n90-hdr__msub {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-left: 12px;
+    color: var(--n90-muted);
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .n90-hdr__msub:hover,
+  .n90-hdr__msub--all { color: var(--n90-carbon); }
+  .n90-hdr__msub--all { font-weight: 600; }
+  .n90-hdr__mrows2 { margin-top: 24px; }
+  /* ref drawer stagger */
+  .n90-hdr__mrow,
+  .n90-hdr__macc,
+  .n90-hdr__mrow2 { animation: n90-hdr-up .5s var(--n90-ease) both; }
+  .n90-hdr__mrow:nth-of-type(1) { animation-delay: .05s; }
+  .n90-hdr__mrow:nth-of-type(2) { animation-delay: .09s; }
+  .n90-hdr__mrow:nth-of-type(3) { animation-delay: .13s; }
+  .n90-hdr__mrow:nth-of-type(4) { animation-delay: .17s; }
+  .n90-hdr__mrow:nth-of-type(5) { animation-delay: .21s; }
+  .n90-hdr__mrow:nth-of-type(6) { animation-delay: .25s; }
+  /* ref .btn.btn-block */
+  .n90-hdr__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .n90-hdr__drawer-f .n90-hdr__tlink { align-self: center; }
+
+  .n90-hdr :focus-visible,
+  .n90-hdr__drawer :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  .n90-hdr__mobile { display: none; }
+  .n90-hdr__spacer { flex: 1; }
+
+  /* Laptop 1024–1279: tighter nav; Free Quote hides (still in each sport menu as "Get a free kit mockup") */
+  @media screen and (max-width: 1279px) {
+    .n90-hdr__in { gap: 24px; }
+    .n90-hdr__nav ul { gap: 16px; }
+    .n90-hdr__navlink { font-size: 15px; }
+    .n90-hdr__quote { display: none; }
+  }
+  /* Below 1024: ref .is-m header */
+  @media screen and (max-width: 1023px) {
+    .n90-hdr__desktop { display: none !important; }
+    .n90-hdr__mobile { display: inline-flex; }
+    .n90-hdr__in,
+    .n90-hdr.is-scrolled .n90-hdr__in { height: 60px; padding: 0 6px; gap: 2px; }
+    .n90-hdr__logo { padding: 0 6px; }
+    .n90-hdr__search-in { padding: 20px 16px 28px; }
+    .n90-hdr__search-input { font-size: 26px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .n90-hdr *,
+    .n90-hdr__drawer,
+    .n90-hdr__drawer *,
+    .n90-hdr__dshade { animation: none !important; transition: none !important; }
+    .n90-prog { display: none; }
+  }
+</style>
+
+{%- if section.settings.show_progress -%}
+  <div class="n90-prog" aria-hidden="true"><span data-hdr-prog></span></div>
+{%- endif -%}
+
+<header class="n90-hdr" data-hdr>
+  <div class="n90-hdr__bar">
+    <div class="n90-hdr__in page-width">
+      <button
+        type="button"
+        class="n90-hdr__ibtn n90-hdr__mobile"
+        aria-label="{{ 'n90.header.open_menu' | t }}"
+        aria-controls="n90-hdr-drawer-{{ section.id }}"
+        aria-expanded="false"
+        data-hdr-drawer-open
+      >
+        {%- render 'icon', name: 'menu' -%}
+      </button>
+
+      <a href="{{ routes.root_url }}" class="n90-hdr__logo" aria-label="{{ 'n90.header.home_link' | t: shop: shop.name | escape }}">
+        {%- if section.settings.logo != blank -%}
+          {{ section.settings.logo | image_url: width: 400 | image_tag: width: section.settings.logo_width, alt: shop.name, loading: 'eager' }}
+        {%- else -%}
+          {{ section.settings.logo_text | default: shop.name | escape }}
+        {%- endif -%}
+      </a>
+
+      <nav class="n90-hdr__nav n90-hdr__desktop" aria-label="{{ 'n90.header.main_nav' | t }}">
+        <ul role="list">
+          {%- for block in sports -%}
+            <li>
+              <button
+                type="button"
+                class="n90-hdr__navlink"
+                aria-expanded="false"
+                aria-controls="n90-hdr-mega-{{ block.id }}"
+                data-hdr-trigger
+                {{ block.shopify_attributes }}
+              >
+                {{- block.settings.sport | capitalize -}}
+              </button>
+            </li>
+          {%- endfor -%}
+          <li>
+            <button
+              type="button"
+              class="n90-hdr__navlink"
+              aria-expanded="false"
+              aria-controls="n90-hdr-mega-shop-{{ section.id }}"
+              data-hdr-trigger
+            >
+              {{- section.settings.shop_label | escape -}}
+            </button>
+          </li>
+          {%- if section.settings.club_shops_label != blank and club_url != blank -%}
+            <li>
+              <a
+                class="n90-hdr__navlink"
+                href="{{ club_url }}"
+                data-hdr-plain
+                {% if request.path == club_url %}aria-current="page"{% endif %}
+              >
+                {{- section.settings.club_shops_label | escape -}}
+              </a>
+            </li>
+          {%- endif -%}
+        </ul>
+      </nav>
+
+      <span class="n90-hdr__spacer n90-hdr__mobile" aria-hidden="true"></span>
+
+      <div class="n90-hdr__r">
+        <button
+          type="button"
+          class="n90-hdr__ibtn"
+          aria-label="{{ 'n90.header.search' | t }}"
+          aria-expanded="false"
+          aria-controls="n90-hdr-search-{{ section.id }}"
+          data-hdr-search
+        >
+          {%- render 'icon', name: 'search' -%}
+        </button>
+        {%- if shop.customer_accounts_enabled -%}
+          <a href="{{ routes.account_url }}" class="n90-hdr__ibtn n90-hdr__desktop" aria-label="{{ 'n90.header.account' | t }}">
+            {%- render 'icon', name: 'account' -%}
+          </a>
+        {%- endif -%}
+        <a href="{{ routes.cart_url }}" class="n90-hdr__ibtn" id="cart-icon-bubble">
+          {%- render 'header-cart-bubble' -%}
+        </a>
+        {%- if section.settings.quote_label != blank -%}
+          <a href="{{ quote_url }}" class="n90-hdr__quote n90-hdr__desktop">{{ section.settings.quote_label | escape }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} ═══ Sport mega menus ═══ {%- endcomment -%}
+  {%- for block in sports -%}
+    {%- assign panel_id = 'n90-hdr-mega-' | append: block.id -%}
+    {%- render 'header-sport', block: block, mode: 'panel', panel_id: panel_id, quote_url: quote_url -%}
+  {%- endfor -%}
+
+  {%- comment -%} ═══ Shop mega menu ═══ {%- endcomment -%}
+  {%- assign shop_panel_id = 'n90-hdr-mega-shop-' | append: section.id -%}
+  {%- render 'header-shop-groups',
+    menu: section.settings.shop_menu,
+    mode: 'panel',
+    panel_id: shop_panel_id,
+    feature_image: section.settings.shop_feature_image,
+    feature_title: section.settings.shop_feature_title,
+    feature_label: section.settings.shop_feature_label,
+    feature_url: shop_feature_url
+  -%}
+
+  {%- comment -%} ═══ Search ═══ {%- endcomment -%}
+  <div class="n90-hdr__search" id="n90-hdr-search-{{ section.id }}" data-hdr-panel="search" hidden>
+    <div class="n90-hdr__search-in">
+      <form action="{{ routes.search_url }}" method="get" role="search">
+        <label class="ref-sr" for="n90-hdr-q-{{ section.id }}">{{ 'n90.header.search' | t }}</label>
+        <div class="n90-hdr__search-row">
+          <input
+            id="n90-hdr-q-{{ section.id }}"
+            class="n90-hdr__search-input"
+            type="search"
+            name="q"
+            value="{{ search.terms | escape }}"
+            placeholder="{{ section.settings.search_placeholder | escape }}"
+            autocomplete="off"
+          >
+          <input type="hidden" name="options[prefix]" value="last">
+          <button type="submit" class="n90-hdr__ibtn" aria-label="{{ 'n90.header.submit_search' | t }}">
+            {%- render 'icon', name: 'arrow' -%}
+          </button>
+        </div>
+      </form>
+      <p class="n90-hdr__eyebrow">{{ section.settings.search_popular_label | escape }}</p>
+      <div class="n90-hdr__chips">
+        {%- assign popular = section.settings.popular | split: ',' -%}
+        {%- for term in popular -%}
+          {%- assign t = term | strip -%}
+          {%- if t != blank -%}
+            <a class="n90-hdr__chip" href="{{ routes.search_url }}?q={{ t | url_encode }}">{{ t | escape }}</a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  <div class="n90-hdr__shade" data-hdr-shade hidden></div>
+</header>
+
+{%- if settings.cart_type == 'notification' -%}
+  {%- render 'cart-notification', color_scheme: 'scheme-1', desktop_menu_type: 'mega' -%}
+{%- endif -%}
+
+{%- comment -%} ═══ Mobile drawer (ref .drawer.left / MobileMenu) ═══ {%- endcomment -%}
+<div class="n90-hdr__dshade" data-hdr-dshade hidden></div>
+<div
+  class="n90-hdr__drawer"
+  id="n90-hdr-drawer-{{ section.id }}"
+  role="dialog"
+  aria-modal="true"
+  aria-label="{{ 'n90.header.menu' | t }}"
+  data-hdr-drawer
+  hidden
+>
+  <div class="n90-hdr__drawer-h">
+    <a href="{{ routes.root_url }}" class="n90-hdr__logo">{{ section.settings.logo_text | default: shop.name | escape }}</a>
+    <button type="button" class="n90-hdr__ibtn" aria-label="{{ 'n90.header.close_menu' | t }}" data-hdr-drawer-close>
+      {%- render 'icon', name: 'close' -%}
+    </button>
+  </div>
+  <nav class="n90-hdr__drawer-b" aria-label="{{ 'n90.header.mobile_nav' | t }}">
+    <p class="n90-hdr__eyebrow">{{ section.settings.drawer_sports_label | escape }}</p>
+    {%- for block in sports -%}
+      <details class="n90-hdr__mrow">
+        <summary>
+          <span>{{ block.settings.sport | capitalize }}</span>
+          {%- render 'icon', name: 'chevron-right' -%}
+        </summary>
+        {%- render 'header-sport', block: block, mode: 'drawer' -%}
+      </details>
+    {%- endfor -%}
+
+    <p class="n90-hdr__eyebrow n90-hdr__eyebrow--shop">{{ section.settings.shop_label | escape }}</p>
+    {%- render 'header-shop-groups', menu: section.settings.shop_menu, mode: 'drawer' -%}
+
+    <div class="n90-hdr__mrows2">
+      {%- if section.settings.club_shops_label != blank and club_url != blank -%}
+        <a class="n90-hdr__mrow2" href="{{ club_url }}"><span>{{ section.settings.club_shops_label | escape }}</span>{%- render 'icon', name: 'chevron-right' -%}</a>
+      {%- endif -%}
+      {%- if shop.customer_accounts_enabled -%}
+        <a class="n90-hdr__mrow2" href="{{ routes.account_url }}"><span>{{ 'n90.header.account' | t }}</span>{%- render 'icon', name: 'chevron-right' -%}</a>
+      {%- endif -%}
+    </div>
+  </nav>
+  <div class="n90-hdr__drawer-f">
+    {%- if section.settings.show_localization -%}
+      <div class="n90-hdr__drawer-loc">
+        {%- assign drawer_loc_id = 'n90-loc-drawer-' | append: section.id -%}
+        {%- render 'n90-localization', id: drawer_loc_id, direction: 'up' -%}
+      </div>
+    {%- endif -%}
+    {%- if section.settings.quote_label != blank -%}
+      <a class="n90-hdr__btn" href="{{ quote_url }}">{{ section.settings.quote_label | escape }}</a>
+    {%- endif -%}
+    {%- if section.settings.whatsapp_url != blank -%}
+      <a class="n90-hdr__tlink" href="{{ section.settings.whatsapp_url }}" target="_blank" rel="noopener">{{ section.settings.whatsapp_label | escape }}</a>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var header = document.querySelector('[data-hdr]');
+    if (!header) return;
+
+    var shade = header.querySelector('[data-hdr-shade]');
+    var triggers = Array.prototype.slice.call(header.querySelectorAll('[data-hdr-trigger]'));
+    var searchBtn = header.querySelector('[data-hdr-search]');
+    var desktop = window.matchMedia('(min-width: 1024px)');
+    var FOCUSABLE = 'a[href]:not([tabindex="-1"]), button:not([disabled]), input:not([type="hidden"])';
+    var active = null;
+    var locked = false;
+
+    function panelOf(trigger) { return document.getElementById(trigger.getAttribute('aria-controls')); }
+    function focusables(el) { return Array.prototype.slice.call(el.querySelectorAll(FOCUSABLE)); }
+
+    /* ── Panels (sport megas, Shop, search) ── */
+    function close(restoreFocus) {
+      if (!active) return;
+      var trigger = active;
+      panelOf(trigger).hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      shade.hidden = true;
+      active = null;
+      locked = false;
+      if (restoreFocus) trigger.focus();
+    }
+    function open(trigger, lock, focusFirst) {
+      if (active === trigger) {
+        if (lock) locked = true;
+      } else {
+        close(false);
+        panelOf(trigger).hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        shade.hidden = false;
+        active = trigger;
+        locked = !!lock;
+      }
+      if (trigger === searchBtn) {
+        panelOf(trigger).querySelector('input[type="search"]').focus();
+      } else if (focusFirst) {
+        var first = focusables(panelOf(trigger))[0];
+        if (first) first.focus();
+      }
+    }
+
+    triggers.forEach(function (trigger) {
+      trigger.addEventListener('mouseenter', function () {
+        if (desktop.matches && active !== trigger) open(trigger, false, false);
+      });
+      /* Click locks the panel open; a second click on a locked panel closes it.
+         Keyboard activation (detail === 0) also moves focus into the panel. */
+      trigger.addEventListener('click', function (e) {
+        if (active === trigger && locked) close(false);
+        else open(trigger, true, e.detail === 0);
+      });
+      trigger.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          open(trigger, true, true);
+        }
+      });
+    });
+
+    searchBtn.addEventListener('click', function () {
+      if (active === searchBtn) close(true);
+      else open(searchBtn, true, false);
+    });
+
+    /* Plain links (Club Shops) close an unlocked menu, as in the reference */
+    header.querySelectorAll('[data-hdr-plain]').forEach(function (link) {
+      link.addEventListener('mouseenter', function () { if (!locked) close(false); });
+    });
+
+    header.addEventListener('mouseleave', function () { if (!locked) close(false); });
+    shade.addEventListener('mouseenter', function () { if (!locked) close(false); });
+    shade.addEventListener('click', function () { close(false); });
+
+    document.addEventListener('click', function (e) {
+      if (active && !header.contains(e.target)) close(false);
+    });
+    document.addEventListener('focusin', function (e) {
+      if (active && !header.contains(e.target)) close(false);
+    });
+
+    /* Keyboard inside an open panel: Tab past the last item continues to the next
+       header control; Shift+Tab before the first returns to the trigger. */
+    header.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab' || !active || active === searchBtn) return;
+      var panel = panelOf(active);
+      if (!panel.contains(document.activeElement)) return;
+      var items = focusables(panel);
+      if (!e.shiftKey && document.activeElement === items[items.length - 1]) {
+        e.preventDefault();
+        var barItems = focusables(header.querySelector('.n90-hdr__bar')).filter(function (el) { return el.offsetParent !== null; });
+        var next = barItems[barItems.indexOf(active) + 1];
+        close(false);
+        if (next) next.focus();
+      } else if (e.shiftKey && document.activeElement === items[0]) {
+        e.preventDefault();
+        active.focus();
+      }
+    });
+
+    /* ── Mobile drawer (focus trapped while open) ── */
+    var drawer = document.querySelector('[data-hdr-drawer]');
+    var dshade = document.querySelector('[data-hdr-dshade]');
+    var drawerBtn = header.querySelector('[data-hdr-drawer-open]');
+
+    function openDrawer() {
+      close(false);
+      drawer.hidden = false;
+      dshade.hidden = false;
+      drawerBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      drawer.querySelector('[data-hdr-drawer-close]').focus();
+    }
+    function closeDrawer(restoreFocus) {
+      if (drawer.hidden) return;
+      drawer.hidden = true;
+      dshade.hidden = true;
+      drawerBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      if (restoreFocus) drawerBtn.focus();
+    }
+    drawerBtn.addEventListener('click', openDrawer);
+    drawer.querySelector('[data-hdr-drawer-close]').addEventListener('click', function () { closeDrawer(true); });
+    dshade.addEventListener('click', function () { closeDrawer(true); });
+    drawer.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var items = focusables(drawer).filter(function (el) { return el.offsetParent !== null; });
+      var first = items[0];
+      var last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+    var onBreakpoint = function () { if (desktop.matches) closeDrawer(false); else close(false); };
+    if (desktop.addEventListener) desktop.addEventListener('change', onBreakpoint);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (!drawer.hidden) closeDrawer(true);
+      else if (active) close(true);
+    });
+
+    /* ── Scrolled header + page progress (ref .m-scrolled / .m-prog) ── */
+    var prog = document.querySelector('[data-hdr-prog]');
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        var y = window.scrollY;
+        header.classList.toggle('is-scrolled', y > 40);
+        if (prog) {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          prog.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
+        }
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ── Cart count bump when Dawn re-renders the bubble (ref .count.m-bump) ── */
+    var bubble = document.getElementById('cart-icon-bubble');
+    if (bubble && 'MutationObserver' in window) {
+      new MutationObserver(function () {
+        var count = bubble.querySelector('.ref-cart-count');
+        if (!count) return;
+        count.classList.remove('is-bump');
+        void count.offsetWidth;
+        count.classList.add('is-bump');
+      }).observe(bubble, { childList: true });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Header",
+  "tag": "div",
+  "class": "section-header",
+  "enabled_on": { "groups": ["header"] },
+  "max_blocks": 8,
+  "settings": [
+    { "type": "header", "content": "Logo" },
+    { "type": "text", "id": "logo_text", "label": "Wordmark", "default": "ROSTER", "info": "Used when no logo image is set." },
+    { "type": "image_picker", "id": "logo", "label": "Logo image" },
+    {
+      "type": "range", "id": "logo_width", "label": "Logo width",
+      "min": 80, "max": 240, "step": 10, "unit": "px", "default": 150
+    },
+    { "type": "header", "content": "Navigation" },
+    { "type": "text", "id": "shop_label", "label": "Shop menu label", "default": "Shop" },
+    {
+      "type": "link_list", "id": "shop_menu", "label": "Shop menu",
+      "info": "Top-level links become groups and their child links the items. Without a menu the reference groups are used."
+    },
+    { "type": "text", "id": "club_shops_label", "label": "Club shops label", "default": "Club Shops" },
+    { "type": "url", "id": "club_shops_url", "label": "Club shops link", "info": "Defaults to the page with handle club-shops; the link hides if neither exists." },
+    { "type": "header", "content": "Shop menu feature" },
+    { "type": "image_picker", "id": "shop_feature_image", "label": "Image" },
+    { "type": "text", "id": "shop_feature_title", "label": "Title", "default": "Urban Camo" },
+    { "type": "text", "id": "shop_feature_label", "label": "Link label", "default": "Shop the Look" },
+    { "type": "url", "id": "shop_feature_url", "label": "Link" },
+    { "type": "header", "content": "Actions" },
+    { "type": "text", "id": "quote_label", "label": "Quote button label", "default": "Free Quote" },
+    { "type": "url", "id": "quote_url", "label": "Quote link", "info": "Also used by \"Get a free kit mockup\" in the sport menus. Defaults to all products." },
+    { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search kits, sports, products" },
+    { "type": "text", "id": "search_popular_label", "label": "Search suggestions heading", "default": "Popular" },
+    { "type": "text", "id": "drawer_sports_label", "label": "Mobile menu sports heading", "default": "Shop by sport" },
+    { "type": "text", "id": "whatsapp_label", "label": "WhatsApp link label", "default": "Chat on WhatsApp" },
+    { "type": "url", "id": "whatsapp_url", "label": "WhatsApp link (mobile menu)", "info": "e.g. https://wa.me/447700900000. Hidden until set." },
+    { "type": "checkbox", "id": "show_localization", "label": "Show country / language selectors in the mobile menu", "info": "Only when your store sells to more than one country or language. Desktop selectors are in the Utility bar section.", "default": true },
+    {
+      "type": "text", "id": "popular", "label": "Popular searches",
+      "default": "Football kits, Training tops, Headband, Rain jacket, Club shops",
+      "info": "Comma separated. Each opens search results."
+    },
+    { "type": "checkbox", "id": "show_progress", "label": "Show page progress bar", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "sport",
+      "name": "Sport",
+      "settings": [
+        {
+          "type": "select", "id": "sport", "label": "Sport",
+          "options": [
+            { "value": "football", "label": "Football" },
+            { "value": "rugby", "label": "Rugby" },
+            { "value": "cricket", "label": "Cricket" },
+            { "value": "golf", "label": "Golf" },
+            { "value": "darts", "label": "Darts" },
+            { "value": "bowls", "label": "Bowls" }
+          ],
+          "default": "football"
+        },
+        {
+          "type": "link_list", "id": "menu", "label": "Menu",
+          "info": "Optional. Without a menu the reference items are used (Match Kits, Training Wear, Outerwear …)."
+        },
+        { "type": "url", "id": "landing_url", "label": "\"All\" link", "info": "Defaults to the collection with the sport handle (e.g. football), otherwise all products." },
+        { "type": "image_picker", "id": "feature_image", "label": "Menu feature image" },
+        { "type": "text", "id": "feature_caption", "label": "Placeholder caption", "info": "Shown until a feature image is set." },
+        { "type": "header", "content": "Menu side panel" },
+        { "type": "text", "id": "promo_title", "label": "Heading", "default": "Custom [sport] teamwear", "info": "[sport] is replaced by the sport name." },
+        { "type": "textarea", "id": "promo_facts", "label": "Facts", "default": "From 10 pieces\n3–4 week turnaround\nFree design and quote\nFree club shop setup", "info": "One per line." },
+        { "type": "text", "id": "promo_cta", "label": "Mockup link label", "default": "Get a free kit mockup" }
+      ]
+    }
+  ]
+}
+{% endschema %}
