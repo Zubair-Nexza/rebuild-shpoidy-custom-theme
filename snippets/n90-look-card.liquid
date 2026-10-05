@@ -1,0 +1,87 @@
+{%- comment -%}
+  snippets/n90-look-card.liquid
+  Editorial product card for sections/shop-the-look.liquid: 1:1 media (button → quick view
+  drawer), badge (custom or vendor), linked title, price, colour dots.
+
+  Accepts:
+  - product: {Object}
+  - badge: {String} custom badge text (defaults to the vendor)
+  - pos: {Number} position in the grid (pins without a product match by position)
+  - attrs: {String} block.shopify_attributes
+{%- endcomment -%}
+
+{%- liquid
+  assign card_badge = badge | default: product.vendor
+  assign card_img = product.featured_media.preview_image
+  assign card_variant = product.selected_or_first_available_variant
+  assign card_price = product.price | money
+  assign colour_option = blank
+  for option in product.options_with_values
+    assign option_name = option.name | downcase
+    if option_name == 'color' or option_name == 'colour'
+      assign colour_option = option
+      break
+    endif
+  endfor
+-%}
+
+<li class="n90-lk__card" data-lk-item="{{ product.id }}" data-lk-pos="pos-{{ pos }}" {{ attrs }}>
+  <button
+    type="button"
+    class="n90-lk__card-media"
+    data-lk-qv="{{ product.handle | escape }}"
+    data-lk-url="{{ product.url }}"
+    aria-haspopup="dialog"
+    aria-label="{{ 'n90.a11y.quick_view_product' | t: title: product.title | escape }}"
+  >
+    {%- if card_img != blank -%}
+      {%- assign card_alt = card_img.alt | default: product.title -%}
+      {{
+        card_img
+        | image_url: width: 800
+        | image_tag:
+          widths: '300, 450, 600, 800',
+          sizes: '(min-width: 1025px) 20vw, (min-width: 768px) 30vw, 68vw',
+          loading: 'lazy',
+          decoding: 'async',
+          alt: card_alt
+      }}
+    {%- else -%}
+      {{ 'product-1' | placeholder_svg_tag: 'n90-pc__ph' }}
+    {%- endif -%}
+    <span class="n90-lk__qv" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      {{ 'n90.a11y.quick_view' | t }}
+    </span>
+  </button>
+  {%- if card_badge != blank -%}
+    <p class="n90-lk__badge">{{ card_badge | escape }}</p>
+  {%- endif -%}
+  <h3 class="n90-lk__title"><a href="{{ product.url }}">{{ product.title | escape }}</a></h3>
+  <p class="n90-lk__price">
+    {%- if product.price_varies -%}
+      {{ 'products.product.price.from_price_html' | t: price: card_price }}
+    {%- else -%}
+      {{ card_price }}
+    {%- endif -%}
+    {%- if card_variant.compare_at_price > card_variant.price -%}
+      <s><span class="ref-sr">{{ 'products.product.price.regular_price' | t }}</span>{{ card_variant.compare_at_price | money }}</s>
+    {%- endif -%}
+  </p>
+  {%- if colour_option != blank and colour_option.values.size > 1 -%}
+    <ul class="n90-lk__dots" role="list" aria-label="{{ colour_option.name | escape }}: {{ colour_option.values.size }}">
+      {%- for value in colour_option.values limit: 6 -%}
+        {%- liquid
+          if value.swatch.image
+            assign dot_bg = value.swatch.image | image_url: width: 24 | prepend: 'url(' | append: ') center / cover'
+          elsif value.swatch.color
+            assign dot_bg = value.swatch.color
+          else
+            assign dot_bg = value.name | downcase | remove: ' '
+          endif
+        -%}
+        <li style="background: {{ dot_bg }};" title="{{ value | escape }}"></li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+</li>

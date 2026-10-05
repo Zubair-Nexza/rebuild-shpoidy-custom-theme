@@ -1,0 +1,104 @@
+{%- comment -%}
+  snippets/n90-kit-art.liquid
+  Port of the reference KitArt component (tpl-art): flat SVG mock of a shirt, kit,
+  jacket, camo top, ball, headband or bag. Used as fallback art when no product is set.
+
+  Accepts:
+  - kind: {String} kit | top | jacket | camo | ball | band | bag (default kit)
+  - pattern: {String} plain | pulse | apex | hoops | stripes | sash (shirts only)
+  - c1, c2, c3, ink: {String} colours (defaults: Carbon, Canvas, Volt, Carbon)
+{%- endcomment -%}
+
+{%- liquid
+  assign kind = kind | default: 'kit'
+  assign pattern = pattern | default: 'plain'
+  assign c1 = c1 | default: '#181818'
+  assign c2 = c2 | default: '#FFFFFF'
+  assign c3 = c3 | default: '#D4FF3A'
+  assign ink = ink | default: '#181818'
+  assign shirt_kinds = 'kit,top,jacket,camo' | split: ','
+  assign dy = 36
+  if kind == 'kit'
+    assign dy = 0
+  endif
+-%}
+
+<svg class="n90-kit-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+  {%- if shirt_kinds contains kind -%}
+    <g transform="translate(0,{{ dy }})">
+      {%- if kind == 'kit' -%}
+        <path d="M140 410 L260 410 L270 478 L212 478 L200 446 L188 478 L130 478 Z" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="140" y="410" width="120" height="9" fill="{{ c2 }}" stroke="{{ ink }}" stroke-width="2"/>
+      {%- endif -%}
+      {%- if kind == 'jacket' -%}
+        <path d="M150 96 L178 84 Q200 100 222 84 L250 96 L300 118 Q318 126 322 150 L338 330 L304 336 L286 196 L266 184 L266 392 Q200 400 134 392 L134 184 L114 196 L96 336 L62 330 L78 150 Q82 126 100 118 Z" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2" stroke-linejoin="round"/>
+      {%- else -%}
+        <path d="M150 96 L178 84 Q200 100 222 84 L250 96 L316 132 L294 196 L266 184 L266 392 Q200 400 134 392 L134 184 L106 196 L84 132 Z" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2" stroke-linejoin="round"/>
+      {%- endif -%}
+
+      {%- if kind == 'camo' -%}
+        <g>
+          <ellipse cx="162" cy="222" rx="22" ry="13" fill="{{ c2 }}"/>
+          <ellipse cx="232" cy="248" rx="26" ry="15" fill="{{ c3 }}"/>
+          <ellipse cx="176" cy="300" rx="30" ry="17" fill="{{ c3 }}"/>
+          <ellipse cx="240" cy="338" rx="20" ry="13" fill="{{ c2 }}"/>
+          <ellipse cx="156" cy="364" rx="17" ry="11" fill="{{ c2 }}"/>
+          <ellipse cx="208" cy="196" rx="18" ry="10" fill="{{ c3 }}"/>
+          <ellipse cx="214" cy="370" rx="16" ry="10" fill="{{ c3 }}"/>
+        </g>
+      {%- else -%}
+        {%- case pattern -%}
+          {%- when 'hoops' -%}
+            <g fill="{{ c2 }}"><rect x="135" y="214" width="130" height="26"/><rect x="135" y="266" width="130" height="26"/><rect x="135" y="318" width="130" height="26"/></g>
+          {%- when 'stripes' -%}
+            <g fill="{{ c2 }}"><rect x="152" y="118" width="14" height="274"/><rect x="184" y="104" width="14" height="292"/><rect x="216" y="104" width="14" height="292"/><rect x="248" y="118" width="14" height="274"/></g>
+          {%- when 'sash' -%}
+            <polygon points="135,340 135,380 265,236 265,196" fill="{{ c2 }}"/>
+          {%- when 'apex' -%}
+            <polygon points="135,206 200,262 265,206 265,238 200,294 135,238" fill="{{ c2 }}"/>
+          {%- when 'pulse' -%}
+            <polyline points="135,252 172,252 184,226 200,280 214,238 226,252 265,252" fill="none" stroke="{{ c2 }}" stroke-width="9" stroke-linejoin="miter"/>
+        {%- endcase -%}
+      {%- endif -%}
+
+      {%- if kind == 'jacket' -%}
+        <g fill="{{ c2 }}" stroke="{{ ink }}" stroke-width="1.5">
+          <polygon points="96,336 62,330 63,318 97,324"/>
+          <polygon points="304,336 338,330 337,318 303,324"/>
+        </g>
+        <line x1="200" y1="100" x2="200" y2="396" stroke="{{ c2 }}" stroke-width="3"/>
+      {%- else -%}
+        <g fill="{{ c2 }}" stroke="{{ ink }}" stroke-width="1.5">
+          <polygon points="84,132 106,196 115,192 93,128"/>
+          <polygon points="316,132 294,196 285,192 307,128"/>
+        </g>
+      {%- endif -%}
+      <path d="M178 84 Q200 112 222 84" fill="none" stroke="{{ c2 }}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M178 84 Q200 112 222 84" fill="none" stroke="{{ ink }}" stroke-width="1.5"/>
+      <circle cx="236" cy="150" r="11" fill="none" stroke="{{ c2 }}" stroke-width="2.5"/>
+      <path d="M134 392 Q200 400 266 392" fill="none" stroke="{{ ink }}" stroke-width="2"/>
+    </g>
+  {%- elsif kind == 'ball' -%}
+    <ellipse cx="200" cy="392" rx="96" ry="10" fill="{{ ink }}" opacity="0.08"/>
+    <circle cx="200" cy="250" r="120" fill="{{ c2 }}" stroke="{{ ink }}" stroke-width="2.5"/>
+    <polygon points="200,208 240,237 225,284 175,284 160,237" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2"/>
+    <g stroke="{{ ink }}" stroke-width="2" fill="none">
+      <line x1="200" y1="208" x2="200" y2="150"/><line x1="240" y1="237" x2="295" y2="219"/><line x1="225" y1="284" x2="259" y2="331"/><line x1="175" y1="284" x2="141" y2="331"/><line x1="160" y1="237" x2="105" y2="219"/>
+    </g>
+    <g fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2">
+      <path d="M170 138 L200 150 L230 138 Q200 128 170 138 Z"/><path d="M295 219 L312 196 Q322 222 318 250 Z"/><path d="M259 331 L290 330 Q275 350 250 362 Z"/><path d="M141 331 L150 362 Q125 350 110 330 Z"/><path d="M105 219 L82 250 Q78 222 88 196 Z"/>
+    </g>
+    <circle cx="200" cy="250" r="120" fill="none" stroke="{{ ink }}" stroke-width="2.5"/>
+  {%- elsif kind == 'band' -%}
+    <rect x="70" y="205" width="260" height="90" rx="45" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2.5"/>
+    <rect x="70" y="243" width="260" height="14" fill="{{ c2 }}"/>
+    <rect x="70" y="205" width="260" height="90" rx="45" fill="none" stroke="{{ ink }}" stroke-width="2.5"/>
+    <circle cx="200" cy="250" r="14" fill="{{ c1 }}" stroke="{{ c2 }}" stroke-width="3"/>
+  {%- elsif kind == 'bag' -%}
+    <path d="M160 184 Q160 128 200 128 Q240 128 240 184" fill="none" stroke="{{ ink }}" stroke-width="10" stroke-linecap="round"/>
+    <rect x="100" y="180" width="200" height="220" rx="20" fill="{{ c1 }}" stroke="{{ ink }}" stroke-width="2.5"/>
+    <rect x="130" y="272" width="140" height="92" rx="10" fill="none" stroke="{{ c2 }}" stroke-width="3"/>
+    <line x1="140" y1="290" x2="260" y2="290" stroke="{{ c2 }}" stroke-width="2"/>
+    <circle cx="236" cy="222" r="11" fill="none" stroke="{{ c2 }}" stroke-width="2.5"/>
+  {%- endif -%}
+</svg>

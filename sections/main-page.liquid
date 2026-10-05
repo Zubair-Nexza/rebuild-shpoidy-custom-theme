@@ -1,0 +1,28 @@
+{%- comment -%}
+  sections/main-page.liquid
+  Clean Sport standard page: 820px reading column, display title,
+  article-style body typography (assets/n90-prose.css, shared with policy pages).
+{%- endcomment -%}
+
+{{ 'n90-prose.css' | asset_url | stylesheet_tag }}
+
+<div class="n90-pg">
+  {%- if section.settings.eyebrow != blank -%}
+    <p class="n90-pg__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+  {%- endif -%}
+  <h1 class="n90-pg__title">{{ page.title | escape }}</h1>
+  <div class="n90-prose rte">
+    {{ page.content }}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main-page.name",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "info": "Small label above the page title. Leave blank to hide." }
+  ]
+}
+{% endschema %}

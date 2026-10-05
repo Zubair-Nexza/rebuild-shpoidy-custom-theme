@@ -1,0 +1,394 @@
+{%- comment -%}
+  sections/finish-the-kit.liquid
+  ROSTER — "Finish the kit" (Accessories & equipment)
+  Reference: data-section="AccessoriesRow" (.acc-head + .pills / .acc-row of .acc / .acc-ic / .acc-svg / .acc-name)
+
+  Design change from the reference: the 128px circular icon tiles become 1:1 squares
+  with 12px corners and a hairline border. Kept from the reference: Carbon active pill,
+  7-column row, icon spring (scale 1.1, rotate -6deg), staggered mUp entrance that
+  replays on every filter change, snap-scrolling row below 1024px.
+{%- endcomment -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --ftk-pt: {{ section.settings.padding_top }}px;
+    --ftk-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-ftk-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+  /* ref .sec.sec-top */
+  .n90-ftk {
+    padding: var(--ftk-pt) 0 var(--ftk-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  .n90-ftk--rule { border-top: 1px solid var(--n90-line); }
+
+  /* ref .acc-head */
+  .n90-ftk__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  .n90-ftk__eyebrow {
+    margin: 0 0 16px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-ftk__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(42px, 4.2vw, 60px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+
+  /* ref .pills / .pill */
+  .n90-ftk__pills {
+    flex: none;
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--n90-surface);
+  }
+  .n90-ftk__pill {
+    min-height: 44px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--n90-muted);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .3s var(--n90-ease), color .3s;
+  }
+  .n90-ftk__pill:hover { color: var(--n90-carbon); }
+  .n90-ftk__pill[aria-pressed="true"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+
+  /* ref .acc-row — 7 columns */
+  .n90-ftk__row {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-ftk__row > li { min-width: 0; }
+  .n90-ftk__row > li[hidden] { display: none; }
+  /* ref .acc mUp stagger — replayed on filter change */
+  .n90-ftk__row.is-filtering > li { animation: n90-ftk-up .55s var(--n90-ease) both; animation-delay: var(--ftk-d, 0s); }
+
+  /* ref .acc */
+  .n90-ftk__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    text-align: center;
+    color: var(--n90-carbon);
+    text-decoration: none;
+  }
+  /* ref .acc-ic → rounded square */
+  .n90-ftk__tile {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--n90-line);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    transition: transform .45s var(--n90-spring), border-color .3s var(--n90-ease), box-shadow .3s var(--n90-ease);
+  }
+  .n90-ftk__card:hover .n90-ftk__tile,
+  .n90-ftk__card:focus-visible .n90-ftk__tile {
+    transform: translateY(-4px);
+    border-color: var(--n90-carbon);
+    box-shadow: 0 10px 24px -14px rgba(var(--n90-carbon-rgb), .35);
+  }
+  .n90-ftk__tile img {
+    max-width: 65%;
+    max-height: 65%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: transform .45s var(--n90-spring);
+  }
+  /* ref .acc-svg */
+  .n90-ftk__icon {
+    width: 40%;
+    height: 40%;
+    transition: transform .45s var(--n90-spring);
+  }
+  .n90-ftk__card:hover .n90-ftk__icon,
+  .n90-ftk__card:hover .n90-ftk__tile img { transform: scale(1.1) rotate(-6deg); }
+
+  /* ref .acc-name / .xs.muted */
+  .n90-ftk__name {
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.1;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .n90-ftk__sub { font-size: 12px; color: var(--n90-muted); }
+
+  .n90-ftk__empty { margin: 0; font-size: 14px; color: var(--n90-muted); }
+  .n90-ftk__card:focus-visible { outline: none; }
+  .n90-ftk__card:focus-visible .n90-ftk__tile { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-ftk__pill:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Laptop 1024–1199: tighter type so 7 columns still fit */
+  @media screen and (max-width: 1199px) {
+    .n90-ftk__name { font-size: 16px; }
+  }
+
+  /* Tablet + mobile < 1024: snap-scrolling row (ref .is-m .acc-row) */
+  @media screen and (max-width: 1023px) {
+    .n90-ftk__head { flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+    .n90-ftk__row {
+      display: flex;
+      gap: 12px;
+      margin: 0 calc(var(--n90-gutter) * -1);
+      padding: 0 var(--n90-gutter) 8px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding: 0 var(--n90-gutter);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .n90-ftk__row::-webkit-scrollbar { display: none; }
+    .n90-ftk__row > li { flex: 0 0 clamp(120px, 21vw, 168px); scroll-snap-align: start; }
+    .n90-ftk__name { font-size: 15px; }
+  }
+
+  @media screen and (max-width: 767px) {
+    .n90-ftk { padding: min(var(--ftk-pt), 64px) 0 min(var(--ftk-pb), 64px); }
+    .n90-ftk__pills { align-self: stretch; }
+    .n90-ftk__pill { flex: 1; padding: 0 12px; font-size: 14px; }
+  }
+
+  @media (hover: none) {
+    .n90-ftk__card:hover .n90-ftk__tile { transform: none; box-shadow: none; border-color: var(--n90-line); }
+    .n90-ftk__card:hover .n90-ftk__icon,
+    .n90-ftk__card:hover .n90-ftk__tile img { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-ftk__row.is-filtering > li { animation: none; }
+    .n90-ftk__tile,
+    .n90-ftk__icon,
+    .n90-ftk__tile img,
+    .n90-ftk__pill { transition: none; }
+  }
+</style>
+
+<section
+  class="n90-ftk{% if section.settings.show_rule %} n90-ftk--rule{% endif %}"
+  id="n90-ftk-{{ section.id }}"
+  aria-labelledby="n90-ftk-title-{{ section.id }}"
+>
+  <div class="page-width">
+    <div class="n90-ftk__head" data-n90-reveal>
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-ftk__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-ftk__heading" id="n90-ftk-title-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+      </div>
+      {%- if section.settings.show_filters -%}
+        <div class="n90-ftk__pills" role="group" aria-label="{{ 'n90.a11y.filter_items' | t }}">
+          <button type="button" class="n90-ftk__pill" aria-pressed="true" data-ftk-filter="all">{{ section.settings.label_all | escape }}</button>
+          <button type="button" class="n90-ftk__pill" aria-pressed="false" data-ftk-filter="accessories">{{ section.settings.label_accessories | escape }}</button>
+          <button type="button" class="n90-ftk__pill" aria-pressed="false" data-ftk-filter="equipment">{{ section.settings.label_equipment | escape }}</button>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <ul class="n90-ftk__row" role="list" data-n90-stagger>
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign b = block.settings
+          assign card_url = b.link
+          if card_url == blank
+            assign card_url = routes.collections_url | append: '/' | append: b.title | handleize
+          endif
+        -%}
+        <li data-ftk-cat="{{ b.category }}" {{ block.shopify_attributes }}>
+          <a href="{{ card_url }}" class="n90-ftk__card">
+            <span class="n90-ftk__tile">
+              {%- if b.image != blank -%}
+                {{
+                  b.image
+                  | image_url: width: 400
+                  | image_tag:
+                    widths: '160, 240, 320, 400',
+                    sizes: '(min-width: 1024px) 10vw, 168px',
+                    loading: 'lazy', decoding: 'async',
+                    alt: ''
+                }}
+              {%- else -%}
+                <svg class="n90-ftk__icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  {%- case b.icon -%}
+                    {%- when 'band' -%}<rect x="6" y="18" width="36" height="12" rx="6"/><path d="M6 24h36"/>
+                    {%- when 'wrist' -%}<rect x="14" y="10" width="20" height="28" rx="8"/><path d="M14 20h20M14 28h20"/>
+                    {%- when 'towel' -%}<path d="M12 8h24v32H12z"/><path d="M12 30h24M12 34h24"/>
+                    {%- when 'glove' -%}<path d="M14 40V20c0-2 3-2 3 0v6V10c0-2 3-2 3 0v12V8c0-2 3-2 3 0v14V10c0-2 3-2 3 0v16l3-4c1.5-1.5 4 0 3 2l-6 10c-2 4-5 6-9 6h-3z"/><path d="M14 35h14"/>
+                    {%- when 'bag' -%}<rect x="8" y="16" width="32" height="24" rx="4"/><path d="M18 16v-4a6 6 0 0 1 12 0v4M8 26h32"/>
+                    {%- when 'ball' -%}<circle cx="24" cy="24" r="16"/><path d="M24 17l6.5 4.7-2.5 7.6h-8l-2.5-7.6z"/><path d="M24 8v9M39 19l-8.5 2.7M33 37l-5-7.7M15 37l5-7.7M9 19l8.5 2.7"/>
+                    {%- else -%}<path d="M24 8l3.5 10.5L38 22l-10.5 3.5L24 36l-3.5-10.5L10 22l10.5-3.5z"/>
+                  {%- endcase -%}
+                </svg>
+              {%- endif -%}
+            </span>
+            <span class="n90-ftk__name">{{ b.title | escape }}</span>
+            {%- if b.subtext != blank -%}
+              <span class="n90-ftk__sub">{{ b.subtext | escape }}</span>
+            {%- endif -%}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-ftk-' + {{ section.id | json }});
+    if (!root) return;
+    var pills = Array.prototype.slice.call(root.querySelectorAll('[data-ftk-filter]'));
+    var row = root.querySelector('.n90-ftk__row');
+    var items = Array.prototype.slice.call(row.children);
+    if (!pills.length) return;
+
+    function filter(cat) {
+      pills.forEach(function (p) { p.setAttribute('aria-pressed', p.dataset.ftkFilter === cat ? 'true' : 'false'); });
+
+      var shown = 0;
+      items.forEach(function (li) {
+        var match = cat === 'all' || li.dataset.ftkCat === cat;
+        li.hidden = !match;
+        if (match) {
+          li.style.setProperty('--ftk-d', Math.min(shown, 6) * 0.04 + 's');
+          shown++;
+        }
+      });
+
+      /* Replay the reference mUp stagger (.acc nth-child delays 0.04s) */
+      row.classList.remove('is-filtering');
+      void row.offsetWidth;
+      row.classList.add('is-filtering');
+      row.scrollLeft = 0;
+    }
+
+    pills.forEach(function (p) {
+      p.addEventListener('click', function () { filter(p.dataset.ftkFilter); });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Finish the kit",
+  "tag": "div",
+  "class": "section-finish-the-kit",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 12,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Accessories & equipment" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Finish the kit" },
+    { "type": "header", "content": "Filter pills" },
+    { "type": "checkbox", "id": "show_filters", "label": "Show filter pills", "default": true },
+    { "type": "text", "id": "label_all", "label": "All label", "default": "All" },
+    { "type": "text", "id": "label_accessories", "label": "Accessories label", "default": "Accessories" },
+    { "type": "text", "id": "label_equipment", "label": "Equipment label", "default": "Equipment" },
+    { "type": "header", "content": "Layout" },
+    { "type": "checkbox", "id": "show_rule", "label": "Show top divider", "default": true },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Item",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Headbands" },
+        { "type": "text", "id": "subtext", "label": "Price or subtext", "default": "£5.99" },
+        {
+          "type": "url", "id": "link", "label": "Link",
+          "info": "Collection or product. Defaults to /collections/<title>."
+        },
+        {
+          "type": "select", "id": "category", "label": "Filter category",
+          "options": [
+            { "value": "accessories", "label": "Accessories" },
+            { "value": "equipment", "label": "Equipment" }
+          ],
+          "default": "accessories"
+        },
+        {
+          "type": "image_picker", "id": "image", "label": "Image",
+          "info": "Shown centred at up to 65% of the tile. Replaces the icon."
+        },
+        {
+          "type": "select", "id": "icon", "label": "Icon",
+          "options": [
+            { "value": "band", "label": "Headband" },
+            { "value": "wrist", "label": "Wristband" },
+            { "value": "towel", "label": "Towel" },
+            { "value": "ball", "label": "Football" },
+            { "value": "glove", "label": "Goalkeeper glove" },
+            { "value": "bag", "label": "Bag" },
+            { "value": "star", "label": "Star" }
+          ],
+          "default": "band"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Finish the kit",
+      "blocks": [
+        { "type": "item", "settings": { "title": "Headbands", "subtext": "£5.99", "category": "accessories", "icon": "band" } },
+        { "type": "item", "settings": { "title": "Wristbands", "subtext": "£[X]", "category": "accessories", "icon": "wrist" } },
+        { "type": "item", "settings": { "title": "Towels", "subtext": "£[X]", "category": "accessories", "icon": "towel" } },
+        { "type": "item", "settings": { "title": "Footballs", "subtext": "From £10.99", "category": "equipment", "icon": "ball" } },
+        { "type": "item", "settings": { "title": "Goalkeeper Gloves", "subtext": "£[X]", "category": "equipment", "icon": "glove" } },
+        { "type": "item", "settings": { "title": "Bags & Backpacks", "subtext": "£[X]", "category": "equipment", "icon": "bag" } },
+        { "type": "item", "settings": { "title": "Custom Accessories", "subtext": "From 10 pieces", "category": "accessories", "icon": "star" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

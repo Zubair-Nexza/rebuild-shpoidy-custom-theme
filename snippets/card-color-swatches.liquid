@@ -1,0 +1,65 @@
+{%- comment -%}
+  snippets/card-color-swatches.liquid
+  Interactive colour swatches under the product card title (snippets/n90-product-card.liquid).
+  Hover previews a colour's variant image in the card's 1:1 media; click / tap keeps it and
+  points the card links at that variant. More than 4 colours → "+N" pill to the product.
+  Behaviour: assets/n90-card-swatches.js · Styles: assets/n90-product-card.css
+
+  Accepts:
+  - product: {Object}
+  - option: {Object} the colour product_option (from product.options_with_values)
+{%- endcomment -%}
+
+{%- liquid
+  assign opt_index = option.position | minus: 1
+  assign shown = 4
+  assign extra = option.values.size | minus: shown
+-%}
+
+<div class="n90-sw" role="group" aria-label="{{ option.name | escape }}: {{ option.values.size }}" data-n90-swatches>
+  {%- for value in option.values limit: shown -%}
+    {%- liquid
+      assign sw_variant = blank
+      assign sw_media = blank
+      for v in product.variants
+        if v.options[opt_index] == value.name
+          if sw_variant == blank
+            assign sw_variant = v
+          endif
+          if v.featured_media != blank
+            assign sw_variant = v
+            assign sw_media = v.featured_media.preview_image
+            break
+          endif
+        endif
+      endfor
+
+      if value.swatch.image
+        assign sw_bg = value.swatch.image | image_url: width: 48 | prepend: 'url(' | append: ') center / cover'
+      elsif value.swatch.color
+        assign sw_bg = value.swatch.color
+      else
+        assign sw_bg = value.name | downcase | remove: ' '
+      endif
+    -%}
+    <button
+      type="button"
+      class="n90-sw__dot"
+      style="--sw: {{ sw_bg }};"
+      aria-label="{{ value.name | escape }}"
+      aria-pressed="false"
+      title="{{ value.name | escape }}"
+      data-n90-swatch
+      {% if sw_variant != blank %}
+        data-url="{{ sw_variant.url }}"
+      {% endif %}
+      {% if sw_media != blank %}
+        data-src="{{ sw_media | image_url: width: 800 }}"
+        data-srcset="{{ sw_media | image_url: width: 300 }} 300w, {{ sw_media | image_url: width: 450 }} 450w, {{ sw_media | image_url: width: 600 }} 600w, {{ sw_media | image_url: width: 800 }} 800w, {{ sw_media | image_url: width: 1080 }} 1080w"
+      {% endif %}
+    ></button>
+  {%- endfor -%}
+  {%- if extra > 0 -%}
+    <a class="n90-sw__more" href="{{ product.url }}" aria-label="{{ 'n90.a11y.more_options' | t: count: extra, option: option.name | downcase | escape }}">+{{ extra }}</a>
+  {%- endif -%}
+</div>

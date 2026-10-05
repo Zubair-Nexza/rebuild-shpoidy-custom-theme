@@ -1,0 +1,161 @@
+{%- comment -%}
+  snippets/product-badge.liquid
+  Clean Sport badge engine for product cards and the PDP gallery.
+  Shape, position and labels: Theme settings → ROSTER badges.
+  Styles: assets/n90-tokens.css (.n90-badges / .n90-badge)
+
+  Order: Sold out → Sale / % off → tag badges (in tag order) → metafield badge.
+  Tag badges (case-insensitive):
+    badge:new         → "New drop"     (Volt)
+    badge:pre-season  → "Pre-season"   (Volt)
+    badge:bestseller  → "Bestseller"   (Carbon)
+    badge:popular     → "Popular"      (Carbon)
+    badge:custom      → text from the custom.badge product metafield
+    badge:<any text>  → that text      (custom badge colour)
+  Legacy raw tags still work: new, popular, bestseller / best-seller, pre-season / preseason.
+  The custom.badge metafield (single line text) also shows on its own, without the tag.
+
+  Accepts:
+  - product: {Object}
+  - variant: {Object} optional, defaults to the selected or first available variant
+  - context: {String} 'card' (default) or 'pdp' — PDP keeps hidden Sold out / Sale
+    badges in the markup so the variant picker can toggle them
+  - limit: {Number} max badges shown (default 2 on cards, 3 on the PDP)
+{%- endcomment -%}
+
+{%- liquid
+  assign ctx = context | default: 'card'
+  assign is_pdp = false
+  if ctx == 'pdp'
+    assign is_pdp = true
+  endif
+  assign max_badges = limit
+  if max_badges == blank
+    if is_pdp
+      assign max_badges = 3
+    else
+      assign max_badges = 2
+    endif
+  endif
+
+  assign v = variant | default: product.selected_or_first_available_variant
+  assign shape = settings.n90_badge_shape | default: 'sharp'
+  assign position = settings.n90_badge_position | default: 'left'
+  assign custom_tone = settings.n90_badge_custom_style | default: 'carbon'
+
+  assign sold_out = false
+  if is_pdp
+    if v.available == false
+      assign sold_out = true
+    endif
+  elsif product.available == false
+    assign sold_out = true
+  endif
+
+  assign on_sale = false
+  assign sale_text = settings.n90_badge_sale_label | default: 'Sale'
+  if sold_out == false and v.compare_at_price > v.price
+    assign on_sale = true
+    if settings.n90_badge_sale_format == 'percent'
+      assign saving = v.compare_at_price | minus: v.price
+      assign pct = saving | times: 100.0 | divided_by: v.compare_at_price | round
+      assign sale_text = pct | append: '% off'
+    endif
+  endif
+
+  assign used = 0
+  if sold_out
+    assign used = 1
+  elsif on_sale
+    assign used = 1
+  endif
+  assign seen = '|'
+-%}
+
+{%- capture tag_badges -%}
+  {%- for tag in product.tags -%}
+    {%- liquid
+      if used >= max_badges
+        break
+      endif
+      assign tag_down = tag | downcase | strip
+      assign prefix = tag_down | slice: 0, 6
+      assign is_prefixed = false
+      if prefix == 'badge:'
+        assign is_prefixed = true
+        assign key = tag_down | remove_first: 'badge:' | strip
+      else
+        comment
+          Legacy raw tags (pre badge: prefix) — only this fixed list, so ordinary tags never become badges
+        endcomment
+        case tag_down
+          when 'new', 'popular', 'bestseller', 'best-seller', 'pre-season', 'preseason'
+            assign key = tag_down
+          else
+            continue
+        endcase
+      endif
+      assign label = blank
+      assign tone = custom_tone
+      case key
+        when 'new', 'new-drop', 'new drop'
+          assign label = settings.n90_badge_new_label | default: 'New drop'
+          assign tone = 'volt'
+        when 'pre-season', 'preseason', 'pre season'
+          assign label = settings.n90_badge_preseason_label | default: 'Pre-season'
+          assign tone = 'volt'
+        when 'bestseller', 'best-seller', 'best seller'
+          assign label = settings.n90_badge_bestseller_label | default: 'Bestseller'
+          assign tone = 'carbon'
+        when 'popular'
+          assign label = settings.n90_badge_popular_label | default: 'Popular'
+          assign tone = 'carbon'
+        when 'custom'
+          assign label = blank
+        else
+          if is_prefixed
+            assign tag_len = tag | strip | size
+            assign label = tag | strip | slice: 6, tag_len | strip
+          endif
+      endcase
+      assign label_key = label | downcase | prepend: '|' | append: '|'
+      if label == blank or seen contains label_key
+        continue
+      endif
+      assign seen = seen | append: label_key
+      assign used = used | plus: 1
+    -%}
+    <span class="n90-badge n90-badge--{{ tone }}">{{ label | escape }}</span>
+  {%- endfor -%}
+
+  {%- liquid
+    assign mf_badge = product.metafields.custom.badge.value
+    if mf_badge != blank and used < max_badges
+      assign label_key = mf_badge | downcase | prepend: '|' | append: '|'
+      unless seen contains label_key
+        assign used = used | plus: 1
+        assign mf_label = mf_badge | escape
+        echo '<span class="n90-badge n90-badge--' | append: custom_tone | append: '">' | append: mf_label | append: '</span>'
+      endunless
+    endif
+  -%}
+{%- endcapture -%}
+
+{%- if is_pdp or used > 0 -%}
+  <span
+    class="n90-badges n90-badges--{{ position }} n90-badges--{{ shape }}{% if is_pdp %} n90-badges--pdp{% endif %}"
+    {% if is_pdp %}
+      data-n90-badges data-sale-format="{{ settings.n90_badge_sale_format | escape }}" data-sale-label="{{ settings.n90_badge_sale_label | default: 'Sale' | escape }}"
+    {% endif %}
+  >
+    {%- if is_pdp -%}
+      <span class="n90-badge n90-badge--soldout" data-n90-badge="soldout"{% unless sold_out %} hidden{% endunless %}>{{ settings.n90_badge_soldout_label | default: 'Sold out' | escape }}</span>
+      <span class="n90-badge n90-badge--sale" data-n90-badge="sale"{% unless on_sale %} hidden{% endunless %}>{{ sale_text | escape }}</span>
+    {%- elsif sold_out -%}
+      <span class="n90-badge n90-badge--soldout">{{ settings.n90_badge_soldout_label | default: 'Sold out' | escape }}</span>
+    {%- elsif on_sale -%}
+      <span class="n90-badge n90-badge--sale">{{ sale_text | escape }}</span>
+    {%- endif -%}
+    {{- tag_badges -}}
+  </span>
+{%- endif -%}

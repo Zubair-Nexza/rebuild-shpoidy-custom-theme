@@ -1,0 +1,103 @@
+{%- comment -%}
+  snippets/n90-bundle-panel.liquid
+  One bundle panel for sections/composite-bundle-builder.liquid: name, live price, optional
+  team note / contents lines, and the CTA row. Behaviour: assets/n90-bundle-builder.js
+
+  "Shop the bundle":
+  - adds the 3 core products + ticked add-ons to the cart when every core product is in stock
+    and has no options to choose (single variant) — data-cb-mode="cart";
+  - otherwise links to button_url (the bundle / collection page where sizes are chosen) —
+    data-cb-mode="link". It is never disabled.
+
+  Accepts:
+  - pid: {String} unique panel id · first: {Boolean} · tabbed: {Boolean}
+  - title, team_label, team_note, contents, price_text: {String}
+  - p1, p2, p3: {Object} core products
+  - button_label, button_url, quote_label, quote_url: {String}
+  - attrs: {String} block.shopify_attributes
+{%- endcomment -%}
+
+{%- liquid
+  assign addable = true
+  assign total = 0
+  assign ids = ''
+  assign core_count = 0
+  for n in (1..3)
+    case n
+      when 1
+        assign cp = p1
+      when 2
+        assign cp = p2
+      else
+        assign cp = p3
+    endcase
+    if cp == blank
+      assign addable = false
+      continue
+    endif
+    assign core_count = core_count | plus: 1
+    assign cv = cp.selected_or_first_available_variant
+    assign total = total | plus: cv.price
+    if cp.has_only_default_variant == false or cv.available == false
+      assign addable = false
+    endif
+    unless ids == ''
+      assign ids = ids | append: ','
+    endunless
+    assign ids = ids | append: cv.id
+  endfor
+  if core_count < 3
+    assign addable = false
+  endif
+-%}
+
+<div
+  class="n90-cb__panel"
+  id="n90-cb-panel-{{ pid }}"
+  data-cb-panel
+  data-bundle-title="{{ title | escape }}"
+  data-core-total="{% if core_count == 3 %}{{ total }}{% endif %}"
+  data-core-ids="{% if addable %}{{ ids }}{% endif %}"
+  {% if tabbed %}
+    role="tabpanel" aria-labelledby="n90-cb-tab-{{ pid }}"
+  {% endif %}
+  {% unless first %}
+    hidden
+  {% endunless %}
+  {{ attrs }}
+>
+  <div class="n90-cb__copy">
+    <p class="n90-cb__name">{{ title | escape }}</p>
+    {%- if core_count == 3 or price_text != blank -%}
+      <p class="n90-cb__price">
+        <span data-cb-total>{%- if core_count == 3 -%}{{ total | money }}{%- else -%}{{ price_text | escape }}{%- endif -%}</span>
+        <span class="n90-cb__price-note" data-cb-addon-note hidden>{{ 'n90.bundle.incl_addons' | t }}</span>
+      </p>
+    {%- endif -%}
+    {%- if team_note != blank -%}
+      <p class="n90-cb__team">{%- if team_label != blank -%}<span>{{ team_label | escape }}</span>{%- endif -%}<strong>{{ team_note | escape }}</strong></p>
+    {%- endif -%}
+    {%- if contents != blank -%}
+      <p class="n90-cb__included">{{ contents | escape }}</p>
+    {%- endif -%}
+  </div>
+
+  <div class="n90-cb__cta">
+    {%- if addable -%}
+      <button type="button" class="n90-cb__btn bundle-submit-btn" data-cb-submit data-cb-mode="cart" data-fallback-url="{{ button_url }}">
+        <span>{{ button_label | escape }}</span>
+        {%- render 'icon', name: 'arrow' -%}
+        <span class="n90-cb__spin" aria-hidden="true"></span>
+      </button>
+    {%- else -%}
+      <a href="{{ button_url }}" class="n90-cb__btn bundle-submit-btn" data-cb-mode="link">
+        <span>{{ button_label | escape }}</span>
+        {%- render 'icon', name: 'arrow' -%}
+      </a>
+    {%- endif -%}
+    {%- if quote_label != blank -%}
+      <a href="{{ quote_url }}" class="n90-cb__tlink">{{ quote_label | escape }}</a>
+    {%- endif -%}
+  </div>
+  <p class="n90-cb__error" role="alert" data-cb-error></p>
+</div>

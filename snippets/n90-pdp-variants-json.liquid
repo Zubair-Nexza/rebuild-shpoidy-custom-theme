@@ -1,0 +1,23 @@
+{%- comment -%}
+  snippets/n90-pdp-variants-json.liquid
+  Variant data for the product page picker (sections/n90-main-product.liquid).
+
+  Accepts:
+  - product: {Object}
+{%- endcomment -%}
+<script type="application/json" data-pdp-variants-json>
+  [
+    {%- for variant in product.variants -%}
+      {
+        "id": {{ variant.id | json }},
+        "options": {{ variant.options | json }},
+        "available": {{ variant.available | json }},
+        "price": {{ variant.price | money | json }},
+        "price_cents": {{ variant.price | json }},
+        "compare_cents": {{ variant.compare_at_price | default: 0 | json }},
+        "compare": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | json }}{% else %}null{% endif %},
+        "media": {% if variant.featured_media %}{{ variant.featured_media.id | json }}{% else %}null{% endif %}
+      }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ]
+</script>

@@ -1,0 +1,235 @@
+{%- comment -%}
+  sections/main-product-custom-kit.liquid
+  ROSTER — Custom-made teamwear / mockup product page (template: product.custom-kit).
+  No Add to cart, Buy it now or quantity: the price reads "Team pricing from £X (Min order 10
+  pieces)" and the Volt button opens the mockup & quote inquiry (snippets/n90-kit-inquiry.liquid).
+  Left: 1:1 gallery with thumbnails. Right: eyebrow, title, team price, what's included,
+  inquiry button, description.
+{%- endcomment -%}
+
+{%- liquid
+  assign s = section.settings
+  assign media_count = product.media.size
+  assign first_media = product.featured_media
+  assign eyebrow = s.eyebrow | default: product.type
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} { --ck-pt: {{ s.padding_top }}px; --ck-pb: {{ s.padding_bottom }}px; }
+{%- endstyle -%}
+
+<style>
+  .n90-ckp { padding: var(--ck-pt) 0 var(--ck-pb); background: var(--n90-canvas); color: var(--n90-carbon); font-family: var(--n90-font-body); }
+  .n90-ckp__crumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; padding: 0; list-style: none; font-size: 13px; color: var(--n90-muted); }
+  .n90-ckp__crumbs li + li::before { content: '/'; margin-right: 8px; }
+  .n90-ckp__crumbs a { color: inherit; text-decoration: none; }
+  .n90-ckp__crumbs a:hover { color: var(--n90-carbon); text-decoration: underline; }
+  .n90-ckp__grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(24px, 4vw, 64px); align-items: start; }
+  .n90-ckp__main { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 12px; background: var(--n90-surface); }
+  .n90-ckp__main img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .n90-ckp__main svg { width: 100%; height: 100%; }
+  .n90-ckp__thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+  .n90-ckp__thumb { display: block; width: 100%; aspect-ratio: 1 / 1; padding: 0; overflow: hidden; border: 1px solid var(--n90-line); border-radius: 8px; background: var(--n90-surface); cursor: pointer; }
+  .n90-ckp__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .n90-ckp__thumb[aria-current="true"] { border: 2px solid var(--n90-carbon); }
+  .n90-ckp__info { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .n90-ckp__eyebrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .n90-ckp__eyebrow { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-ckp__tag { padding: 5px 10px 4px; border-radius: 4px; background: var(--n90-carbon); color: var(--n90-volt); font-family: var(--n90-font-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .n90-ckp__title { margin: 0; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(36px, 3.6vw, 56px); line-height: .95; text-transform: uppercase; }
+  .n90-ckp__price { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 22px; line-height: 1.25; }
+  .n90-ckp__features { display: grid; gap: 10px; margin: 0; padding: 18px 0; list-style: none; border-top: 1px solid var(--n90-line); border-bottom: 1px solid var(--n90-line); }
+  .n90-ckp__features li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; }
+  .n90-ckp__features svg { width: 18px; height: 18px; flex: none; margin-top: 1px; padding: 3px; border-radius: 50%; background: var(--n90-volt); }
+  .n90-ckp__note { margin: -6px 0 0; font-size: 13px; color: var(--n90-muted); }
+  .n90-ckp__badge { padding: 5px 10px 4px; border-radius: 4px; background: var(--n90-volt); color: #181818; font-family: var(--n90-font-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .n90-ckp__lead { display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; margin-top: -6px; padding: 6px 12px; border-radius: 999px; background: var(--n90-surface); font-size: 13px; font-weight: 500; }
+  .n90-ckp__lead svg { width: 16px; height: 16px; }
+  .n90-ckp__custom { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; border: 0; min-width: 0; }
+  .n90-ckp__custom-title { padding: 0; margin-bottom: 4px; font-family: var(--n90-font-display); font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
+  .n90-ckp__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .n90-ckp__field--full { grid-column: 1 / -1; }
+  .n90-ckp__field label { font-size: 13px; font-weight: 500; }
+  .n90-ckp__field input, .n90-ckp__field textarea { width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--n90-line-strong); border-radius: 4px; background: var(--n90-surface); color: var(--n90-carbon); font: 500 15px var(--n90-font-body); }
+  .n90-ckp__field textarea { min-height: 80px; resize: vertical; }
+  .n90-ckp__field input:focus, .n90-ckp__field textarea:focus { outline: none; border-color: var(--n90-carbon); background: var(--n90-canvas); box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); }
+  .n90-ckp__hint { margin: 0; font-size: 12px; color: var(--n90-muted); }
+  .n90-ckp__desc { font-size: 15px; line-height: 1.65; color: var(--n90-muted); }
+  .n90-ckp__desc > :first-child { margin-top: 0; }
+  .n90-ckp :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  @media screen and (max-width: 1023px) {
+    .n90-ckp__grid { grid-template-columns: minmax(0, 1fr); }
+    .n90-ckp__info { position: static; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-ckp { padding: min(var(--ck-pt), 16px) 0 min(var(--ck-pb), 64px); }
+    .n90-ckp__thumbs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+</style>
+
+<div class="n90-ckp" id="n90-ckp-{{ section.id }}">
+  <div class="page-width">
+    {%- if s.show_breadcrumbs -%}
+      <nav aria-label="{{ 'n90.breadcrumb.label' | t }}">
+        <ol class="n90-ckp__crumbs">
+          <li><a href="{{ routes.root_url }}">{{ 'n90.breadcrumb.home' | t }}</a></li>
+          {%- if collection != blank -%}
+            <li><a href="{{ collection.url }}">{{ collection.title | escape }}</a></li>
+          {%- endif -%}
+          <li><span aria-current="page">{{ product.title | escape }}</span></li>
+        </ol>
+      </nav>
+    {%- endif -%}
+
+    <div class="n90-ckp__grid">
+      <div class="n90-ckp__gallery">
+        <div class="n90-ckp__main">
+          {%- if first_media != blank -%}
+            {%- assign main_alt = first_media.alt | default: product.title -%}
+            {{
+              first_media.preview_image
+              | image_url: width: 1600
+              | image_tag:
+                widths: '600, 800, 1000, 1200, 1600',
+                sizes: '(min-width: 1024px) 58vw, 100vw',
+                loading: 'eager',
+                fetchpriority: 'high',
+                alt: main_alt,
+                class: 'n90-ckp__main-img'
+            }}
+          {%- else -%}
+            {%- render 'n90-kit-art', kind: 'kit', pattern: 'pulse' -%}
+          {%- endif -%}
+        </div>
+        {%- if media_count > 1 -%}
+          <ul class="n90-ckp__thumbs" role="list">
+            {%- for media in product.media limit: 12 -%}
+              <li>
+                <button
+                  type="button"
+                  class="n90-ckp__thumb"
+                  aria-label="{{ 'n90.a11y.show_media' | t: index: forloop.index, count: media_count }}"
+                  aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+                  data-ckp-thumb
+                  data-src="{{ media.preview_image | image_url: width: 1600 }}"
+                  data-srcset="{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1600 }} 1600w"
+                  data-alt="{{ media.alt | default: product.title | escape }}"
+                >
+                  {{ media.preview_image | image_url: width: 200 | image_tag: loading: 'lazy', decoding: 'async', alt: '' }}
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      <div class="n90-ckp__info">
+        <div class="n90-ckp__eyebrow-row">
+          {%- if eyebrow != blank -%}<p class="n90-ckp__eyebrow">{{ eyebrow | escape }}</p>{%- endif -%}
+          <span class="n90-ckp__tag">{{ 'n90.catalog.custom_tag' | t }}</span>
+          {%- if s.badge != blank -%}<span class="n90-ckp__badge">{{ s.badge | escape }}</span>{%- endif -%}
+        </div>
+        <h1 class="n90-ckp__title">{{ product.title | escape }}</h1>
+        <p class="n90-ckp__price">{%- render 'n90-custom-price', product: product -%}</p>
+        {%- if s.turnaround != blank -%}
+          <span class="n90-ckp__lead">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5"/></svg>
+            {{ s.turnaround | escape }}
+          </span>
+        {%- endif -%}
+
+        {%- assign features = s.features | newline_to_br | split: '<br />' -%}
+        {%- if s.features != blank -%}
+          <ul class="n90-ckp__features" role="list">
+            {%- for feature in features -%}
+              {%- assign feature = feature | strip -%}
+              {%- if feature != blank -%}
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{{ feature | escape }}</li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        {%- assign inquiry_id = 'n90-ki-' | append: section.id -%}
+        {%- assign inquiry_form = inquiry_id | append: '-form' -%}
+        {%- if s.show_personalise -%}
+          {%- comment -%} Sent with the quote request via form="…" (no cart on custom kits) {%- endcomment -%}
+          <fieldset class="n90-ckp__custom">
+            <legend class="n90-ckp__custom-title">{{ s.personalise_heading | escape }}</legend>
+            <div class="n90-ckp__field">
+              <label for="{{ inquiry_id }}-player">{{ s.player_label | escape }}</label>
+              <input id="{{ inquiry_id }}-player" type="text" name="contact[{{ s.player_label | escape }}]" form="{{ inquiry_form }}" maxlength="20" autocomplete="off">
+            </div>
+            <div class="n90-ckp__field">
+              <label for="{{ inquiry_id }}-number">{{ s.number_label | escape }}</label>
+              <input id="{{ inquiry_id }}-number" type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" name="contact[{{ s.number_label | escape }}]" form="{{ inquiry_form }}" autocomplete="off">
+            </div>
+            <div class="n90-ckp__field n90-ckp__field--full">
+              <label for="{{ inquiry_id }}-notes">{{ s.notes_label | escape }}</label>
+              <textarea id="{{ inquiry_id }}-notes" name="contact[{{ s.notes_label | escape }}]" form="{{ inquiry_form }}" rows="3" placeholder="{{ s.notes_placeholder | escape }}"></textarea>
+            </div>
+            <p class="n90-ckp__hint n90-ckp__field--full">{{ 'n90.catalog.personalise_hint' | t }}</p>
+          </fieldset>
+        {%- endif -%}
+        {%- render 'n90-kit-inquiry', product: product, id: inquiry_id, label: s.button_label, sports: s.sports -%}
+        {%- if s.note != blank -%}
+          <p class="n90-ckp__note">{{ s.note | escape }}</p>
+        {%- endif -%}
+
+        {%- if product.description != blank -%}
+          <div class="n90-ckp__desc rte">{{ product.description }}</div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-ckp-' + {{ section.id | json }});
+    if (!root) return;
+    var main = root.querySelector('.n90-ckp__main-img');
+    var thumbs = Array.prototype.slice.call(root.querySelectorAll('[data-ckp-thumb]'));
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        if (!main) return;
+        main.setAttribute('srcset', t.dataset.srcset);
+        main.setAttribute('src', t.dataset.src);
+        main.setAttribute('alt', t.dataset.alt || '');
+        thumbs.forEach(function (b) { b.setAttribute('aria-current', b === t ? 'true' : 'false'); });
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Custom kit product",
+  "tag": "section",
+  "class": "section-main-product-custom-kit",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "checkbox", "id": "show_breadcrumbs", "label": "Show breadcrumbs", "default": true },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "info": "Defaults to the product type." },
+    { "type": "text", "id": "badge", "label": "Volt badge", "default": "Pre-season ready", "info": "Leave empty to hide." },
+    { "type": "text", "id": "turnaround", "label": "Lead-time badge", "default": "3–4 week turnaround", "info": "Leave empty to hide." },
+    {
+      "type": "textarea", "id": "features", "label": "What's included",
+      "default": "Free design mockup within 48 hours\nFully sublimated — any colours, any pattern\nClub crest, names, numbers and sponsors included\n3–4 week turnaround from sign-off",
+      "info": "One per line."
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "info": "Defaults to Theme settings → ROSTER catalog." },
+    { "type": "text", "id": "sports", "label": "Sport options", "default": "Football, Rugby, Cricket, Golf, Darts, Bowls, Other", "info": "Separate with commas." },
+    { "type": "header", "content": "Personalise" },
+    { "type": "checkbox", "id": "show_personalise", "label": "Show personalisation fields", "default": true, "info": "Sent with the quote request — custom kits have no cart." },
+    { "type": "text", "id": "personalise_heading", "label": "Heading", "default": "Personalise" },
+    { "type": "text", "id": "player_label", "label": "Player name label", "default": "Player name" },
+    { "type": "text", "id": "number_label", "label": "Squad number label", "default": "Squad number" },
+    { "type": "text", "id": "notes_label", "label": "Notes label", "default": "Team notes" },
+    { "type": "text", "id": "notes_placeholder", "label": "Notes placeholder", "default": "Sponsors, colours, anything else…" },
+    { "type": "text", "id": "note", "label": "Note under the button", "default": "No payment now — we design first, you approve, then we quote your squad." },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 96, "step": 4, "unit": "px", "default": 16 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 88 }
+  ]
+}
+{% endschema %}

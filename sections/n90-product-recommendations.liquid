@@ -1,0 +1,144 @@
+{%- comment -%}
+  sections/n90-product-recommendations.liquid
+  ROSTER — "Complete the set" (product recommendations)
+  Reference: data-section="CompleteTheSet" (.sec.sec-top / .sec-head / .g4 of ProductCard)
+
+  Uses Shopify's recommendations via Dawn's <product-recommendations> loader
+  (assets/global.js): the section renders empty, then fetches itself with the
+  current product and swaps in the cards. Hidden when there are no recommendations.
+  Cards: snippets/n90-product-card.liquid + assets/n90-product-card.css.
+{%- endcomment -%}
+
+{{ 'n90-product-card.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .n90-rec {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    border-top: 1px solid var(--n90-line);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  /* Empty until Dawn's loader swaps in the cards — collapse, but keep it observable */
+  .n90-rec:not(:has(.n90-rec__grid)) { padding: 0; border-top: 0; }
+  .n90-rec__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 48px; }
+  .n90-rec__eyebrow {
+    margin: 0 0 16px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-rec__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(36px, 4.2vw, 60px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-rec__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 40px 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-rec__grid > li { min-width: 0; animation: n90-rec-up .55s var(--n90-ease) both; }
+  .n90-rec__grid > li:nth-child(2) { animation-delay: .06s; }
+  .n90-rec__grid > li:nth-child(3) { animation-delay: .12s; }
+  .n90-rec__grid > li:nth-child(4) { animation-delay: .18s; }
+  @keyframes n90-rec-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  .n90-rec__error { margin: 24px 0 0; font-size: 14px; color: #B42318; }
+  .n90-rec__error:empty { display: none; }
+
+  @media screen and (max-width: 1023px) {
+    .n90-rec__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 16px; }
+    .n90-rec__grid > li:nth-child(n + 4) { display: none; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-rec { padding: 64px 0; }
+    .n90-rec__head { margin-bottom: 28px; }
+    .n90-rec__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+    .n90-rec__grid > li:nth-child(n + 4) { display: block; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-rec__grid > li { animation: none; }
+  }
+</style>
+
+<div class="n90-rec" data-n90-qadd-scope>
+  <product-recommendations
+    class="page-width"
+    data-url="{{ routes.product_recommendations_url }}?limit={{ section.settings.products_to_show }}&intent={{ section.settings.intent }}"
+    data-section-id="{{ section.id }}"
+    data-product-id="{{ product.id }}"
+  >
+    {%- if recommendations.performed and recommendations.products_count > 0 -%}
+      <div class="n90-rec__head">
+        <div>
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-rec__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          <h2 class="n90-rec__heading">{{ section.settings.heading | escape }}</h2>
+        </div>
+      </div>
+      <ul class="n90-rec__grid grid__item" role="list">
+        {%- for rec in recommendations.products -%}
+          {%- capture stream -%}{%- render 'n90-product-stream', product: rec -%}{%- endcapture -%}{%- if stream == 'custom' -%}{%- continue -%}{%- endif -%}
+          <li>
+            {%- render 'n90-product-card',
+              product: rec,
+              sizes: '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw',
+              show_secondary_image: true,
+              show_quick_add: section.settings.show_quick_add,
+              show_swatches: true
+            -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+      <p class="n90-rec__error" role="alert" data-n90-qadd-error></p>
+    {%- endif -%}
+  </product-recommendations>
+</div>
+
+{% schema %}
+{
+  "name": "Complete the set",
+  "tag": "section",
+  "class": "section-n90-product-recommendations",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Goes with" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Complete the set" },
+    {
+      "type": "select", "id": "intent", "label": "Recommendation type",
+      "options": [
+        { "value": "complementary", "label": "Complementary (set up in Search & Discovery)" },
+        { "value": "related", "label": "Related" }
+      ],
+      "default": "related",
+      "info": "Complementary products are chosen per product in the Search & Discovery app."
+    },
+    {
+      "type": "range", "id": "products_to_show", "label": "Products to show",
+      "min": 2, "max": 8, "step": 1, "default": 4
+    },
+    { "type": "checkbox", "id": "show_quick_add", "label": "Show quick add", "default": true },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "presets": [
+    { "name": "Complete the set" }
+  ]
+}
+{% endschema %}

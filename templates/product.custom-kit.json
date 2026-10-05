@@ -1,0 +1,76 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product-custom-kit",
+      "settings": {
+        "show_breadcrumbs": true,
+        "padding_top": 16,
+        "padding_bottom": 88,
+        "badge": "Pre-season ready",
+        "turnaround": "3–4 week turnaround",
+        "show_personalise": true,
+        "personalise_heading": "Personalise",
+        "player_label": "Player name",
+        "number_label": "Squad number",
+        "notes_label": "Team notes",
+        "notes_placeholder": "Sponsors, colours, anything else…"
+      }
+    },
+    "how_it_works": {
+      "type": "how-it-works",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "step_num": "01",
+            "title": "Tell us what you need",
+            "description": "<p>Sport, items, team size and deadline.</p>"
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "step_num": "02",
+            "title": "Get a free mockup",
+            "description": "<p>We design your kit with your crest and colours, and send a quote.</p>"
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "step_num": "03",
+            "title": "Approve and order",
+            "description": "<p>Tweak it until it’s right, then confirm sizes. From 10 pieces.</p>"
+          }
+        },
+        "step_4": {
+          "type": "step",
+          "settings": {
+            "step_num": "04",
+            "title": "Kit in 3–4 weeks",
+            "description": "<p>Made for your club. Add a free club shop so players order their own.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "step_1",
+        "step_2",
+        "step_3",
+        "step_4"
+      ],
+      "settings": {
+        "eyebrow": "How it works",
+        "heading": "Four steps to <em>match day</em>",
+        "subtext": "",
+        "btn_label": "",
+        "btn_url": "",
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main",
+    "how_it_works"
+  ]
+}

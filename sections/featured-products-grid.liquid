@@ -1,0 +1,392 @@
+{%- comment -%}
+  sections/featured-products-grid.liquid
+  ROSTER · Section 2 — Featured products grid
+  Reference: .sec / .sec-head / .g4 grid of ProductCard (.pc) + motion layer
+  (card tilt, alt-image fade, name underline sweep, quick-add pop, scroll reveal).
+
+  Cards: snippets/n90-product-card.liquid + assets/n90-product-card.css
+  Reveal + card tilt: assets/n90-motion.js
+  Quick add: assets/n90-cart.js (Dawn cart notification / drawer slide-down).
+{%- endcomment -%}
+
+{%- liquid
+  assign fpg_collection = section.settings.collection
+  assign limit = section.settings.products_to_show
+  assign cols = section.settings.columns_desktop
+  assign cols_laptop = cols | at_most: 4
+  assign col_px = 1440 | divided_by: cols
+
+  assign product_count = 0
+  if fpg_collection != blank
+    assign product_count = fpg_collection.products_count | at_most: limit
+  endif
+  assign use_placeholders = false
+  if product_count == 0 and request.design_mode
+    assign use_placeholders = true
+  endif
+
+  if section.settings.mobile_layout == 'swipe'
+    assign mobile_vw = '72vw'
+  else
+    assign mobile_vw = '50vw'
+  endif
+  capture sizes
+    echo '(min-width: 1440px) ' | append: col_px | append: 'px, '
+    echo '(min-width: 1024px) calc(100vw / ' | append: cols_laptop | append: '), '
+    echo '(min-width: 768px) 33vw, ' | append: mobile_vw
+  endcapture
+-%}
+
+{%- if product_count > 0 or use_placeholders -%}
+  {%- style -%}
+    #shopify-section-{{ section.id }} {
+      --fpg-pt: {{ section.settings.padding_top }}px;
+      --fpg-pb: {{ section.settings.padding_bottom }}px;
+      --fpg-cols: {{ cols }};
+      --fpg-cols-laptop: {{ cols_laptop }};
+      --fpg-bg: {% if section.settings.background == 'surface' %}var(--n90-surface){% else %}var(--n90-canvas){% endif %};
+    }
+  {%- endstyle -%}
+
+  {{ 'n90-product-card.css' | asset_url | stylesheet_tag }}
+  <style>
+    /* ref .sec */
+    .n90-fpg {
+      padding: var(--fpg-pt) 0 var(--fpg-pb);
+      background: var(--fpg-bg);
+      color: var(--n90-carbon);
+      font-family: var(--n90-font-body);
+      overflow: hidden;
+    }
+
+    /* ref .sec-head */
+    .n90-fpg__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .n90-fpg__eyebrow {
+      margin: 0 0 16px;
+      font-family: var(--n90-font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .n90-fpg__heading {
+      margin: 0;
+      font-family: var(--n90-font-display);
+      font-weight: var(--n90-display-weight);
+      font-size: clamp(42px, 4.2vw, 60px);
+      line-height: .95;
+      letter-spacing: .005em;
+      text-transform: uppercase;
+    }
+    .n90-fpg__tlink {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      flex: none;
+      color: var(--n90-carbon);
+      font-family: var(--n90-font-display);
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      text-decoration: underline;
+      text-underline-offset: 7px;
+      text-decoration-thickness: 1px;
+      transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+    }
+    .n90-fpg__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+    /* ref .g4 */
+    .n90-fpg__grid {
+      display: grid;
+      grid-template-columns: repeat(var(--fpg-cols), minmax(0, 1fr));
+      gap: 40px 24px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .n90-fpg__grid > li { min-width: 0; }
+
+    .n90-fpg__error {
+      margin: 24px 0 0;
+      font-size: 14px;
+      color: #B42318;
+    }
+    .n90-fpg__error:empty { display: none; }
+    .n90-fpg :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+    /* Laptop 1024–1439: cap at 4 columns */
+    @media screen and (max-width: 1439px) {
+      .n90-fpg__grid { grid-template-columns: repeat(var(--fpg-cols-laptop), minmax(0, 1fr)); }
+    }
+    /* Tablet 768–1023: 3 columns */
+    @media screen and (max-width: 1023px) {
+      .n90-fpg__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 16px; }
+      .n90-fpg__head { margin-bottom: 36px; }
+    }
+    /* Mobile 320–767: ref .is-m — 2-column grid (or swipe track) */
+    @media screen and (max-width: 767px) {
+      .n90-fpg { padding: calc(var(--fpg-pt) * .58) 0 calc(var(--fpg-pb) * .58); }
+      .n90-fpg__head { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 28px; }
+      .n90-fpg__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+
+      .n90-fpg--swipe .n90-fpg__grid {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: 72%;
+        gap: 12px;
+        margin: 0 calc(var(--n90-gutter) * -1);
+        padding: 0 var(--n90-gutter) 4px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 var(--n90-gutter);
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .n90-fpg--swipe .n90-fpg__grid::-webkit-scrollbar { display: none; }
+      .n90-fpg--swipe .n90-fpg__grid > li { scroll-snap-align: start; }
+    }
+  </style>
+
+  <section
+    class="n90-fpg{% if section.settings.mobile_layout == 'swipe' %} n90-fpg--swipe{% endif %}"
+    id="n90-fpg-{{ section.id }}"
+    data-n90-qadd-scope
+    aria-labelledby="n90-fpg-title-{{ section.id }}"
+  >
+    <div class="page-width">
+      <div class="n90-fpg__head" data-n90-reveal>
+        <div>
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-fpg__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          <h2 class="n90-fpg__heading" id="n90-fpg-title-{{ section.id }}">
+            {{- section.settings.heading | default: fpg_collection.title | escape -}}
+          </h2>
+        </div>
+        {%- if section.settings.link_label != blank -%}
+          <a
+            href="{{ section.settings.link_url | default: fpg_collection.url | default: routes.all_products_collection_url }}"
+            class="n90-fpg__tlink"
+          >
+            {{- section.settings.link_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+
+      <ul class="n90-fpg__grid" role="list" data-n90-stagger>
+        {%- if use_placeholders -%}
+          {%- for i in (1..limit) -%}
+            <li>{%- render 'n90-product-card', placeholder: true, index: i -%}</li>
+          {%- endfor -%}
+        {%- else -%}
+          {%- assign shown = 0 -%}
+          {%- for product in fpg_collection.products limit: 50 -%}
+            {%- capture stream -%}{%- render 'n90-product-stream', product: product -%}{%- endcapture -%}{%- if section.settings.product_stream != 'all' and stream != section.settings.product_stream -%}{%- continue -%}{%- endif -%}
+            {%- if shown >= limit -%}{%- break -%}{%- endif -%}
+            {%- assign shown = shown | plus: 1 -%}
+            <li>
+              {%- render 'n90-product-card',
+                product: product,
+                sizes: sizes,
+                show_secondary_image: section.settings.show_secondary_image,
+                show_quick_add: section.settings.show_quick_add,
+                show_swatches: section.settings.show_swatches
+              -%}
+            </li>
+          {%- endfor -%}
+        {%- endif -%}
+      </ul>
+      <p class="n90-fpg__error" role="alert" data-n90-qadd-error></p>
+    </div>
+  </section>
+
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Featured products grid",
+  "tag": "div",
+  "class": "section-featured-products-grid",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Ready to buy"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Shop best sellers"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Link label",
+      "default": "Shop all"
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "Link",
+      "info": "Defaults to the selected collection."
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Placeholder cards show in the editor until a collection with products is chosen. Nothing shows on the live store while it is empty."
+    },
+    {
+      "type": "select",
+      "id": "product_stream",
+      "label": "Products",
+      "options": [
+        {
+          "value": "retail",
+          "label": "Retail only"
+        },
+        {
+          "value": "custom",
+          "label": "Custom kits only"
+        },
+        {
+          "value": "all",
+          "label": "All"
+        }
+      ],
+      "default": "retail",
+      "info": "Custom kits = custom-kit template or custom tags (Theme settings → ROSTER catalog)."
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on large desktop (1440px+)",
+      "info": "Laptops show up to 4, tablets 3, phones 2.",
+      "min": 3,
+      "max": 5,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "Mobile layout",
+      "options": [
+        {
+          "value": "grid",
+          "label": "2-column grid"
+        },
+        {
+          "value": "swipe",
+          "label": "Swipe track"
+        }
+      ],
+      "default": "grid"
+    },
+    {
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "canvas",
+          "label": "Canvas (white)"
+        },
+        {
+          "value": "surface",
+          "label": "Surface (soft grey)"
+        }
+      ],
+      "default": "canvas"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 8,
+      "unit": "px",
+      "default": 112
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 8,
+      "unit": "px",
+      "default": 112
+    },
+    {
+      "type": "header",
+      "content": "Cards"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "Show second image on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "Show quick add",
+      "info": "Single-variant products add straight to the cart. Products with sizes open the product page.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_swatches",
+      "label": "Show colour dots",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured products grid"
+    },
+    {
+      "name": "Custom kit showcase",
+      "settings": {
+        "product_stream": "custom"
+      }
+    }
+  ]
+}
+{% endschema %}

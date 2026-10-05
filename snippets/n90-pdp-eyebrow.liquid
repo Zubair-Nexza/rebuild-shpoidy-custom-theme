@@ -1,0 +1,39 @@
+{%- comment -%}
+  snippets/n90-pdp-eyebrow.liquid
+  Eyebrow + Volt badge block for sections/n90-main-product.liquid.
+  Eyebrow: block text, else the vendor (Show vendor / brand), else sport tag // product type.
+
+  Accepts:
+  - block: {Object} the eyebrow block · product: {Object} · sport_tag: {String}
+{%- endcomment -%}
+{%- liquid
+  assign eb = block.settings.text
+  if eb == blank and block.settings.show_vendor and product.vendor != blank
+    assign eb = product.vendor
+  endif
+  if eb == blank
+    assign eb_parts = ''
+    if sport_tag != blank
+      assign eb_parts = sport_tag
+    endif
+    if product.type != blank
+      if eb_parts != ''
+        assign eb_parts = eb_parts | append: ' // '
+      endif
+      assign eb_parts = eb_parts | append: product.type
+    endif
+    assign eb = eb_parts
+  endif
+  assign show_badge = false
+  if block.settings.badge != blank
+    if block.settings.badge_tag == blank or product.tags contains block.settings.badge_tag
+      assign show_badge = true
+    endif
+  endif
+-%}
+{%- if eb != blank or show_badge -%}
+  <div class="n90-pdp__eyebrow-row" {{ block.shopify_attributes }}>
+    {%- if eb != blank -%}<p class="n90-pdp__eyebrow">{{ eb | escape }}</p>{%- endif -%}
+    {%- if show_badge -%}<span class="n90-pdp__badge">{{ block.settings.badge | escape }}</span>{%- endif -%}
+  </div>
+{%- endif -%}

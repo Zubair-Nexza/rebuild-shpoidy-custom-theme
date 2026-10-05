@@ -1,0 +1,1493 @@
+{%- comment -%}
+  sections/n90-main-product.liquid
+  ROSTER — Product detail page (Clean Sport Motion)
+  Reference: ProductMain (.cols.prod: .s7 ProductGallery / .s5 ProductInfo sticky), .crumbs,
+  .price / .teamprice / .opt-head / .size-pills .sz / .buy-row .qty / .dlines / .pacc, .mbar
+
+  Left (7 cols): 1:1 media track — photos, native HTML5 video, YouTube/Vimeo — with a
+  thumbnail strip; swipeable with dots on mobile. Right (5 cols, sticky): eyebrow +
+  Volt badge, title, price + turnaround, colour swatches, size pills (+ size guide
+  dialog: snippets/size-guide-modal.liquid), personalisation fields, quantity + Volt
+  add to cart, delivery lines, "Complete the look" cross-sells (complementary
+  recommendations via sections/product-recommendations.liquid, same-collection
+  fallback), description and accordions. Mobile: sticky bottom add-to-cart bar.
+  Sold-out variants swap the buy row for a "Notify me" back-in-stock signup
+  ({% form 'customer' %}, tagged back-in-stock + product/variant).
+  Gallery badges: snippets/product-badge.liquid (updated on variant change).
+
+  Add to cart reuses Dawn's <product-form> (assets/product-form.js) so the cart
+  notification / drawer and header count keep working. Variant switching is local
+  (variant data rendered below) — no section re-render.
+{%- endcomment -%}
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  comment
+    Custom-made teamwear on this template (snippets/n90-product-stream.liquid): no cart —
+    team price line + mockup & quote inquiry. Normally these use product.custom-kit.
+  endcomment
+  capture pdp_stream
+    render 'n90-product-stream', product: product
+  endcapture
+  assign is_custom = false
+  if pdp_stream == 'custom'
+    assign is_custom = true
+  endif
+  assign form_id = 'n90-pf-' | append: section.id
+  assign media_count = product.media.size
+  assign sport_list = 'football,rugby,cricket,golf,darts,bowls' | split: ','
+  assign sport_tag = blank
+  for tag in product.tags
+    assign t = tag | downcase
+    if sport_list contains t
+      assign sport_tag = tag
+      break
+    endif
+  endfor
+-%}
+
+{{ 'n90-product-card.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --pdp-pt: {{ section.settings.padding_top }}px;
+    --pdp-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-pdp-spin { to { transform: rotate(360deg); } }
+  @keyframes n90-pdp-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+  @keyframes n90-pdp-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  .n90-pdp {
+    padding: var(--pdp-pt) 0 var(--pdp-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* ref .crumbs */
+  .n90-pdp__crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 56px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: var(--n90-muted);
+  }
+  .n90-pdp__crumbs a { color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  .n90-pdp__crumbs a:hover { color: var(--n90-carbon); text-decoration: underline; }
+  .n90-pdp__crumbs li + li::before { content: '/'; margin-right: 8px; }
+
+  /* ref .cols.prod — 7 / 5 */
+  .n90-pdp__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: start;
+  }
+  .n90-pdp__gallery { position: relative; grid-column: 1 / span 7; min-width: 0; }
+  .n90-pdp__info {
+    grid-column: 8 / span 5;
+    position: sticky;
+    top: 96px;
+    min-width: 0;
+    padding-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: n90-pdp-up .6s var(--n90-ease) both;
+  }
+
+  /* ── Gallery: 1:1 track ── */
+  .n90-pdp__track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    background: var(--n90-surface);
+  }
+  .n90-pdp__track::-webkit-scrollbar { display: none; }
+  .n90-pdp__slide {
+    position: relative;
+    flex: 0 0 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--n90-surface);
+    scroll-snap-align: start;
+  }
+  .n90-pdp__slide img,
+  .n90-pdp__slide video,
+  .n90-pdp__slide iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: 0;
+  }
+  .n90-pdp__slide .n90-kit-art { position: absolute; inset: 10%; width: 80%; height: 80%; }
+
+  /* ref .thumbs */
+  .n90-pdp__thumbs {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-pdp__thumb {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--n90-surface);
+    cursor: pointer;
+    transition: border-color .2s, transform .25s var(--n90-spring), opacity .2s;
+    opacity: .72;
+  }
+  .n90-pdp__thumb:hover { opacity: 1; }
+  .n90-pdp__thumb[aria-current="true"] { border-color: var(--n90-carbon); opacity: 1; box-shadow: inset 0 0 0 1px var(--n90-carbon); }
+  .n90-pdp__thumb:active { transform: scale(.94); }
+  .n90-pdp__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .n90-pdp__thumb-play {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--n90-carbon);
+    color: var(--n90-volt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .n90-pdp__thumb-play svg { width: 10px; height: 10px; }
+  .n90-pdp__dots { display: none; justify-content: center; gap: 6px; margin-top: 12px; }
+  .n90-pdp__dot { width: 6px; height: 6px; border-radius: 3px; background: var(--n90-line-strong); transition: width .3s var(--n90-ease), background .3s; }
+  .n90-pdp__dot.is-on { width: 20px; background: var(--n90-carbon); }
+
+  /* ── Info ── */
+  .n90-pdp__eyebrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .n90-pdp__eyebrow {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-pdp__badge {
+    padding: 5px 10px 4px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .n90-pdp__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(36px, 3.6vw, 56px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  /* ref .price (dir-c) */
+  .n90-pdp__price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; }
+  .n90-pdp__price { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 32px; line-height: 1.1; }
+  .n90-pdp__compare { font-family: var(--n90-font-display); font-size: 22px; color: var(--n90-muted); }
+  .n90-pdp__sale {
+    padding: 4px 8px 3px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-carbon);
+    color: var(--n90-volt);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .n90-pdp__turnaround {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--n90-surface);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .n90-pdp__turnaround svg { width: 16px; height: 16px; }
+  .n90-pdp__team { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+  .n90-pdp__team span { color: var(--n90-muted); }
+  .n90-pdp__tax { margin: 0; font-size: 12px; color: var(--n90-muted); }
+  .n90-pdp__rule { border: 0; border-top: 1px solid var(--n90-line); margin: 4px 0; }
+
+  /* ref .opt-head / .size-pills .sz */
+  .n90-pdp__opt { margin: 0; padding: 0; border: 0; min-width: 0; }
+  .n90-pdp__opt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .n90-pdp__opt-label { padding: 0; font-size: 14px; font-weight: 500; }
+  .n90-pdp__opt-label strong { font-weight: 600; }
+  .n90-pdp__ilink {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--n90-carbon);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .n90-pdp__guide { display: inline-flex; align-items: center; gap: 8px; text-decoration-color: var(--n90-volt); text-decoration-thickness: 2px; }
+  .n90-pdp__guide svg { width: 20px; height: 20px; flex: none; }
+  .n90-pdp__guide:hover { text-decoration-color: var(--n90-carbon); }
+  .n90-pdp__values { display: flex; flex-wrap: wrap; gap: 8px; }
+  .n90-pdp__value { position: relative; }
+  .n90-pdp__value input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .n90-pdp__pill {
+    min-width: 52px;
+    min-height: 44px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, color .2s, transform .25s var(--n90-spring);
+  }
+  .n90-pdp__pill:hover { border-color: var(--n90-carbon); }
+  .n90-pdp__value input:checked + .n90-pdp__pill { background: var(--n90-carbon); border-color: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-pdp__value input:focus-visible + .n90-pdp__pill,
+  .n90-pdp__value input:focus-visible + .n90-pdp__swatch { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-pdp__pill:active,
+  .n90-pdp__swatch:active { transform: scale(.94); }
+  .n90-pdp__value.is-unavailable .n90-pdp__pill { color: var(--n90-muted); text-decoration: line-through; border-style: dashed; }
+  /* Swatches — circular, like the homepage card dots */
+  .n90-pdp__swatch {
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--n90-line-strong);
+    cursor: pointer;
+    transition: box-shadow .2s, transform .25s var(--n90-spring);
+  }
+  .n90-pdp__value input:checked + .n90-pdp__swatch { box-shadow: 0 0 0 2px var(--n90-canvas), 0 0 0 4px var(--n90-carbon); }
+  .n90-pdp__value.is-unavailable .n90-pdp__swatch { opacity: .4; }
+
+  /* Personalisation */
+  .n90-pdp__custom { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .n90-pdp__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .n90-pdp__field--full { grid-column: 1 / -1; }
+  .n90-pdp__field label { font-size: 14px; font-weight: 500; }
+  .n90-pdp__input {
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font: inherit;
+    font-size: 16px;
+  }
+  textarea.n90-pdp__input { min-height: 88px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+  .n90-pdp__input[type="file"] { padding: 10px 14px; font-size: 14px; }
+  .n90-pdp__hint { margin: 0; font-size: 12px; color: var(--n90-muted); }
+  .n90-pdp__custom-title {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  /* ref .buy-row / .qty */
+  .n90-pdp__buy { display: flex; gap: 12px; }
+  .n90-pdp__buy[hidden],
+  .n90-pdp__bis[hidden] { display: none; }
+
+  /* Back in stock */
+  .n90-pdp__bis { padding: 20px; border-radius: 12px; background: var(--n90-surface); animation: n90-pdp-up .4s var(--n90-ease) both; }
+  .n90-pdp__bis-title { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-family: var(--n90-font-display); font-weight: 700; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; }
+  .n90-pdp__bis-title svg { width: 20px; height: 20px; flex: none; padding: 3px; border-radius: 50%; background: var(--n90-volt); }
+  .n90-pdp__bis-text { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--n90-muted); }
+  .n90-pdp__bis-row { display: flex; gap: 8px; }
+  .n90-pdp__bis-input {
+    flex: 1;
+    min-width: 0;
+    height: 54px;
+    padding: 0 16px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font: 500 16px var(--n90-font-body);
+    transition: border-color .2s, box-shadow .25s var(--n90-ease);
+  }
+  .n90-pdp__bis-input:focus { outline: none; border-color: var(--n90-carbon); box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); }
+  .n90-pdp__bis-btn {
+    flex: none;
+    min-height: 54px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--n90-carbon);
+    color: var(--n90-volt);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-pdp__bis-btn:hover { transform: translateY(-2px); }
+  .n90-pdp__bis-btn:active { transform: scale(.98); }
+  .n90-pdp__bis-fine { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--n90-muted); }
+  .n90-pdp__bis-msg { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; font-weight: 500; }
+  .n90-pdp__bis-msg svg { width: 22px; height: 22px; flex: none; padding: 4px; border-radius: 50%; background: var(--n90-volt); }
+  .n90-pdp__bis-err { margin: 10px 0 0; font-size: 14px; color: #B42318; }
+  @media screen and (max-width: 479px) {
+    .n90-pdp__bis-row { flex-direction: column; }
+  }
+  .n90-pdp__qty {
+    flex: none;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+  }
+  .n90-pdp__qty button {
+    width: 44px;
+    height: 100%;
+    border: 0;
+    background: none;
+    color: var(--n90-carbon);
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .n90-pdp__qty input {
+    width: 36px;
+    border: 0;
+    background: none;
+    text-align: center;
+    font: inherit;
+    font-size: 15px;
+    color: var(--n90-carbon);
+    -moz-appearance: textfield;
+  }
+  .n90-pdp__qty input::-webkit-outer-spin-button,
+  .n90-pdp__qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .n90-pdp__atc,
+  .n90-pdp__bar-btn {
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    min-height: 52px;
+    padding: 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .35s var(--n90-ease), opacity .2s;
+  }
+  .n90-pdp__atc::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-pdp__atc:hover::after { animation: n90-pdp-shine .9s var(--n90-ease); }
+  .n90-pdp__atc:active,
+  .n90-pdp__bar-btn:active { transform: scale(.97); }
+  .n90-pdp__atc[disabled],
+  .n90-pdp__bar-btn[disabled] { background: var(--n90-surface); color: var(--n90-muted); cursor: not-allowed; }
+  .n90-pdp__atc[disabled]::after { display: none; }
+  .n90-pdp__atc .loading__spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: n90-pdp-spin .8s linear infinite;
+  }
+  .n90-pdp__atc .loading__spinner.hidden,
+  .n90-pdp__atc.loading > span { display: none; }
+  .n90-pdp__error { margin: 0; font-size: 14px; color: #B42318; }
+  .n90-pdp__error[hidden] { display: none; }
+  .n90-pdp .shopify-payment-button__button { min-height: 52px; border-radius: var(--n90-radius); }
+  .n90-pdp .shopify-payment-button { margin-top: 10px; }
+
+  /* ref .dlines */
+  .n90-pdp__dlines { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .n90-pdp__dline { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+  .n90-pdp__trust { margin: -8px 0 0; }
+  .n90-pdp__trust a { color: inherit; text-decoration: underline; text-decoration-color: var(--n90-volt); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .n90-pdp__dline svg { width: 18px; height: 18px; flex: none; }
+  .n90-pdp__tlink {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    text-decoration-thickness: 1px;
+    transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+  }
+  .n90-pdp__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+  .n90-pdp__desc { font-size: 15px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-pdp__desc > :first-child { margin-top: 0; }
+  .n90-pdp__desc > :last-child { margin-bottom: 0; }
+
+  /* ref .pacc / .faq-q / .faq-a */
+  .n90-pdp__accs { margin-top: 8px; }
+  .n90-pdp__acc { border-top: 1px solid var(--n90-line); }
+  .n90-pdp__acc:last-child { border-bottom: 1px solid var(--n90-line); }
+  .n90-pdp__acc > summary {
+    min-height: 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+  }
+  .n90-pdp__acc > summary::-webkit-details-marker { display: none; }
+  .n90-pdp__acc > summary::after { content: '+'; font-size: 20px; font-weight: 400; transition: transform .3s var(--n90-ease); }
+  .n90-pdp__acc[open] > summary::after { transform: rotate(45deg); }
+  .n90-pdp__acc-body { padding: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-pdp__acc-body > :first-child { margin-top: 0; }
+  .n90-pdp__acc-body > :last-child { margin-bottom: 0; }
+
+  /* ref .mbar — sticky mobile bar */
+  .n90-pdp__bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    display: none;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--n90-line);
+    background: var(--n90-canvas);
+    transform: translateY(110%);
+    transition: transform .4s var(--n90-ease);
+  }
+  .n90-pdp__bar.is-on { transform: none; }
+  .n90-pdp__bar-info { flex: 1; min-width: 0; }
+  .n90-pdp__bar-title { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--n90-muted); }
+  .n90-pdp__bar-price { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 20px; }
+  .n90-pdp__bar-btn { flex: 0 0 auto; padding: 0 20px; font-size: 16px; }
+
+  .n90-pdp :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Laptop 1024–1279 */
+  @media screen and (max-width: 1279px) {
+    .n90-pdp__info { padding-left: 8px; }
+    .n90-pdp__thumbs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+  /* Tablet 768–1023: stacked, info not sticky */
+  @media screen and (max-width: 1023px) {
+    .n90-pdp__grid { display: flex; flex-direction: column; gap: 32px; }
+    .n90-pdp__gallery { width: 100%; }
+    .n90-pdp__info { position: static; padding-left: 0; width: 100%; }
+  }
+  /* Mobile < 768: swipeable carousel with dots + sticky bar */
+  @media screen and (max-width: 767px) {
+    .n90-pdp { padding: min(var(--pdp-pt), 8px) 0 min(var(--pdp-pb), 64px); }
+    .n90-pdp__crumbs { min-height: 44px; }
+    .n90-pdp__gallery { margin: 0 calc(var(--n90-gutter) * -1); width: auto; }
+    .n90-pdp__track,
+    .n90-pdp__slide { border-radius: 0; }
+    .n90-pdp__thumbs { display: none; }
+    .n90-pdp__dots { display: flex; }
+    .n90-pdp__grid { gap: 24px; }
+    .n90-pdp__custom { grid-template-columns: 1fr; }
+    .n90-pdp__bar { display: flex; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .n90-pdp__info,
+    .n90-pdp__atc:hover::after { animation: none; }
+    .n90-pdp__track { scroll-behavior: auto; }
+    .n90-pdp__bar,
+    .n90-pdp__thumb,
+    .n90-pdp__pill,
+    .n90-pdp__swatch { transition: none; }
+  }
+</style>
+
+<div class="n90-pdp" id="n90-pdp-{{ section.id }}" data-section-id="{{ section.id }}">
+  <div class="page-width">
+    {%- if section.settings.show_breadcrumbs -%}
+      <nav aria-label="{{ 'n90.breadcrumb.label' | t }}">
+        <ol class="n90-pdp__crumbs">
+          <li><a href="{{ routes.root_url }}">{{ 'n90.breadcrumb.home' | t }}</a></li>
+          {%- if collection != blank -%}
+            <li><a href="{{ collection.url }}">{{ collection.title | escape }}</a></li>
+          {%- elsif product.collections.size > 0 -%}
+            <li><a href="{{ product.collections.first.url }}">{{ product.collections.first.title | escape }}</a></li>
+          {%- endif -%}
+          <li><span aria-current="page">{{ product.title | escape }}</span></li>
+        </ol>
+      </nav>
+    {%- endif -%}
+
+    <div class="n90-pdp__grid">
+      {%- comment -%} ═══ Gallery ═══ {%- endcomment -%}
+      <div class="n90-pdp__gallery" data-pdp-gallery>
+        {%- render 'product-badge', product: product, variant: current_variant, context: 'pdp' -%}
+        <div class="n90-pdp__track" data-pdp-track tabindex="0" role="region" aria-roledescription="carousel" aria-label="{{ 'n90.a11y.product_media' | t: title: product.title | escape }}">
+          {%- for media in product.media -%}
+            <div
+              class="n90-pdp__slide"
+              data-media-id="{{ media.id }}"
+              role="group"
+              aria-roledescription="slide"
+              aria-label="{{ forloop.index }} of {{ media_count }}"
+            >
+              {%- case media.media_type -%}
+                {%- when 'video' -%}
+                  {%- liquid
+                    assign v_src = blank
+                    for source in media.sources
+                      if source.format == 'mp4'
+                        assign v_src = source.url
+                      endif
+                    endfor
+                    if v_src == blank
+                      assign v_src = media.sources.first.url
+                    endif
+                  -%}
+                  <video
+                    src="{{ v_src }}"
+                    poster="{{ media.preview_image | image_url: width: 1200 }}"
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                    webkit-playsinline
+                    preload="metadata"
+                    aria-label="{{ media.alt | default: product.title | escape }}"
+                    data-pdp-video
+                  ></video>
+                {%- when 'external_video' -%}
+                  {%- if media.host == 'youtube' -%}
+                    <iframe
+                      src="https://www.youtube-nocookie.com/embed/{{ media.external_id }}?autoplay=1&mute=1&loop=1&playlist={{ media.external_id }}&controls=1&playsinline=1&rel=0"
+                      title="{{ media.alt | default: product.title | escape }}"
+                      allow="autoplay; encrypted-media; picture-in-picture"
+                      loading="lazy"
+                    ></iframe>
+                  {%- else -%}
+                    <iframe
+                      src="https://player.vimeo.com/video/{{ media.external_id }}?autoplay=1&muted=1&loop=1"
+                      title="{{ media.alt | default: product.title | escape }}"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      loading="lazy"
+                    ></iframe>
+                  {%- endif -%}
+                {%- else -%}
+                  {%- liquid
+                    if forloop.first
+                      assign m_loading = 'eager'
+                      assign m_priority = 'high'
+                    else
+                      assign m_loading = 'lazy'
+                      assign m_priority = 'auto'
+                    endif
+                    assign m_alt = media.alt | default: product.title
+                  -%}
+                  {{
+                    media.preview_image
+                    | image_url: width: 1600
+                    | image_tag:
+                      widths: '400, 600, 800, 1000, 1200, 1600',
+                      sizes: '(min-width: 1024px) 58vw, 100vw',
+                      loading: m_loading,
+                      fetchpriority: m_priority,
+                      alt: m_alt
+                  }}
+              {%- endcase -%}
+            </div>
+          {%- else -%}
+            <div class="n90-pdp__slide">{%- render 'n90-kit-art', kind: 'kit', pattern: 'pulse' -%}</div>
+          {%- endfor -%}
+        </div>
+
+        {%- if media_count > 1 -%}
+          <ul class="n90-pdp__thumbs" role="list">
+            {%- for media in product.media -%}
+              <li>
+                <button
+                  type="button"
+                  class="n90-pdp__thumb"
+                  data-pdp-thumb="{{ forloop.index0 }}"
+                  aria-label="{{ 'n90.a11y.show_media' | t: index: forloop.index, count: media_count }}"
+                  {% if forloop.first %}aria-current="true"{% endif %}
+                >
+                  {{ media.preview_image | image_url: width: 240 | image_tag: loading: 'lazy', decoding: 'async', alt: '' }}
+                  {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}
+                    <span class="n90-pdp__thumb-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                  {%- endif -%}
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+          <div class="n90-pdp__dots" aria-hidden="true">
+            {%- for media in product.media -%}
+              <span class="n90-pdp__dot{% if forloop.first %} is-on{% endif %}"></span>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ═══ Info ═══ {%- endcomment -%}
+      <div class="n90-pdp__info">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'eyebrow' -%}
+              {%- render 'n90-pdp-eyebrow', block: block, product: product, sport_tag: sport_tag -%}
+
+            {%- when 'title' -%}
+              <h1 class="n90-pdp__title" {{ block.shopify_attributes }}>{{ product.title | escape }}</h1>
+
+            {%- when 'price' -%}
+              {%- if is_custom -%}
+                <p class="n90-pdp__price" {{ block.shopify_attributes }}>{%- render 'n90-custom-price', product: product -%}</p>
+              {%- else -%}
+              <div class="n90-pdp__price-block" {{ block.shopify_attributes }}>
+                <div class="n90-pdp__price-row" data-pdp-price>
+                  <p class="n90-pdp__price">{{ current_variant.price | money }}</p>
+                  {%- if current_variant.compare_at_price > current_variant.price -%}
+                    <s class="n90-pdp__compare"><span class="ref-sr">{{ 'products.product.price.regular_price' | t }}</span>{{ current_variant.compare_at_price | money }}</s>
+                    <span class="n90-pdp__sale">{{ 'products.product.on_sale' | t }}</span>
+                  {%- endif -%}
+                </div>
+                {%- if cart.taxes_included -%}
+                  <p class="n90-pdp__tax">{{ 'products.product.taxes_included' | t }}</p>
+                {%- endif -%}
+              </div>
+              {%- if block.settings.team_price != blank -%}
+                <p class="n90-pdp__team"><span>{{ block.settings.team_label | escape }}</span><strong>{{ block.settings.team_price | escape }}</strong></p>
+              {%- endif -%}
+              {%- if block.settings.turnaround != blank -%}
+                <span class="n90-pdp__turnaround">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5"/></svg>
+                  {{ block.settings.turnaround | escape }}
+                </span>
+              {%- endif -%}
+              {%- endif -%}
+
+            {%- when 'variant_picker' -%}
+              {%- liquid
+                assign guide_id = 'n90-sg-' | append: section.id
+                assign show_guide = block.settings.size_guide_enable
+                if show_guide and block.settings.size_guide_tag != blank
+                  assign guide_tag = block.settings.size_guide_tag | strip
+                  unless product.tags contains guide_tag
+                    assign show_guide = false
+                  endunless
+                endif
+                if product.metafields.custom.size_guide.value != blank
+                  assign show_guide = true
+                endif
+              -%}
+              {%- unless product.has_only_default_variant -%}
+                <div class="n90-pdp__variants" data-pdp-variants {{ block.shopify_attributes }}>
+                  {%- for option in product.options_with_values -%}
+                    {%- assign option_name = option.name | downcase -%}
+                    {%- assign is_colour = false -%}
+                    {%- if option_name == 'color' or option_name == 'colour' -%}{%- assign is_colour = true -%}{%- endif -%}
+                    {%- liquid
+                      assign is_size = false
+                      if option_name == 'size' or option_name == 'sizes'
+                        assign is_size = true
+                      endif
+                    -%}
+                    <fieldset class="n90-pdp__opt" data-pdp-option="{{ forloop.index0 }}">
+                      <div class="n90-pdp__opt-head">
+                        <legend class="n90-pdp__opt-label">
+                          {{ option.name | escape }}: <strong data-pdp-selected>{{ option.selected_value | escape }}</strong>
+                        </legend>
+                        {%- if is_size and show_guide -%}
+                          <button type="button" class="n90-pdp__ilink n90-pdp__guide" data-n90-sg-open="{{ guide_id }}" aria-haspopup="dialog" aria-controls="{{ guide_id }}" aria-expanded="false">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></svg>
+                            {{- block.settings.size_guide_label | escape -}}
+                          </button>
+                        {%- endif -%}
+                      </div>
+                      <div class="n90-pdp__values">
+                        {%- for value in option.values -%}
+                          {%- assign input_id = section.id | append: '-' | append: forloop.parentloop.index0 | append: '-' | append: forloop.index0 -%}
+                          <div class="n90-pdp__value{% unless value.available %} is-unavailable{% endunless %}">
+                            <input
+                              type="radio"
+                              id="{{ input_id }}"
+                              name="n90-opt-{{ section.id }}-{{ forloop.parentloop.index0 }}"
+                              value="{{ value | escape }}"
+                              {% if value.selected %}checked{% endif %}
+                            >
+                            {%- if is_colour and block.settings.colour_swatches -%}
+                              {%- liquid
+                                if value.swatch.image
+                                  assign sw_bg = value.swatch.image | image_url: width: 72 | prepend: 'url(' | append: ') center / cover'
+                                elsif value.swatch.color
+                                  assign sw_bg = value.swatch.color
+                                else
+                                  assign sw_bg = value.name | downcase | remove: ' '
+                                endif
+                              -%}
+                              <label for="{{ input_id }}" class="n90-pdp__swatch" style="background: {{ sw_bg }};" title="{{ value | escape }}">
+                                <span class="ref-sr">{{ value | escape }}</span>
+                              </label>
+                            {%- else -%}
+                              <label for="{{ input_id }}" class="n90-pdp__pill">{{ value | escape }}</label>
+                            {%- endif -%}
+                          </div>
+                        {%- endfor -%}
+                      </div>
+                    </fieldset>
+                  {%- endfor -%}
+
+                  {%- if show_guide -%}
+                    {%- render 'size-guide-modal', id: guide_id, block: block, product: product -%}
+                  {%- endif -%}
+                </div>
+              {%- endunless -%}
+
+            {%- when 'personalisation' -%}
+              <div class="n90-pdp__custom" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <p class="n90-pdp__custom-title">{{ block.settings.heading | escape }}</p>
+                {%- endif -%}
+                {%- if block.settings.show_name -%}
+                  <div class="n90-pdp__field">
+                    <label for="n90-pdp-name-{{ section.id }}">{{ block.settings.name_label | escape }}</label>
+                    <input class="n90-pdp__input" id="n90-pdp-name-{{ section.id }}" type="text" name="properties[{{ block.settings.name_label | escape }}]" form="{{ form_id }}" maxlength="20" autocomplete="off">
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.show_number -%}
+                  <div class="n90-pdp__field">
+                    <label for="n90-pdp-num-{{ section.id }}">{{ block.settings.number_label | escape }}</label>
+                    <input class="n90-pdp__input" id="n90-pdp-num-{{ section.id }}" type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" name="properties[{{ block.settings.number_label | escape }}]" form="{{ form_id }}" autocomplete="off">
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.show_crest -%}
+                  <div class="n90-pdp__field n90-pdp__field--full">
+                    <label for="n90-pdp-crest-{{ section.id }}">{{ block.settings.crest_label | escape }}</label>
+                    <input class="n90-pdp__input" id="n90-pdp-crest-{{ section.id }}" type="file" accept=".png,.jpg,.jpeg,.svg,.pdf" name="properties[{{ block.settings.crest_label | escape }}]" form="{{ form_id }}">
+                    {%- if block.settings.crest_hint != blank -%}<p class="n90-pdp__hint">{{ block.settings.crest_hint | escape }}</p>{%- endif -%}
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.show_notes -%}
+                  <div class="n90-pdp__field n90-pdp__field--full">
+                    <label for="n90-pdp-notes-{{ section.id }}">{{ block.settings.notes_label | escape }}</label>
+                    <textarea class="n90-pdp__input" id="n90-pdp-notes-{{ section.id }}" name="properties[{{ block.settings.notes_label | escape }}]" form="{{ form_id }}" placeholder="{{ block.settings.notes_placeholder | escape }}"></textarea>
+                  </div>
+                {%- endif -%}
+              </div>
+
+            {%- when 'buy_buttons' -%}
+              {%- if is_custom -%}
+                <div {{ block.shopify_attributes }}>
+                  {%- assign pdp_inquiry_id = 'n90-ki-' | append: section.id -%}
+                  {%- render 'n90-kit-inquiry', product: product, id: pdp_inquiry_id -%}
+                </div>
+              {%- else -%}
+              <div {{ block.shopify_attributes }}>
+                <product-form class="n90-pdp__form" data-section-id="{{ section.id }}">
+                  {%- form 'product', product, id: form_id, novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+                    <input type="hidden" name="id" value="{{ current_variant.id }}" data-pdp-variant-id>
+                    <div class="n90-pdp__buy" data-pdp-buy{% if block.settings.show_notify and current_variant.available == false %} hidden{% endif %}>
+                      {%- if block.settings.show_quantity -%}
+                        <div class="n90-pdp__qty">
+                          <button type="button" data-pdp-qty="-1" aria-label="{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}">−</button>
+                          <input type="number" name="quantity" value="1" min="1" aria-label="{{ 'products.product.quantity.label' | t }}" data-pdp-qty-input>
+                          <button type="button" data-pdp-qty="1" aria-label="{{ 'products.product.quantity.increase' | t: product: product.title | escape }}">+</button>
+                        </div>
+                      {%- endif -%}
+                      <button
+                        type="submit"
+                        name="add"
+                        class="n90-pdp__atc"
+                        data-pdp-atc
+                        {% unless current_variant.available %}disabled{% endunless %}
+                      >
+                        <span data-pdp-atc-label>
+                          {%- if current_variant.available -%}{{ 'products.product.add_to_cart' | t }}{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+                        </span>
+                        <span class="loading__spinner hidden" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                    {%- if block.settings.show_dynamic_checkout -%}
+                      {{ form | payment_button }}
+                    {%- endif -%}
+                  {%- endform -%}
+                  <div class="product-form__error-message-wrapper" role="alert" hidden>
+                    <p class="n90-pdp__error product-form__error-message"></p>
+                  </div>
+                </product-form>
+
+                {%- if block.settings.show_notify -%}
+                  {%- liquid
+                    assign bis_id = 'n90-bis-' | append: section.id
+                    assign bis_tags = 'back-in-stock,bis-' | append: product.handle | append: ',bis-variant-' | append: current_variant.id
+                  -%}
+                  <div class="n90-pdp__bis" data-pdp-bis{% if current_variant.available %} hidden{% endif %}>
+                    {%- form 'customer', id: bis_id, class: 'n90-pdp__bis-form' -%}
+                      {%- if form.posted_successfully? -%}
+                        <p class="n90-pdp__bis-msg" role="status" data-pdp-bis-success>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                          {{ block.settings.notify_success | escape }}
+                        </p>
+                      {%- endif -%}
+                      <div data-pdp-bis-fields>
+                        <p class="n90-pdp__bis-title">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                          {{ block.settings.notify_heading | escape }}
+                        </p>
+                        <p class="n90-pdp__bis-text">{{ block.settings.notify_text | escape }}</p>
+                        <input type="hidden" name="contact[tags]" value="{{ bis_tags | escape }}" data-pdp-bis-tags>
+                        <div class="n90-pdp__bis-row">
+                          <label class="ref-sr" for="{{ bis_id }}-email">{{ 'newsletter.label' | t }}</label>
+                          <input
+                            class="n90-pdp__bis-input"
+                            id="{{ bis_id }}-email"
+                            type="email"
+                            name="contact[email]"
+                            required
+                            autocomplete="email"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            placeholder="{{ 'newsletter.label' | t }}"
+                            value="{{ customer.email | escape }}"
+                            {% if form.errors %}
+                              aria-invalid="true" aria-describedby="{{ bis_id }}-error"
+                            {% endif %}
+                          >
+                          <button type="submit" class="n90-pdp__bis-btn">{{ block.settings.notify_button | escape }}</button>
+                        </div>
+                        {%- if form.errors -%}
+                          <p class="n90-pdp__bis-err" id="{{ bis_id }}-error" role="alert">{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email | escape }}</p>
+                        {%- endif -%}
+                        {%- if block.settings.notify_fine_print != blank -%}
+                          <p class="n90-pdp__bis-fine">{{ block.settings.notify_fine_print | replace: '[shop]', shop.name | escape }}</p>
+                        {%- endif -%}
+                      </div>
+                    {%- endform -%}
+                  </div>
+                {%- endif -%}
+              </div>
+              {%- endif -%}
+
+            {%- when 'delivery' -%}
+              <ul class="n90-pdp__dlines" role="list" {{ block.shopify_attributes }}>
+                {%- if block.settings.line_1 != blank -%}
+                  <li class="n90-pdp__dline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/></svg>
+                    {{ block.settings.line_1 | escape }}
+                  </li>
+                {%- endif -%}
+                {%- if block.settings.line_2 != blank -%}
+                  <li class="n90-pdp__dline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 7L9 18l-5-5"/></svg>
+                    {{ block.settings.line_2 | escape }}
+                  </li>
+                {%- endif -%}
+              </ul>
+              {%- if block.settings.whatsapp_url != blank -%}
+                <a class="n90-pdp__tlink" href="{{ block.settings.whatsapp_url }}" target="_blank" rel="noopener">{{ block.settings.whatsapp_label | escape }}</a>
+              {%- endif -%}
+
+            {%- when 'complete_kit' -%}
+              {%- liquid
+                assign ck_limit = block.settings.limit
+                assign ck_collection = blank
+                if block.settings.fallback
+                  if collection != blank and collection.handle != 'all' and collection.handle != 'frontpage'
+                    assign ck_collection = collection
+                  else
+                    for c in product.collections
+                      if c.handle != 'all' and c.handle != 'frontpage'
+                        assign ck_collection = c
+                        break
+                      endif
+                    endfor
+                  endif
+                endif
+                assign ck_count = 0
+              -%}
+              {%- capture ck_items -%}
+                {%- if ck_collection != blank -%}
+                  {%- for p in ck_collection.products limit: 24 -%}
+                    {%- if p.id == product.id or p.available == false -%}{%- continue -%}{%- endif -%}
+                    {%- capture stream -%}{%- render 'n90-product-stream', product: p -%}{%- endcapture -%}{%- if stream == 'custom' -%}{%- continue -%}{%- endif -%}
+                    {%- render 'n90-kit-item', product: p -%}
+                    {%- assign ck_count = ck_count | plus: 1 -%}
+                    {%- if ck_count >= ck_limit -%}{%- break -%}{%- endif -%}
+                  {%- endfor -%}
+                {%- endif -%}
+              {%- endcapture -%}
+              {{ 'n90-complete-kit.css' | asset_url | stylesheet_tag }}
+              <div
+                class="n90-ck"
+                data-n90-ck
+                data-n90-qadd-scope
+                data-url="{{ routes.product_recommendations_url }}?product_id={{ product.id }}&limit={{ ck_limit }}&intent=complementary&section_id=product-recommendations"
+                {{ block.shopify_attributes }}
+                {% if ck_count == 0 %}
+                  hidden
+                {% endif %}
+              >
+                <div class="n90-ck__head">
+                  <h2 class="n90-ck__title">
+                    {{- block.settings.heading | escape -}}
+                    {%- if block.settings.subheading != blank %} <span>// {{ block.settings.subheading | escape }}</span>{% endif -%}
+                  </h2>
+                </div>
+                <ul class="n90-ck__list" role="list" data-n90-ck-list>{{ ck_items }}</ul>
+                <p class="n90-ck__error" role="alert" data-n90-qadd-error></p>
+              </div>
+
+            {%- when 'trust_line' -%}
+              {%- if block.settings.text != blank -%}
+                <div class="n90-pdp__dline n90-pdp__trust" {{ block.shopify_attributes }}>
+                  {%- render 'n90-trust-icon', icon: block.settings.icon -%}
+                  {%- if block.settings.link != blank -%}
+                    <a href="{{ block.settings.link }}">{{ block.settings.text | escape }}</a>
+                  {%- else -%}
+                    <span>{{ block.settings.text | escape }}</span>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+
+            {%- when 'description' -%}
+              {%- if product.description != blank -%}
+                <div class="n90-pdp__desc rte" {{ block.shopify_attributes }}>{{ product.description }}</div>
+              {%- endif -%}
+
+            {%- when 'accordion' -%}
+              {%- liquid
+                assign acc_body = block.settings.content
+                if block.settings.page != blank
+                  assign acc_body = block.settings.page.content
+                endif
+              -%}
+              {%- if acc_body != blank -%}
+                <details class="n90-pdp__acc" {{ block.shopify_attributes }}{% if block.settings.open %} open{% endif %}>
+                  <summary>{{ block.settings.title | escape }}</summary>
+                  <div class="n90-pdp__acc-body rte">{{ acc_body }}</div>
+                </details>
+              {%- endif -%}
+
+            {%- when '@app' -%}
+              {%- render block -%}
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} ═══ Mobile sticky bar (ref .mbar) ═══ {%- endcomment -%}
+  {%- if section.settings.sticky_bar and is_custom == false -%}
+    <div class="n90-pdp__bar" data-pdp-bar aria-hidden="true">
+      <div class="n90-pdp__bar-info">
+        <p class="n90-pdp__bar-title">{{ product.title | escape }}</p>
+        <p class="n90-pdp__bar-price" data-pdp-bar-price>{{ current_variant.price | money }}</p>
+      </div>
+      <button type="submit" form="{{ form_id }}" class="n90-pdp__bar-btn" data-pdp-bar-btn tabindex="-1" {% unless current_variant.available %}disabled{% endunless %}>
+        {%- if current_variant.available -%}{{ 'products.product.add_to_cart' | t }}{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+      </button>
+    </div>
+  {%- endif -%}
+
+  {%- comment -%} Variant data for the picker {%- endcomment -%}
+  {%- render 'n90-pdp-variants-json', product: product -%}
+</div>
+
+{%- comment -%} Product + BreadcrumbList JSON-LD: snippets/structured-data.liquid {%- endcomment -%}
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-pdp-' + {{ section.id | json }});
+    if (!root) return;
+    var strings = {
+      add: {{ 'products.product.add_to_cart' | t | json }},
+      soldOut: {{ 'products.product.sold_out' | t | json }},
+      unavailable: {{ 'products.product.unavailable' | t | json }},
+      regular: {{ 'products.product.price.regular_price' | t | json }},
+      sale: {{ 'products.product.on_sale' | t | json }}
+    };
+
+    /* ── Gallery ── */
+    var track = root.querySelector('[data-pdp-track]');
+    var slides = Array.prototype.slice.call(root.querySelectorAll('.n90-pdp__slide'));
+    var thumbs = Array.prototype.slice.call(root.querySelectorAll('[data-pdp-thumb]'));
+    var dots = Array.prototype.slice.call(root.querySelectorAll('.n90-pdp__dot'));
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var current = 0;
+
+    function setActive(i) {
+      current = i;
+      thumbs.forEach(function (t, n) { t.setAttribute('aria-current', n === i ? 'true' : 'false'); });
+      dots.forEach(function (d, n) { d.classList.toggle('is-on', n === i); });
+      slides.forEach(function (s, n) {
+        var v = s.querySelector('video');
+        if (!v) return;
+        if (n === i && !reduceMotion) { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+        else v.pause();
+      });
+    }
+    function goTo(i) {
+      if (!slides[i]) return;
+      track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft, behavior: reduceMotion ? 'auto' : 'smooth' });
+      setActive(i);
+    }
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () { goTo(parseInt(t.dataset.pdpThumb, 10)); });
+    });
+    var scrollTimer;
+    track.addEventListener('scroll', function () {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () {
+        var i = Math.round(track.scrollLeft / track.clientWidth);
+        if (i !== current) setActive(i);
+      }, 80);
+    }, { passive: true });
+    track.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.min(slides.length - 1, current + 1)); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.max(0, current - 1)); }
+    });
+    setActive(0);
+
+    /* ── Variant picker ── */
+    var dataEl = root.querySelector('[data-pdp-variants-json]');
+    var variants = dataEl ? JSON.parse(dataEl.textContent) : [];
+    var options = Array.prototype.slice.call(root.querySelectorAll('[data-pdp-option]'));
+    var idInput = root.querySelector('[data-pdp-variant-id]');
+    var atc = root.querySelector('[data-pdp-atc]');
+    var atcLabel = root.querySelector('[data-pdp-atc-label]');
+    var priceRow = root.querySelector('[data-pdp-price]');
+    var barPrice = root.querySelector('[data-pdp-bar-price]');
+    var barBtn = root.querySelector('[data-pdp-bar-btn]');
+
+    function selected() {
+      return options.map(function (fs) {
+        var checked = fs.querySelector('input:checked');
+        return checked ? checked.value : null;
+      });
+    }
+    function findVariant(sel) {
+      return variants.filter(function (v) {
+        return v.options.every(function (o, i) { return o === sel[i]; });
+      })[0];
+    }
+    var badges = root.querySelector('[data-n90-badges]');
+    var bis = root.querySelector('[data-pdp-bis]');
+    var bisTags = root.querySelector('[data-pdp-bis-tags]');
+    var buyRow = root.querySelector('[data-pdp-buy]');
+
+    /* Back-in-stock success: only for this form (the footer newsletter shares the customer form) */
+    var bisSuccess = root.querySelector('[data-pdp-bis-success]');
+    if (bisSuccess) {
+      var bisForm = bisSuccess.closest('form');
+      var hash = window.location.hash;
+      if (bisForm && (!hash || hash === '#' + bisForm.id)) {
+        bisForm.querySelector('[data-pdp-bis-fields]').hidden = true;
+        bisSuccess.setAttribute('tabindex', '-1');
+        bisSuccess.focus();
+      } else {
+        bisSuccess.remove();
+      }
+    }
+    function updateBadges(v) {
+      if (!badges) return;
+      var sold = badges.querySelector('[data-n90-badge="soldout"]');
+      var sale = badges.querySelector('[data-n90-badge="sale"]');
+      var onSale = v.available && v.compare_cents > v.price_cents;
+      if (sold) sold.hidden = v.available;
+      if (sale) {
+        sale.hidden = !onSale;
+        if (onSale) {
+          sale.textContent = badges.dataset.saleFormat === 'percent'
+            ? Math.round(((v.compare_cents - v.price_cents) * 100) / v.compare_cents) + '% off'
+            : badges.dataset.saleLabel;
+        }
+      }
+    }
+    function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function markAvailability(sel) {
+      options.forEach(function (fs, i) {
+        fs.querySelectorAll('.n90-pdp__value').forEach(function (wrap) {
+          var input = wrap.querySelector('input');
+          var test = sel.slice();
+          test[i] = input.value;
+          var match = findVariant(test);
+          wrap.classList.toggle('is-unavailable', !match || !match.available);
+        });
+      });
+    }
+
+    function update() {
+      var sel = selected();
+      options.forEach(function (fs, i) {
+        var label = fs.querySelector('[data-pdp-selected]');
+        if (label) label.textContent = sel[i] || '';
+      });
+      markAvailability(sel);
+      var v = findVariant(sel);
+      var text;
+      if (!v) {
+        text = strings.unavailable;
+      } else {
+        if (idInput) {
+          idInput.value = v.id;
+          idInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        text = v.available ? strings.add : strings.soldOut;
+        if (priceRow) {
+          var html = '<p class="n90-pdp__price">' + escapeHtml(v.price) + '</p>';
+          if (v.compare) {
+            html += '<s class="n90-pdp__compare"><span class="ref-sr">' + escapeHtml(strings.regular) + '</span>' + escapeHtml(v.compare) + '</s>';
+            html += '<span class="n90-pdp__sale">' + escapeHtml(strings.sale) + '</span>';
+          }
+          priceRow.innerHTML = html;
+        }
+        if (barPrice) barPrice.textContent = v.price;
+        updateBadges(v);
+        if (v.media) {
+          var idx = slides.findIndex(function (s) { return s.dataset.mediaId === String(v.media); });
+          if (idx > -1) goTo(idx);
+        }
+        var url = new URL(window.location.href);
+        url.searchParams.set('variant', v.id);
+        window.history.replaceState({}, '', url.toString());
+      }
+      var enabled = !!(v && v.available);
+      if (bis) {
+        var soldOut = !!(v && !v.available);
+        bis.hidden = !soldOut;
+        if (buyRow) buyRow.hidden = soldOut;
+        if (v && bisTags) bisTags.value = bisTags.value.replace(/bis-variant-\d+/, 'bis-variant-' + v.id);
+      }
+      if (atc) {
+        atc.disabled = !enabled;
+        atc.removeAttribute('aria-disabled');
+      }
+      if (atcLabel) atcLabel.textContent = text;
+      if (barBtn) {
+        barBtn.disabled = !enabled;
+        barBtn.textContent = text;
+      }
+    }
+    options.forEach(function (fs) {
+      fs.addEventListener('change', update);
+    });
+    if (options.length) markAvailability(selected());
+
+    /* ── Quantity ── */
+    var qtyInput = root.querySelector('[data-pdp-qty-input]');
+    root.querySelectorAll('[data-pdp-qty]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var next = Math.max(1, (parseInt(qtyInput.value, 10) || 1) + parseInt(btn.dataset.pdpQty, 10));
+        qtyInput.value = next;
+      });
+    });
+
+    /* ── Complete the look: swap in complementary picks (Search & Discovery) when set ── */
+    var kit = root.querySelector('[data-n90-ck]');
+    if (kit && kit.dataset.url && window.fetch && window.DOMParser) {
+      var loadKit = function () {
+        fetch(kit.dataset.url)
+          .then(function (res) { return res.ok ? res.text() : ''; })
+          .then(function (html) {
+            if (!html) return;
+            var items = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-n90-ck-items]');
+            if (!items || !items.children.length) return;
+            var list = kit.querySelector('[data-n90-ck-list]');
+            var swap = function () {
+              list.innerHTML = items.innerHTML;
+              list.classList.remove('is-swapping');
+              kit.hidden = false;
+              kit.dataset.source = 'complementary';
+            };
+            if (kit.hidden || reduceMotion) return swap();
+            list.classList.add('is-swapping');
+            setTimeout(swap, 200);
+          })
+          .catch(function () { /* keep the fallback */ });
+      };
+      if ('requestIdleCallback' in window) window.requestIdleCallback(loadKit, { timeout: 2500 });
+      else setTimeout(loadKit, 600);
+    }
+
+    /* ── Sticky mobile bar: shows once the main button scrolls out of view ── */
+    var bar = root.querySelector('[data-pdp-bar]');
+    if (bar && atc && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        var hidden = !entries[0].isIntersecting && entries[0].boundingClientRect.top < 0;
+        bar.classList.toggle('is-on', hidden);
+        bar.setAttribute('aria-hidden', hidden ? 'false' : 'true');
+        if (barBtn) barBtn.tabIndex = hidden ? 0 : -1;
+      }).observe(atc);
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Product (Clean Sport)",
+  "tag": "section",
+  "class": "section-n90-main-product",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "checkbox", "id": "show_breadcrumbs", "label": "Show breadcrumbs", "default": true },
+    { "type": "checkbox", "id": "sticky_bar", "label": "Sticky add-to-cart bar on mobile", "default": true },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 96, "step": 4, "unit": "px", "default": 8
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 88
+    }
+  ],
+  "blocks": [
+    { "type": "@app" },
+    {
+      "type": "eyebrow",
+      "name": "Eyebrow + badge",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text", "id": "text", "label": "Eyebrow",
+          "info": "Leave empty for the vendor (when shown) or sport tag // product type."
+        },
+        { "type": "checkbox", "id": "show_vendor", "label": "Show vendor / brand", "default": true },
+        { "type": "text", "id": "badge", "label": "Volt badge", "info": "Optional, e.g. New season. Leave empty to hide." },
+        {
+          "type": "text", "id": "badge_tag", "label": "Only show badge for products tagged",
+          "info": "e.g. popular. Leave empty to show on every product."
+        }
+      ]
+    },
+    { "type": "title", "name": "Title", "limit": 1, "settings": [] },
+    {
+      "type": "price",
+      "name": "Price",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "team_label", "label": "Team price label", "default": "Team price" },
+        { "type": "text", "id": "team_price", "label": "Team price", "info": "e.g. £18 each for 10+. Hidden when empty." },
+        { "type": "text", "id": "turnaround", "label": "Lead-time badge", "info": "Optional. Leave empty for in-stock retail products." }
+      ]
+    },
+    {
+      "type": "variant_picker",
+      "name": "Variant picker",
+      "limit": 1,
+      "settings": [
+        { "type": "checkbox", "id": "colour_swatches", "label": "Show colour as swatches", "default": true },
+        { "type": "header", "content": "Size guide" },
+        { "type": "checkbox", "id": "size_guide_enable", "label": "Show size guide next to the Size option", "default": true },
+        { "type": "text", "id": "size_guide_label", "label": "Link label", "default": "Size guide" },
+        { "type": "text", "id": "size_guide_tag", "label": "Only show for products tagged", "info": "Leave blank for every product with a Size option. A page in the product's custom.size_guide metafield always shows." },
+        {
+          "type": "select", "id": "size_guide_source", "label": "Content",
+          "options": [
+            { "value": "table", "label": "Tables below" },
+            { "value": "page", "label": "Shopify page" }
+          ],
+          "default": "table"
+        },
+        { "type": "page", "id": "size_guide_page", "label": "Size guide page", "info": "Used when Content is set to Shopify page." },
+        { "type": "text", "id": "size_guide_heading", "label": "Heading", "default": "Find your fit" },
+        {
+          "type": "select", "id": "size_guide_unit", "label": "Default unit",
+          "options": [
+            { "value": "cm", "label": "CM" },
+            { "value": "in", "label": "Inches" }
+          ],
+          "default": "cm"
+        },
+        { "type": "paragraph", "content": "Tables: one size per line — Size | Chest | Waist | Length | Recommended fit — measurements in cm. Leave a table empty to hide its tab." },
+        { "type": "text", "id": "size_tab_1", "label": "Tab 1 label", "default": "Men's / Unisex" },
+        {
+          "type": "textarea", "id": "size_table_1", "label": "Tab 1 table",
+          "default": "XS | 86–91 | 71–76 | 69 | Athletic\nS | 91–96 | 76–81 | 71 | Athletic\nM | 96–101 | 81–86 | 73 | Regular\nL | 101–106 | 86–91 | 75 | Regular\nXL | 106–111 | 91–96 | 77 | Relaxed\n2XL | 111–116 | 96–101 | 79 | Relaxed\n3XL | 116–121 | 101–106 | 81 | Relaxed"
+        },
+        { "type": "text", "id": "size_tab_2", "label": "Tab 2 label", "default": "Women's" },
+        {
+          "type": "textarea", "id": "size_table_2", "label": "Tab 2 table",
+          "default": "XS (6) | 78–82 | 60–64 | 62 | Fitted\nS (8–10) | 82–88 | 64–70 | 64 | Fitted\nM (12) | 88–94 | 70–76 | 66 | Regular\nL (14) | 94–100 | 76–82 | 68 | Regular\nXL (16) | 100–106 | 82–88 | 70 | Relaxed\n2XL (18) | 106–112 | 88–94 | 72 | Relaxed"
+        },
+        { "type": "text", "id": "size_tab_3", "label": "Tab 3 label", "default": "Youth" },
+        {
+          "type": "textarea", "id": "size_table_3", "label": "Tab 3 table",
+          "default": "5–6 yrs | 60–64 | 55–58 | 48 | Regular\n7–8 yrs | 64–68 | 58–61 | 52 | Regular\n9–10 yrs | 68–74 | 61–64 | 56 | Regular\n11–12 yrs | 74–80 | 64–67 | 60 | Regular\n13–14 yrs | 80–86 | 67–70 | 64 | Regular"
+        },
+        { "type": "text", "id": "size_guide_note", "label": "Note", "default": "Chest and waist are body measurements; length is the garment. Between sizes? Size up for a relaxed fit." }
+      ]
+    },
+    {
+      "type": "personalisation",
+      "name": "Personalisation",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Personalise" },
+        { "type": "checkbox", "id": "show_name", "label": "Player name", "default": true },
+        { "type": "text", "id": "name_label", "label": "Player name label", "default": "Player name" },
+        { "type": "checkbox", "id": "show_number", "label": "Squad number", "default": true },
+        { "type": "text", "id": "number_label", "label": "Squad number label", "default": "Squad number" },
+        { "type": "checkbox", "id": "show_crest", "label": "Club crest upload", "default": false },
+        { "type": "text", "id": "crest_label", "label": "Crest label", "default": "Club crest" },
+        { "type": "text", "id": "crest_hint", "label": "Crest hint", "default": "PNG, JPG, SVG or PDF" },
+        { "type": "checkbox", "id": "show_notes", "label": "Notes", "default": true },
+        { "type": "text", "id": "notes_label", "label": "Notes label", "default": "Notes" },
+        { "type": "text", "id": "notes_placeholder", "label": "Notes placeholder", "default": "Sponsors, colours, anything else…" }
+      ]
+    },
+    {
+      "type": "buy_buttons",
+      "name": "Buy buttons",
+      "limit": 1,
+      "settings": [
+        { "type": "checkbox", "id": "show_quantity", "label": "Show quantity selector", "default": true },
+        { "type": "checkbox", "id": "show_dynamic_checkout", "label": "Show dynamic checkout buttons", "default": false },
+        { "type": "header", "content": "Back in stock" },
+        { "type": "checkbox", "id": "show_notify", "label": "Show \"Notify me\" signup on sold-out variants", "info": "Signups are saved as customers tagged back-in-stock, bis-<product handle> and bis-variant-<variant ID>. Shopify doesn't send the alert itself — use Shopify Flow or a back-in-stock app to email them.", "default": true },
+        { "type": "text", "id": "notify_heading", "label": "Heading", "default": "Notify me when back in stock" },
+        { "type": "text", "id": "notify_text", "label": "Text", "default": "This size is out of rotation. Leave your email and we'll let you know the moment it's back." },
+        { "type": "text", "id": "notify_button", "label": "Button label", "default": "Notify me" },
+        { "type": "text", "id": "notify_success", "label": "Success message", "default": "You're on the list — we'll email you when it's back." },
+        { "type": "text", "id": "notify_fine_print", "label": "Fine print", "default": "By signing up you agree to receive emails from [shop]. Unsubscribe anytime.", "info": "[shop] is replaced by your store name." }
+      ]
+    },
+    {
+      "type": "delivery",
+      "name": "Delivery lines",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "line_1", "label": "Line 1", "default": "Order before 1pm for express next working day delivery" },
+        { "type": "text", "id": "line_2", "label": "Line 2", "default": "Free UK shipping over £50" },
+        { "type": "text", "id": "whatsapp_label", "label": "WhatsApp label", "default": "Ask about this on WhatsApp" },
+        { "type": "url", "id": "whatsapp_url", "label": "WhatsApp link", "info": "e.g. https://wa.me/447700900000. Hidden until set." }
+      ]
+    },
+    {
+      "type": "complete_kit",
+      "name": "Complete the look",
+      "limit": 1,
+      "settings": [
+        { "type": "paragraph", "content": "Shows complementary products set in the Search & Discovery app. Without them, other products from the same collection show instead." },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Complete the look" },
+        { "type": "text", "id": "subheading", "label": "Subheading", "default": "Match gear" },
+        { "type": "range", "id": "limit", "label": "Products to show", "min": 2, "max": 8, "step": 1, "default": 4 },
+        { "type": "checkbox", "id": "fallback", "label": "Fall back to the same collection", "default": true }
+      ]
+    },
+    {
+      "type": "trust_line",
+      "name": "Trust line",
+      "settings": [
+        {
+          "type": "select", "id": "icon", "label": "Icon",
+          "options": [
+            { "value": "check", "label": "Tick" },
+            { "value": "truck", "label": "Delivery" },
+            { "value": "return", "label": "Returns" },
+            { "value": "shield", "label": "Guarantee" },
+            { "value": "lock", "label": "Secure" },
+            { "value": "clock", "label": "Turnaround" },
+            { "value": "star", "label": "Reviews" }
+          ],
+          "default": "check"
+        },
+        { "type": "text", "id": "text", "label": "Text", "default": "Free design mockup on every kit" },
+        { "type": "url", "id": "link", "label": "Link" }
+      ]
+    },
+    { "type": "description", "name": "Description", "limit": 1, "settings": [] },
+    {
+      "type": "accordion",
+      "name": "Accordion",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Delivery & turnaround" },
+        { "type": "richtext", "id": "content", "label": "Content" },
+        { "type": "page", "id": "page", "label": "Or use a page", "info": "Replaces the content above." },
+        { "type": "checkbox", "id": "open", "label": "Open by default", "default": false }
+      ]
+    }
+  ]
+}
+{% endschema %}

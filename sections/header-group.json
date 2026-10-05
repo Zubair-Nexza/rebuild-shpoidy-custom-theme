@@ -1,0 +1,136 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "utility_bar": {
+      "type": "utility-bar",
+      "blocks": {
+        "message_1": {
+          "type": "message",
+          "settings": {
+            "text": "Free UK shipping over £50",
+            "link": ""
+          }
+        },
+        "message_2": {
+          "type": "message",
+          "settings": {
+            "text": "10% off your first order: <strong>ROSTER10</strong>",
+            "link": ""
+          }
+        },
+        "message_3": {
+          "type": "message",
+          "settings": {
+            "text": "Order by [date] for pre-season",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "message_1",
+        "message_2",
+        "message_3"
+      ],
+      "settings": {
+        "rotate_seconds": 4
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "logo_text": "ROSTER",
+        "logo_width": 150,
+        "shop_label": "Shop",
+        "shop_menu": "",
+        "club_shops_label": "Club Shops",
+        "club_shops_url": "",
+        "shop_feature_title": "Urban Camo",
+        "shop_feature_label": "Shop the Look",
+        "shop_feature_url": "",
+        "quote_label": "Free Quote",
+        "quote_url": "",
+        "whatsapp_url": "",
+        "popular": "Football kits, Training tops, Headband, Rain jacket, Club shops",
+        "show_progress": true
+      },
+      "blocks": {
+        "football": {
+          "type": "sport",
+          "settings": {
+            "sport": "football",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        },
+        "rugby": {
+          "type": "sport",
+          "settings": {
+            "sport": "rugby",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        },
+        "cricket": {
+          "type": "sport",
+          "settings": {
+            "sport": "cricket",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        },
+        "golf": {
+          "type": "sport",
+          "settings": {
+            "sport": "golf",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        },
+        "darts": {
+          "type": "sport",
+          "settings": {
+            "sport": "darts",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        },
+        "bowls": {
+          "type": "sport",
+          "settings": {
+            "sport": "bowls",
+            "menu": "",
+            "landing_url": "",
+            "feature_caption": ""
+          }
+        }
+      },
+      "block_order": [
+        "football",
+        "rugby",
+        "cricket",
+        "golf",
+        "darts",
+        "bowls"
+      ]
+    }
+  },
+  "order": [
+    "utility_bar",
+    "header"
+  ]
+}

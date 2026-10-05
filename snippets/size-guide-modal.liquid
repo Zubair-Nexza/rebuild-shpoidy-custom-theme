@@ -1,0 +1,190 @@
+{%- comment -%}
+  snippets/size-guide-modal.liquid
+  Clean Sport size guide dialog for the PDP (sections/n90-main-product.liquid).
+  Styles: assets/n90-size-guide.css · Behaviour: assets/n90-size-guide.js
+
+  Content, first match wins:
+  1. A page in the product's custom.size_guide metafield (page reference)
+  2. The block's "Size guide page" when the source is set to Page
+  3. The block's editable tables: Men's / Unisex, Women's, Youth — one row per line,
+     "Size | Chest | Waist | Length | Recommended fit", measurements in cm.
+     The CM / INCHES toggle converts every number in the three measurement columns.
+
+  Accepts:
+  - id: {String} dialog id; the trigger uses data-n90-sg-open="<id>"
+  - block: {Object} the variant picker block (size guide settings)
+  - product: {Object}
+{%- endcomment -%}
+
+{{ 'n90-size-guide.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'n90-size-guide.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign bs = block.settings
+  assign guide_page = blank
+  if product.metafields.custom.size_guide.value != blank
+    assign guide_page = product.metafields.custom.size_guide.value
+  elsif bs.size_guide_source == 'page' and bs.size_guide_page != blank
+    assign guide_page = bs.size_guide_page
+  endif
+
+  assign default_tab = 1
+  assign tags_down = product.tags | join: ',' | downcase
+  if tags_down contains 'youth' or tags_down contains 'junior' or tags_down contains 'kids'
+    assign default_tab = 3
+  elsif tags_down contains 'women' or tags_down contains 'ladies'
+    assign default_tab = 2
+  endif
+  if bs.size_table_2 == blank and default_tab == 2
+    assign default_tab = 1
+  endif
+  if bs.size_table_3 == blank and default_tab == 3
+    assign default_tab = 1
+  endif
+
+  assign heading = bs.size_guide_heading | default: 'Find your fit'
+-%}
+
+<dialog
+  class="n90-sg"
+  id="{{ id }}"
+  aria-labelledby="{{ id }}-title"
+  data-n90-sg
+  data-default-unit="{{ bs.size_guide_unit | default: 'cm' }}"
+  data-unit-cm="{{ 'n90.size_guide.unit_cm' | t }}"
+  data-unit-in="{{ 'n90.size_guide.unit_in' | t }}"
+>
+  <div class="n90-sg__panel">
+    <header class="n90-sg__head">
+      <div>
+        <p class="n90-sg__eyebrow">{{ 'n90.size_guide.eyebrow' | t }}</p>
+        <h2 class="n90-sg__title" id="{{ id }}-title">
+          {%- if guide_page != blank -%}{{ guide_page.title | escape }}{%- else -%}{{ heading | escape }}{%- endif -%}
+        </h2>
+      </div>
+      <button type="button" class="n90-sg__close" data-n90-sg-close aria-label="{{ 'accessibility.close' | t }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="n90-sg__body">
+      {%- if guide_page != blank -%}
+        <div class="n90-sg__page rte">{{ guide_page.content }}</div>
+      {%- else -%}
+        <div class="n90-sg__bar">
+          <div class="n90-sg__tabs" role="tablist" aria-label="{{ 'n90.a11y.size_category' | t }}">
+            {%- for n in (1..3) -%}
+              {%- liquid
+                assign table_key = 'size_table_' | append: n
+                assign label_key = 'size_tab_' | append: n
+                assign tab_on = false
+                if n == default_tab
+                  assign tab_on = true
+                endif
+              -%}
+              {%- if bs[table_key] != blank -%}
+                <button
+                  type="button"
+                  class="n90-sg__tab"
+                  role="tab"
+                  id="{{ id }}-tab-{{ n }}"
+                  aria-controls="{{ id }}-panel-{{ n }}"
+                  aria-selected="{{ tab_on }}"
+                  tabindex="{% if tab_on %}0{% else %}-1{% endif %}"
+                  data-n90-sg-tab
+                >
+                  {{- bs[label_key] | escape -}}
+                </button>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+
+          <div class="n90-sg__units" role="group" aria-label="{{ 'n90.a11y.units' | t }}">
+            <button type="button" class="n90-sg__unit" data-n90-sg-unit="cm" aria-pressed="true">{{ 'n90.size_guide.cm' | t }}</button>
+            <button type="button" class="n90-sg__unit" data-n90-sg-unit="in" aria-pressed="false">{{ 'n90.size_guide.inches' | t }}</button>
+          </div>
+        </div>
+
+        {%- for n in (1..3) -%}
+          {%- liquid
+            assign table_key = 'size_table_' | append: n
+            assign label_key = 'size_tab_' | append: n
+            assign rows = bs[table_key] | newline_to_br | split: '<br />'
+          -%}
+          {%- if bs[table_key] != blank -%}
+            <div
+              class="n90-sg__panel-t"
+              role="tabpanel"
+              id="{{ id }}-panel-{{ n }}"
+              aria-labelledby="{{ id }}-tab-{{ n }}"
+              tabindex="0"
+              {% unless n == default_tab %}
+                hidden
+              {% endunless %}
+            >
+              <div class="n90-sg__scroll">
+                <table class="n90-sg__table">
+                  <caption class="ref-sr">{{ 'n90.size_guide.sizes_caption' | t: category: bs[label_key] | escape }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'n90.size_guide.size' | t }}</th>
+                      <th scope="col">{{ 'n90.size_guide.chest' | t }} <span data-n90-sg-u>{{ 'n90.size_guide.unit_cm' | t }}</span></th>
+                      <th scope="col">{{ 'n90.size_guide.waist' | t }} <span data-n90-sg-u>{{ 'n90.size_guide.unit_cm' | t }}</span></th>
+                      <th scope="col">{{ 'n90.size_guide.length' | t }} <span data-n90-sg-u>{{ 'n90.size_guide.unit_cm' | t }}</span></th>
+                      <th scope="col">{{ 'n90.size_guide.fit' | t }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%- for row in rows -%}
+                      {%- assign row_clean = row | strip -%}
+                      {%- if row_clean == blank -%}{%- continue -%}{%- endif -%}
+                      {%- assign cells = row_clean | split: '|' -%}
+                      <tr>
+                        <th scope="row">{{ cells[0] | strip | escape }}</th>
+                        {%- for c in (1..3) -%}
+                          {%- assign cell = cells[c] | strip -%}
+                          <td data-cm="{{ cell | escape }}">{{ cell | default: '—' | escape }}</td>
+                        {%- endfor -%}
+                        <td>{{ cells[4] | strip | default: '—' | escape }}</td>
+                      </tr>
+                    {%- endfor -%}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      <div class="n90-sg__how">
+        <svg class="n90-sg__fig" viewBox="0 0 240 240" fill="none" role="img" aria-labelledby="{{ id }}-fig">
+          <title id="{{ id }}-fig">How to measure chest, waist and body length</title>
+          <path d="M88 28c8 10 20 14 32 14s24-4 32-14l44 18 22 52-30 12-12-26v152H64V84l-12 26-30-12 22-52z" class="n90-sg__cf" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M88 28c8 14 20 20 32 20s24-6 32-20" stroke="currentColor" stroke-width="3"/>
+          <path d="M70 92h100" stroke="currentColor" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>
+          <path d="M64 92h112" class="n90-sg__vs" stroke-width="7" stroke-linecap="round"/>
+          <path d="M64 92h112" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M72 86l-8 6 8 6M168 86l8 6-8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66 152h108" stroke="currentColor" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round"/>
+          <path d="M200 32v196" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M194 40l6-8 6 8M194 220l6 8 6-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="120" cy="92" r="13" fill="currentColor"/>
+          <text x="120" y="97" class="n90-sg__vf" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" text-anchor="middle">A</text>
+          <circle cx="120" cy="152" r="13" fill="currentColor"/>
+          <text x="120" y="157" class="n90-sg__cf" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" text-anchor="middle">B</text>
+          <circle cx="214" cy="130" r="13" class="n90-sg__vf" stroke="currentColor" stroke-width="2"/>
+          <text x="214" y="135" fill="currentColor" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="15" font-weight="700" text-anchor="middle">C</text>
+        </svg>
+        <ol class="n90-sg__steps">
+          <li><span class="n90-sg__key">A</span><span><strong>{{ 'n90.size_guide.chest' | t }}</strong> {{ 'n90.size_guide.chest_how' | t }}</span></li>
+          <li><span class="n90-sg__key">B</span><span><strong>{{ 'n90.size_guide.waist' | t }}</strong> {{ 'n90.size_guide.waist_how' | t }}</span></li>
+          <li><span class="n90-sg__key">C</span><span><strong>{{ 'n90.size_guide.length' | t }}</strong> {{ 'n90.size_guide.length_how' | t }}</span></li>
+        </ol>
+      </div>
+
+      {%- if bs.size_guide_note != blank -%}
+        <p class="n90-sg__note">{{ bs.size_guide_note | escape }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</dialog>

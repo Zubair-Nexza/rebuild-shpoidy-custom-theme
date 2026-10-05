@@ -1,0 +1,33 @@
+{%- comment -%}
+  snippets/icon.liquid
+  Renders inline SVG icons by name.
+  Usage: {% render 'icon', name: 'search' %}
+{%- endcomment -%}
+
+{%- case name -%}
+
+  {%- when 'menu' -%}
+    <svg class="ref-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"></path></svg>
+
+  {%- when 'close' -%}
+    <svg class="ref-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+
+  {%- when 'search' -%}
+    <svg class="ref-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+
+  {%- when 'account' -%}
+    <svg class="ref-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>
+
+  {%- when 'bag' -%}
+    <svg class="ref-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
+
+  {%- when 'arrow' -%}
+    <svg class="ref-ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+  {%- when 'chevron-left' -%}
+    <svg class="ref-ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+
+  {%- when 'chevron-right' -%}
+    <svg class="ref-ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+
+{%- endcase -%}

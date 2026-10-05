@@ -1,0 +1,30 @@
+{%- comment -%}
+  snippets/n90-product-stream.liquid
+  Classifies a product as 'custom' (custom-made teamwear / mockup, quote only) or 'retail'
+  (premade, add to cart). Outputs the word only — use with capture:
+    {%- capture stream -%}{%- render 'n90-product-stream', product: prod -%}{%- endcapture -%}
+
+  Custom when the product uses the custom-kit template, or carries any of the tags in
+  Theme settings → ROSTER catalog → Custom kit tags (default: custom-teamwear, mockup).
+  Everything else is retail.
+
+  Accepts:
+  - product: {Object}
+{%- endcomment -%}
+{%- liquid
+  assign stream = 'retail'
+  if product.template_suffix == 'custom-kit'
+    assign stream = 'custom'
+  else
+    assign custom_tags = settings.n90_custom_tags | default: 'custom-teamwear, mockup' | downcase | split: ','
+    assign product_tags = product.tags | join: '|' | downcase | prepend: '|' | append: '|'
+    for custom_tag in custom_tags
+      assign tag_key = custom_tag | strip | prepend: '|' | append: '|'
+      if tag_key != '||' and product_tags contains tag_key
+        assign stream = 'custom'
+        break
+      endif
+    endfor
+  endif
+  echo stream
+-%}

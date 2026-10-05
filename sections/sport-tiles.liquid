@@ -1,0 +1,365 @@
+{%- comment -%}
+  sections/sport-tiles.liquid
+  ROSTER · Section 3 — Sport tiles ("Shop by sport / Kit for every club")
+  Reference: data-section="SportTiles" (.sec-head + .g3 bento of .tile / .tile-img / .tile-meta)
+
+  Bento grid: 3 columns, first tile spans 2 × 2. Every tile is a strict 1:1 square
+  (the 2 × 2 tile stays square because it spans two square columns and rows).
+  Motion from the reference: numbered counter, image zoom 1.06, meta card lift,
+  Volt arrow that springs in on hover/focus, scroll reveal via assets/n90-motion.js.
+{%- endcomment -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --st-pt: {{ section.settings.padding_top }}px;
+    --st-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  /* ref .sec */
+  .n90-st {
+    padding: var(--st-pt) 0 var(--st-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* ref .sec-head */
+  .n90-st__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .n90-st__eyebrow {
+    margin: 0 0 16px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-st__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(42px, 4.2vw, 60px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-st__tlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    flex: none;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    text-decoration-thickness: 1px;
+    transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+  }
+  .n90-st__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+  /* ref .g3 bento */
+  .n90-st__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: n90-tile;
+  }
+  .n90-st__grid > li { min-width: 0; }
+  .n90-st__grid > li:first-child { grid-column: span 2; grid-row: span 2; }
+
+  /* ref .tile */
+  .n90-st__tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    text-decoration: none;
+    counter-increment: n90-tile;
+  }
+  /* ref .tile::before — 01, 02 … */
+  .n90-st__tile::before {
+    content: counter(n90-tile, decimal-leading-zero);
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    padding: 4px 8px 3px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-canvas);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1;
+    letter-spacing: .12em;
+  }
+
+  /* ref .tile-img — zoom 1.06 on hover */
+  .n90-st__img,
+  .n90-st__pitch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .n90-st__img {
+    object-fit: cover;
+    transition: transform 1s var(--n90-ease);
+  }
+  .n90-st__tile:hover .n90-st__img { transform: scale(1.06); }
+  .n90-st__pitch { opacity: .07; pointer-events: none; }
+
+  /* ref .tile-meta — floating card, lifts 4px, Volt arrow springs in */
+  .n90-st__meta {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 14px 72px 14px 18px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-canvas);
+    transition: transform .5s var(--n90-ease);
+  }
+  .n90-st__tile:hover .n90-st__meta { transform: translateY(-4px); }
+  .n90-st__meta::after {
+    content: '\2192';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    opacity: 0;
+    transform: translate(10px, -50%) scale(.5);
+    transition: opacity .45s var(--n90-spring), transform .45s var(--n90-spring);
+  }
+  .n90-st__tile:hover .n90-st__meta::after,
+  .n90-st__tile:focus-visible .n90-st__meta::after {
+    opacity: 1;
+    transform: translate(0, -50%) scale(1);
+  }
+  /* ref .d.h3 */
+  .n90-st__name {
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(22px, 2.2vw, 32px);
+    line-height: 1.08;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-st__grid > li:first-child .n90-st__name { font-size: clamp(34px, 3.9vw, 56px); }
+  .n90-st__price { font-size: 14px; color: var(--n90-muted); }
+
+  .n90-st__tile:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 3px; }
+
+  /* Tablet 768–1023 */
+  @media screen and (max-width: 1023px) {
+    .n90-st__grid { gap: 16px; }
+    .n90-st__head { margin-bottom: 36px; }
+    .n90-st__meta { left: 10px; right: 10px; bottom: 10px; padding: 12px 64px 12px 14px; }
+  }
+
+  /* Mobile 320–767 — ref .is-m: 2 columns, first tile full width */
+  @media screen and (max-width: 767px) {
+    .n90-st { padding: min(var(--st-pt), 64px) 0 min(var(--st-pb), 64px); }
+    .n90-st__head { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 28px; }
+    .n90-st__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .n90-st__grid > li:first-child { grid-column: span 2; grid-row: span 1; }
+    .n90-st__tile::before { top: 8px; left: 8px; font-size: 13px; }
+    .n90-st__meta { left: 8px; right: 8px; bottom: 8px; padding: 10px 12px; }
+    .n90-st__name { font-size: 20px; }
+    .n90-st__grid > li:first-child .n90-st__name { font-size: 34px; }
+    .n90-st__price { font-size: 12px; }
+    .n90-st__grid > li:first-child .n90-st__meta { padding-right: 64px; }
+  }
+
+  /* Touch: no hover arrow on small tiles; keep the image still */
+  @media (hover: none) {
+    .n90-st__tile:hover .n90-st__img,
+    .n90-st__tile:hover .n90-st__meta { transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .n90-st__img,
+    .n90-st__meta,
+    .n90-st__meta::after { transition: none; }
+  }
+</style>
+
+<section class="n90-st" aria-labelledby="n90-st-title-{{ section.id }}">
+  <div class="page-width">
+    <div class="n90-st__head" data-n90-reveal>
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-st__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-st__heading" id="n90-st-title-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+      </div>
+      {%- if section.settings.link_label != blank and section.settings.link_url != blank -%}
+        <a href="{{ section.settings.link_url }}" class="n90-st__tlink">{{ section.settings.link_label | escape }}</a>
+      {%- endif -%}
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      <ul class="n90-st__grid" role="list" data-n90-stagger>
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign b = block.settings
+
+            assign tile_title = b.custom_title
+            if tile_title == blank and b.collection != blank
+              assign tile_title = b.collection.title
+            endif
+            if tile_title == blank
+              assign tile_title = b.fallback_title
+            endif
+
+            assign tile_img = b.custom_image
+            if tile_img == blank and b.collection != blank
+              assign tile_img = b.collection.featured_image
+            endif
+
+            assign tile_url = b.tile_url
+            if tile_url == blank and b.collection != blank
+              assign tile_url = b.collection.url
+            endif
+            if tile_url == blank
+              assign tile_handle = tile_title | handleize
+              if collections[tile_handle] != blank
+                assign tile_url = collections[tile_handle].url
+              else
+                assign tile_url = routes.all_products_collection_url
+              endif
+            endif
+
+            if forloop.first
+              assign img_sizes = '(min-width: 768px) 66vw, 100vw'
+            else
+              assign img_sizes = '(min-width: 768px) 33vw, 50vw'
+            endif
+          -%}
+          <li {{ block.shopify_attributes }}>
+            <a href="{{ tile_url }}" class="n90-st__tile">
+              {%- if tile_img != blank -%}
+                {{
+                  tile_img
+                  | image_url: width: 1400
+                  | image_tag:
+                    widths: '300, 450, 600, 800, 1000, 1400',
+                    sizes: img_sizes,
+                    loading: 'lazy', decoding: 'async',
+                    class: 'n90-st__img',
+                    alt: ''
+                }}
+              {%- else -%}
+                <svg class="n90-st__pitch" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                  <rect x="40" y="140" width="720" height="520"/><line x1="400" y1="140" x2="400" y2="660"/><circle cx="400" cy="400" r="80"/><circle cx="400" cy="400" r="4" fill="currentColor"/><rect x="40" y="260" width="120" height="280"/><rect x="640" y="260" width="120" height="280"/><rect x="40" y="340" width="44" height="120"/><rect x="716" y="340" width="44" height="120"/><path d="M160 350a60 60 0 0 1 0 100M640 350a60 60 0 0 0 0 100"/>
+                </svg>
+              {%- endif -%}
+              <span class="n90-st__meta">
+                <span class="n90-st__name">{{ tile_title | escape }}</span>
+                {%- if b.price_tag != blank -%}
+                  <span class="n90-st__price">{{ b.price_tag | escape }}</span>
+                {%- endif -%}
+              </span>
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Sport tiles",
+  "tag": "div",
+  "class": "section-sport-tiles",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 9,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Shop by sport" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Kit for every club" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "Find your club shop" },
+    {
+      "type": "url", "id": "link_url", "label": "Link",
+      "info": "The link is hidden until a destination is set."
+    },
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "sport_tile",
+      "name": "Sport tile",
+      "settings": [
+        {
+          "type": "collection", "id": "collection", "label": "Collection",
+          "info": "Supplies the title, image and link unless overridden below."
+        },
+        { "type": "text", "id": "custom_title", "label": "Sport name" },
+        {
+          "type": "image_picker", "id": "custom_image", "label": "Image",
+          "info": "Cropped to a 1:1 square. The first tile is shown 2 × 2."
+        },
+        {
+          "type": "text", "id": "fallback_title", "label": "Fallback name",
+          "info": "Used when there is no sport name or collection.",
+          "default": "Football"
+        },
+        { "type": "url", "id": "tile_url", "label": "Link" },
+        { "type": "text", "id": "price_tag", "label": "Price line", "default": "From £12 per player" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sport tiles",
+      "blocks": [
+        { "type": "sport_tile", "settings": { "fallback_title": "Football" } },
+        { "type": "sport_tile", "settings": { "fallback_title": "Rugby" } },
+        { "type": "sport_tile", "settings": { "fallback_title": "Cricket" } },
+        { "type": "sport_tile", "settings": { "fallback_title": "Golf" } },
+        { "type": "sport_tile", "settings": { "fallback_title": "Darts" } },
+        { "type": "sport_tile", "settings": { "fallback_title": "Bowls" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

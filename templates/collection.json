@@ -1,0 +1,38 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "n90-main-collection",
+      "settings": {
+        "show_breadcrumbs": true,
+        "eyebrow": "",
+        "show_description": true,
+        "show_note": true,
+        "note_handle_contains": "kit",
+        "note_title": "Made to order from 10 pieces",
+        "note_text": "Every kit is designed for your club. Start with a free mockup and we’ll quote with it.",
+        "note_button": "Get a free kit mockup",
+        "note_url": "",
+        "products_per_page": 24,
+        "columns_desktop": "3",
+        "show_secondary_image": true,
+        "show_quick_add": true,
+        "load_more_label": "Load more kits",
+        "enable_filtering": true,
+        "enable_sorting": true,
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

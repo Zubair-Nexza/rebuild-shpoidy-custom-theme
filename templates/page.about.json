@@ -1,0 +1,89 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-about",
+      "blocks": {
+        "stat_1": {
+          "type": "stat",
+          "settings": {
+            "value": "100%",
+            "label": "Bespoke kits"
+          }
+        },
+        "stat_2": {
+          "type": "stat",
+          "settings": {
+            "value": "3–4 wk",
+            "label": "Delivery"
+          }
+        },
+        "stat_3": {
+          "type": "stat",
+          "settings": {
+            "value": "0",
+            "label": "Middlemen"
+          }
+        },
+        "pillar_1": {
+          "type": "pillar",
+          "settings": {
+            "title": "Athletic innovation",
+            "text": "Lightweight, breathable, rip-stop match fabrics."
+          }
+        },
+        "pillar_2": {
+          "type": "pillar",
+          "settings": {
+            "title": "Transparent grassroots support",
+            "text": "Honest club pricing without retail markups."
+          }
+        },
+        "pillar_3": {
+          "type": "pillar",
+          "settings": {
+            "title": "Bespoke identity",
+            "text": "Free in-house design mockups tailored to club tradition."
+          }
+        }
+      },
+      "block_order": [
+        "stat_1",
+        "stat_2",
+        "stat_3",
+        "pillar_1",
+        "pillar_2",
+        "pillar_3"
+      ],
+      "settings": {
+        "eyebrow": "About ROSTER",
+        "heading": "Built for the grassroots. <em>Engineered for motion.</em>",
+        "intro": "Custom teamwear designed with clubs, made for match day and priced for the people who run grassroots sport.",
+        "caption": "",
+        "story_label": "Our story",
+        "pillars_eyebrow": "What we stand for",
+        "pillars_heading": "Three things we won’t compromise on",
+        "close_eyebrow": "Free design · Free quote",
+        "close_heading": "Ready to kit out your club?",
+        "close_text": "Start with a free mockup, or set up a club shop so players and parents order their own.",
+        "close_primary_label": "Get a free kit mockup",
+        "close_primary_url": "",
+        "close_secondary_label": "Explore club shops",
+        "close_secondary_url": "",
+        "padding_top": 48,
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

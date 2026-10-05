@@ -1,0 +1,213 @@
+{%- comment -%}
+  snippets/n90-product-card.liquid
+  Clean Sport product card — reference .pc / .pc-media / .pc-alt / .pc-name / .pc-price / .dots / .qadd
+  Media is a strict 1:1 square (brand spec; the reference uses 4:5).
+  Styles: assets/n90-product-card.css
+
+  Accepts:
+  - product: {Object} product (omit with placeholder: true)
+  - placeholder: {Boolean} render a mock card instead of a product
+  - index: {Number} Shopify placeholder art index (1-6), used when no art_kind is given
+  - title, price_label: {String} mock card text (defaults: "Product title", a sample price)
+  - art_kind: {String} reference kit art for the mock card (see snippets/n90-kit-art.liquid)
+  - dots: {String} comma-separated swatch colours for the mock card
+  - sizes: {String} sizes attribute for the product images
+  - eager: {Boolean} first-row cards — load immediately (fetchpriority high when priority: true)
+  - priority: {Boolean} the likely LCP card
+  - show_secondary_image: {Boolean}
+  - show_quick_add: {Boolean}
+  - show_swatches: {Boolean} interactive colour swatches (snippets/card-color-swatches.liquid)
+  - show_quick_view: {Boolean} "Quick view" button on hover + the "+" on products with
+    options opens the quick view dialog (snippets/quick-view-modal.liquid must be on the page)
+{%- endcomment -%}
+
+{%- if placeholder -%}
+  <div class="n90-pc n90-pc--placeholder">
+    <span class="n90-pc__link">
+      <span class="n90-pc__media">
+        {%- if art_kind != blank -%}
+          <span class="n90-pc__art">{%- render 'n90-kit-art', kind: art_kind -%}</span>
+        {%- else -%}
+          {%- assign ph = index | default: 1 | modulo: 6 | plus: 1 -%}
+          {{ 'product-' | append: ph | placeholder_svg_tag: 'n90-pc__ph' }}
+        {%- endif -%}
+      </span>
+      <span class="n90-pc__title"><span class="n90-pc__name">{{ title | default: 'Product title' | escape }}</span></span>
+      <span class="n90-pc__price">
+        {%- if price_label != blank -%}{{ price_label | escape }}{%- else -%}{{ 1999 | money }}{%- endif -%}
+      </span>
+      {%- if dots != blank -%}
+        <span class="n90-pc__dots" aria-hidden="true">
+          {%- assign dot_list = dots | split: ',' -%}
+          {%- for dot in dot_list -%}
+            <span class="n90-pc__dot" style="background: {{ dot | strip }};"></span>
+          {%- endfor -%}
+        </span>
+      {%- endif -%}
+    </span>
+  </div>
+{%- else -%}
+  {%- liquid
+    assign media_1 = product.featured_media.preview_image
+    assign media_2 = blank
+    if show_secondary_image and product.media.size > 1
+      assign media_2 = product.media[1].preview_image
+    endif
+    assign alt_1 = media_1.alt | default: product.title
+    assign variant = product.selected_or_first_available_variant
+    assign price_money = product.price | money
+    if eager
+      assign img_loading = 'eager'
+    else
+      assign img_loading = 'lazy'
+    endif
+    if priority
+      assign img_priority = 'high'
+    else
+      assign img_priority = 'auto'
+    endif
+    assign on_sale = false
+    if product.compare_at_price > product.price and product.available
+      assign on_sale = true
+    endif
+    comment
+      Custom-made teamwear (snippets/n90-product-stream.liquid): quote only — team price line,
+      "Custom kit" tag, no quick add / quick view.
+    endcomment
+    capture card_stream
+      render 'n90-product-stream', product: product
+    endcapture
+    assign is_custom = false
+    if card_stream == 'custom'
+      assign is_custom = true
+      assign show_quick_add = false
+      assign show_quick_view = false
+      assign on_sale = false
+    endif
+    assign colour_option = blank
+    if show_swatches
+      for option in product.options_with_values
+        assign option_name = option.name | downcase
+        if option_name == 'color' or option_name == 'colour'
+          assign colour_option = option
+          break
+        endif
+      endfor
+    endif
+  -%}
+
+  <div class="n90-pc{% if media_2 != blank %} n90-pc--swap{% endif %}" data-n90-pc>
+    <a href="{{ product.url }}" class="n90-pc__link">
+      <span class="n90-pc__media">
+        {%- if media_1 != blank -%}
+          {{
+            media_1
+            | image_url: width: 1080
+            | image_tag:
+              widths: '300, 450, 600, 800, 1080',
+              sizes: sizes,
+              loading: img_loading,
+              fetchpriority: img_priority,
+              decoding: 'async',
+              class: 'n90-pc__img',
+              alt: alt_1
+          }}
+          {%- if media_2 != blank -%}
+            {{
+              media_2
+              | image_url: width: 1080
+              | image_tag:
+                widths: '300, 450, 600, 800, 1080',
+                sizes: sizes,
+                loading: 'lazy', decoding: 'async',
+                class: 'n90-pc__img n90-pc__alt',
+                alt: ''
+            }}
+          {%- endif -%}
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'n90-pc__ph' }}
+        {%- endif -%}
+
+        {%- render 'product-badge', product: product, context: 'card' -%}
+        {%- if is_custom -%}
+          <span class="n90-pc__kit">{{ 'n90.catalog.custom_tag' | t }}</span>
+        {%- endif -%}
+      </span>
+
+      <span class="n90-pc__title"><span class="n90-pc__name">{{ product.title | escape }}</span></span>
+
+      <span class="n90-pc__price">
+        {%- if is_custom -%}
+          <span class="n90-pc__team">{%- render 'n90-custom-price', product: product -%}</span>
+        {%- elsif on_sale -%}
+          <span class="n90-pc__now">
+            {%- if product.price_varies %}{{ 'products.product.price.from_price_html' | t: price: price_money }}{% else %}{{ price_money }}{% endif -%}
+          </span>
+          <s class="n90-pc__was">
+            <span class="n90-sr">{{ 'products.product.price.regular_price' | t }}</span>
+            {{- product.compare_at_price | money -}}
+          </s>
+        {%- elsif product.price_varies -%}
+          {{ 'products.product.price.from_price_html' | t: price: price_money }}
+        {%- else -%}
+          {{ price_money }}
+        {%- endif -%}
+      </span>
+
+    </a>
+
+    {%- if colour_option != blank and colour_option.values.size > 1 -%}
+      {%- render 'card-color-swatches', product: product, option: colour_option -%}
+    {%- endif -%}
+
+    {%- if show_quick_view -%}
+      <div class="n90-pc__qv-wrap">
+        <button
+          type="button"
+          class="n90-pc__qv"
+          data-n90-qv-open="{{ product.url }}"
+          aria-haspopup="dialog"
+          aria-label="{{ 'n90.a11y.quick_view_product' | t: title: product.title | escape }}"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          {{ 'n90.a11y.quick_view' | t }}
+        </button>
+      </div>
+    {%- endif -%}
+
+    {%- if show_quick_add and product.available -%}
+      {%- if product.has_only_default_variant -%}
+        <button
+          type="button"
+          class="n90-pc__qadd"
+          data-n90-qadd="{{ variant.id }}"
+          aria-label="{{ 'products.product.add_to_cart' | t }}: {{ product.title | escape }}"
+        >
+          <svg class="n90-pc__qadd-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+          <svg class="n90-pc__qadd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          <span class="n90-pc__qadd-spin" aria-hidden="true"></span>
+        </button>
+      {%- elsif show_quick_view -%}
+        {%- comment -%} Sized products: pick a size in the quick view dialog {%- endcomment -%}
+        <button
+          type="button"
+          class="n90-pc__qadd"
+          data-n90-qv-open="{{ product.url }}"
+          aria-haspopup="dialog"
+          aria-label="{{ 'products.product.choose_options' | t }}: {{ product.title | escape }}"
+        >
+          <svg class="n90-pc__qadd-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      {%- else -%}
+        {%- comment -%} Sized products go to the product page to pick a size {%- endcomment -%}
+        <a
+          href="{{ product.url }}"
+          class="n90-pc__qadd"
+          aria-label="{{ 'products.product.choose_options' | t }}: {{ product.title | escape }}"
+        >
+          <svg class="n90-pc__qadd-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+        </a>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+{%- endif -%}

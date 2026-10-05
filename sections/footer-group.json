@@ -1,0 +1,76 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "quote_band": {
+      "type": "quote-band",
+      "settings": {
+        "eyebrow": "Free design · Free quote",
+        "heading": "Get your free kit mockup",
+        "text": "Tell us your sport, team size and colours. We’ll design your kit and send a quote, with no obligation.",
+        "button_label": "Get a free kit mockup",
+        "button_url": "",
+        "link_label": "Chat on WhatsApp",
+        "link_url": "",
+        "note": "10% off your first order with ROSTER10",
+        "visibility": "all"
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "brand_name": "ROSTER",
+        "tagline": "Custom teamwear for grassroots clubs.",
+        "show_newsletter": true,
+        "newsletter_label": "Get 10% off your first order",
+        "newsletter_button": "Sign up",
+        "show_payment_icons": true,
+        "cookies_url": ""
+      },
+      "blocks": {
+        "sports": {
+          "type": "link_column",
+          "settings": {
+            "heading": "Sports",
+            "menu": "",
+            "default_links": "sports"
+          }
+        },
+        "shop": {
+          "type": "link_column",
+          "settings": {
+            "heading": "Shop",
+            "menu": "",
+            "default_links": "shop"
+          }
+        },
+        "help": {
+          "type": "link_column",
+          "settings": {
+            "heading": "Help",
+            "menu": "",
+            "default_links": "help"
+          }
+        }
+      },
+      "block_order": [
+        "sports",
+        "shop",
+        "help"
+      ]
+    }
+  },
+  "order": [
+    "quote_band",
+    "footer"
+  ]
+}

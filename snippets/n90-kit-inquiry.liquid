@@ -1,0 +1,102 @@
+{%- comment -%}
+  snippets/n90-kit-inquiry.liquid
+  "Get a free mockup & quote" for custom kits: Volt button + modal inquiry form (Shopify's
+  native contact form). Collects club name, sport, squad size, deadline, crest link and contact
+  details; the product title and URL are sent along. After sending, the page reloads with the
+  dialog open on the success message. Behaviour: assets/n90-kit-inquiry.js
+
+  Shopify's contact form can't carry file uploads, so the crest is collected as a link
+  (Google Drive / Dropbox / WeTransfer) — or the customer replies to our email with it.
+
+  Accepts:
+  - product: {Object}
+  - id: {String} unique id
+  - label: {String} button label (defaults to the ROSTER catalog setting)
+  - sports: {String} comma-separated sport options
+{%- endcomment -%}
+{%- liquid
+  assign inquiry_id = id | default: 'n90-inquiry'
+  assign form_id = inquiry_id | append: '-form'
+  assign btn_label = label | default: settings.n90_custom_cta | default: 'Get a free mockup & quote'
+  assign sport_list = sports | default: 'Football, Rugby, Cricket, Golf, Darts, Bowls, Other' | split: ','
+  assign min_order = settings.n90_custom_min_order | default: 10
+-%}
+{{ 'n90-kit-inquiry.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'n90-kit-inquiry.js' | asset_url }}" defer="defer"></script>
+
+<button type="button" class="n90-ki__btn" data-ki-open="{{ inquiry_id }}" aria-haspopup="dialog">
+  <span>{{ btn_label | escape }}</span>
+  {%- render 'icon', name: 'arrow' -%}
+</button>
+
+<dialog class="n90-ki" id="{{ inquiry_id }}" aria-labelledby="{{ inquiry_id }}-title" data-ki>
+  <div class="n90-ki__head">
+    <div>
+      <p class="n90-ki__eyebrow">{{ 'n90.catalog.inquiry_eyebrow' | t }}</p>
+      <h2 class="n90-ki__title" id="{{ inquiry_id }}-title">{{ product.title | escape }}</h2>
+    </div>
+    <button type="button" class="n90-ki__close" data-ki-close aria-label="{{ 'accessibility.close' | t }}">✕</button>
+  </div>
+  <div class="n90-ki__body">
+    {%- form 'contact', id: form_id, class: 'n90-ki__form' -%}
+      {%- if form.posted_successfully? -%}
+        <div class="n90-ki__success" role="status" data-ki-success>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          <p>{{ 'n90.catalog.inquiry_success' | t }}</p>
+        </div>
+      {%- else -%}
+        {%- if form.errors -%}
+          <div class="n90-ki__error" role="alert" data-ki-error>{{ form.errors | default_errors }}</div>
+        {%- endif -%}
+        <input type="hidden" name="contact[Enquiry]" value="Custom kit mockup & quote">
+        <input type="hidden" name="contact[Kit]" value="{{ product.title | escape }}">
+        <input type="hidden" name="contact[Kit link]" value="{{ request.origin }}{{ product.url }}">
+        <div class="n90-ki__grid">
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-club">{{ 'n90.forms.club_name' | t }}</label>
+            <input id="{{ form_id }}-club" type="text" name="contact[Club name]" required autocomplete="organization">
+          </div>
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-sport">{{ 'n90.forms.sport' | t }}</label>
+            <select id="{{ form_id }}-sport" name="contact[Sport]">
+              {%- for sport in sport_list -%}
+                {%- assign sport = sport | strip -%}
+                {%- if sport != blank -%}<option>{{ sport | escape }}</option>{%- endif -%}
+              {%- endfor -%}
+            </select>
+          </div>
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-squad">{{ 'n90.catalog.squad' | t }}</label>
+            <input id="{{ form_id }}-squad" type="number" name="contact[Estimated squad size]" min="{{ min_order }}" step="1" inputmode="numeric" placeholder="{{ min_order }}+" required>
+          </div>
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-deadline">{{ 'n90.catalog.deadline' | t }}</label>
+            <input id="{{ form_id }}-deadline" type="date" name="contact[Deadline]">
+          </div>
+          <div class="n90-ki__field n90-ki__field--full">
+            <label for="{{ form_id }}-crest">{{ 'n90.catalog.crest' | t }} <span>{{ 'n90.forms.optional' | t }}</span></label>
+            <input id="{{ form_id }}-crest" type="url" name="contact[Crest link]" placeholder="https://drive.google.com/…">
+            <p class="n90-ki__hint">{{ 'n90.catalog.crest_hint' | t }}</p>
+          </div>
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-name">{{ 'n90.forms.your_name' | t }}</label>
+            <input id="{{ form_id }}-name" type="text" name="contact[name]" required autocomplete="name" value="{% if customer %}{{ customer.name | escape }}{% endif %}">
+          </div>
+          <div class="n90-ki__field">
+            <label for="{{ form_id }}-email">{{ 'n90.forms.email' | t }}</label>
+            <input id="{{ form_id }}-email" type="email" name="contact[email]" required autocomplete="email" value="{% if customer %}{{ customer.email | escape }}{% endif %}">
+          </div>
+          <div class="n90-ki__field n90-ki__field--full">
+            <label for="{{ form_id }}-phone">{{ 'n90.forms.mobile' | t }} <span>{{ 'n90.forms.optional' | t }}</span></label>
+            <input id="{{ form_id }}-phone" type="tel" name="contact[phone]" autocomplete="tel">
+          </div>
+          <div class="n90-ki__field n90-ki__field--full">
+            <label for="{{ form_id }}-body">{{ 'n90.forms.anything_else' | t }}</label>
+            <textarea id="{{ form_id }}-body" name="contact[body]" rows="3" placeholder="{{ 'n90.forms.requirements_placeholder' | t }}"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="n90-ki__submit">{{ btn_label | escape }}</button>
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+</dialog>

@@ -1,0 +1,14 @@
+{%- comment -%}
+  snippets/header-cart-bubble.liquid
+  Inner markup of the header cart link (#cart-icon-bubble).
+  Shared by sections/header.liquid (first render) and
+  sections/cart-icon-bubble.liquid (Section Rendering API refresh after add-to-cart),
+  so the count updates live without changing the markup.
+{%- endcomment -%}
+{%- render 'icon', name: 'bag' -%}
+<span class="ref-sr">{{ 'templates.cart.cart' | t }}, {{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
+{%- if cart.item_count > 0 -%}
+  <span class="ref-cart-count" aria-hidden="true">
+    {%- if cart.item_count < 100 -%}{{ cart.item_count }}{%- else -%}99+{%- endif -%}
+  </span>
+{%- endif -%}

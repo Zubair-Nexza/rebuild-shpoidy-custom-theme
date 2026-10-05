@@ -1,0 +1,31 @@
+{%- comment -%}
+  snippets/n90-color-token.liquid
+  Maps a section colour setting that still holds a Clean Sport brand default to its
+  brand token, so older sections with their own colour pickers follow the theme
+  colour preset (Theme settings → ROSTER colors). Any other colour a
+  merchant picked is returned unchanged.
+
+  Accepts:
+  - value: {String|Color} the section colour setting
+{%- endcomment -%}
+{%- liquid
+  assign v = value | downcase | strip
+  case v
+    when '#181818'
+      echo 'var(--n90-carbon)'
+    when '#d4ff3a'
+      echo 'var(--n90-volt)'
+    when '#ffffff', '#fff'
+      echo 'var(--n90-canvas)'
+    when '#f4f4f5'
+      echo 'var(--n90-surface)'
+    when '#6b7280'
+      echo 'var(--n90-muted)'
+    when '#9ca3af'
+      echo 'var(--n90-muted-on-dark)'
+    when '#e5e7eb'
+      echo 'var(--n90-line)'
+    else
+      echo value
+  endcase
+-%}

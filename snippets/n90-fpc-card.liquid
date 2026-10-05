@@ -1,0 +1,80 @@
+{%- comment -%}
+  snippets/n90-fpc-card.liquid
+  Renders a single product card in the Featured Products Carousel.
+  Accepts:
+  - prod: {Object} Product Liquid object
+  - section: {Object} Section Liquid object containing settings
+{%- endcomment -%}
+
+{%- liquid
+  assign current_variant = prod.selected_or_first_available_variant
+  assign show_second_img = section.settings.show_secondary_image
+  assign show_vendor = section.settings.show_vendor
+  assign show_quick_add = section.settings.show_quick_add
+  
+  assign second_img = blank
+  if show_second_img and prod.media.size > 1
+    assign second_img = prod.media[1].preview_image
+  endif
+-%}
+
+<div class="n90-fpc__card {% if second_img == blank %}no-hover{% endif %}">
+  
+  <a href="{{ prod.url }}" class="n90-fpc__media">
+    <div class="n90-fpc__badges">
+      {%- if prod.available == false -%}
+        <span class="n90-fpc__badge">{{ 'products.product.sold_out' | t }}</span>
+      {%- elsif current_variant.compare_at_price > current_variant.price -%}
+        <span class="n90-fpc__badge n90-fpc__badge--sale">{{ 'products.product.on_sale' | t }}</span>
+      {%- endif -%}
+    </div>
+    
+    {%- if prod.featured_media != blank -%}
+      {{ prod.featured_media.preview_image | image_url: width: 600 | image_tag: class: 'n90-fpc__img', loading: 'lazy', decoding: 'async' }}
+      {%- if second_img != blank -%}
+        {{ second_img | image_url: width: 600 | image_tag: class: 'n90-fpc__img-hover', loading: 'lazy', decoding: 'async' }}
+      {%- endif -%}
+    {%- else -%}
+      {%- comment -%}
+        placeholder_svg_tag outputs an <svg> with hardcoded width/height attrs.
+        Wrap it so our absolute-positioning CSS can take control of the size.
+      {%- endcomment -%}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      </div>
+    {%- endif -%}
+  </a>
+
+  {%- if show_vendor and prod.vendor != blank -%}
+    <div class="n90-fpc__vendor">{{ prod.vendor | escape }}</div>
+  {%- endif -%}
+
+  <a href="{{ prod.url }}" style="text-decoration: none; color: inherit;">
+    <p class="n90-fpc__title">{{ prod.title | escape }}</p>
+  </a>
+
+  <div class="n90-fpc__price-wrap">
+    {%- if prod.price_varies -%}
+      {%- assign fpc_min = prod.price_min | money -%}<span class="n90-fpc__price">{{ 'products.product.price.from_price_html' | t: price: fpc_min }}</span>
+    {%- else -%}
+      <span class="n90-fpc__price">{{ current_variant.price | money }}</span>
+      {%- if current_variant.compare_at_price > current_variant.price -%}
+        <span class="n90-fpc__compare">{{ current_variant.compare_at_price | money }}</span>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+
+  {%- if show_quick_add -%}
+    <button type="button" class="n90-fpc__add-btn" data-variant-id="{{ current_variant.id }}" {% unless prod.available %}disabled{% endunless %}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" width="16" height="16">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      {%- if prod.available -%}
+        {{ 'n90.quick_view.quick_add' | t }}
+      {%- else -%}
+        Sold out
+      {%- endif -%}
+    </button>
+  {%- endif -%}
+
+</div>

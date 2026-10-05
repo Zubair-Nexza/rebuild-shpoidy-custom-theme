@@ -1,0 +1,360 @@
+{%- comment -%}
+  sections/countdown-banner.liquid
+  Flash drop / pre-season countdown — add anywhere (homepage, collection, product page).
+  Days : Hours : Minutes : Seconds in condensed display type on Carbon, Volt, Surface or
+  Canvas, with headline, subtitle and a Volt CTA. End date/time + UTC offset in settings.
+  When the timer ends: hide the section or switch to the "live" message.
+{%- endcomment -%}
+
+{%- liquid
+  assign cd_date = section.settings.end_date | strip
+  assign cd_time = section.settings.end_time | strip | default: '00:00'
+  assign cd_iso = blank
+  if cd_date != blank
+    assign cd_iso = cd_date | append: 'T' | append: cd_time | append: ':00' | append: section.settings.utc_offset
+  endif
+  assign cd_end_s = 0
+  if cd_iso != blank
+    assign cd_end_raw = cd_iso | date: '%s'
+    if cd_end_raw != cd_iso
+      assign cd_end_s = cd_end_raw | plus: 0
+    endif
+  endif
+  assign now_s = 'now' | date: '%s' | plus: 0
+  assign expired = false
+  if cd_end_s > 0 and now_s >= cd_end_s
+    assign expired = true
+  endif
+  assign hide_now = false
+  if expired and section.settings.expired_action == 'hide'
+    assign hide_now = true
+  endif
+  if cd_iso == blank and request.design_mode == false
+    assign hide_now = true
+  endif
+-%}
+
+{%- unless hide_now -%}
+  {%- style -%}
+    #shopify-section-{{ section.id }} .n90-cd {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  {%- endstyle -%}
+
+  <style>
+    @keyframes n90-cd-tick { from { transform: translateY(-30%); opacity: .2; } to { transform: none; opacity: 1; } }
+    @keyframes n90-cd-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+    .n90-cd { --cd-bg: var(--n90-carbon); --cd-fg: var(--n90-canvas); --cd-muted: var(--n90-muted-on-dark); --cd-tile: rgba(255, 255, 255, .06); --cd-line: rgba(255, 255, 255, .12); --cd-accent: var(--n90-volt); }
+    .n90-cd--volt { --cd-bg: var(--n90-volt); --cd-fg: var(--n90-carbon); --cd-muted: rgba(var(--n90-carbon-rgb), .7); --cd-tile: rgba(var(--n90-carbon-rgb), .08); --cd-line: rgba(var(--n90-carbon-rgb), .16); --cd-accent: var(--n90-carbon); }
+    .n90-cd--surface { --cd-bg: var(--n90-surface); --cd-fg: var(--n90-carbon); --cd-muted: var(--n90-muted); --cd-tile: var(--n90-canvas); --cd-line: rgba(0, 0, 0, .08); --cd-accent: var(--n90-carbon); }
+    .n90-cd--canvas { --cd-bg: var(--n90-canvas); --cd-fg: var(--n90-carbon); --cd-muted: var(--n90-muted); --cd-tile: var(--n90-surface); --cd-line: rgba(0, 0, 0, .08); --cd-accent: var(--n90-carbon); }
+
+    .n90-cd { background: var(--n90-canvas); color: var(--n90-carbon); font-family: var(--n90-font-body); }
+    .n90-cd__box {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: center;
+      gap: 32px 56px;
+      padding: clamp(28px, 4vw, 56px);
+      border-radius: 12px;
+      background: var(--cd-bg);
+      color: var(--cd-fg);
+      overflow: hidden;
+    }
+    .n90-cd--full .n90-cd__box { border-radius: 0; }
+    .n90-cd--center .n90-cd__box { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .n90-cd__copy,
+    .n90-cd__timer-wrap { animation: n90-cd-up .6s var(--n90-ease) both; }
+    .n90-cd__timer-wrap { animation-delay: .1s; }
+    .n90-cd__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font-family: var(--n90-font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--cd-muted);
+    }
+    .n90-cd__live { width: 8px; height: 8px; border-radius: 50%; background: var(--cd-accent); box-shadow: 0 0 0 0 var(--cd-accent); animation: n90-cd-ping 1.8s ease-out infinite; }
+    @keyframes n90-cd-ping { 0% { box-shadow: 0 0 0 0 currentColor; } 100% { box-shadow: 0 0 0 10px transparent; } }
+    .n90-cd__live { color: var(--cd-accent); }
+    .n90-cd__heading {
+      margin: 0;
+      font-family: var(--n90-font-display);
+      font-weight: 700;
+      font-size: clamp(36px, 4.4vw, 64px);
+      line-height: .92;
+      letter-spacing: .005em;
+      text-transform: uppercase;
+    }
+    .n90-cd__heading em { font-style: normal; color: var(--cd-accent); }
+    .n90-cd--volt .n90-cd__heading em,
+    .n90-cd--surface .n90-cd__heading em,
+    .n90-cd--canvas .n90-cd__heading em { color: inherit; box-shadow: inset 0 -.28em 0 var(--n90-volt); }
+    .n90-cd--volt .n90-cd__heading em { box-shadow: inset 0 -.28em 0 var(--n90-canvas); }
+    .n90-cd__sub { margin: 16px 0 0; max-width: 460px; font-size: 16px; line-height: 1.6; color: var(--cd-muted); }
+    .n90-cd--center .n90-cd__sub { margin-left: auto; margin-right: auto; }
+
+    .n90-cd__timer-wrap { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+    .n90-cd--center .n90-cd__timer-wrap { align-items: center; }
+    .n90-cd__timer { display: flex; align-items: stretch; gap: clamp(6px, 1vw, 12px); margin: 0; }
+    .n90-cd__unit {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: clamp(12px, 1.6vw, 20px) 6px;
+      border: 1px solid var(--cd-line);
+      border-radius: 12px;
+      background: var(--cd-tile);
+    }
+    .n90-cd--center .n90-cd__unit { flex: 0 0 clamp(72px, 12vw, 132px); }
+    .n90-cd__num {
+      display: block;
+      overflow: hidden;
+      font-family: var(--n90-font-display);
+      font-weight: 700;
+      font-size: clamp(44px, 6vw, 96px);
+      line-height: .9;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .01em;
+    }
+    .n90-cd__num.is-tick { animation: n90-cd-tick .35s var(--n90-ease); }
+    .n90-cd__lbl { font-family: var(--n90-font-display); font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--cd-muted); }
+    .n90-cd__sep { align-self: center; width: 2px; height: 40%; border-radius: 2px; background: var(--cd-accent); opacity: .9; }
+
+    .n90-cd__ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+    .n90-cd__btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 56px;
+      padding: 0 28px;
+      overflow: hidden;
+      border-radius: 12px;
+      background: var(--n90-volt);
+      color: var(--n90-carbon);
+      font-family: var(--n90-font-display);
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: transform .35s var(--n90-ease), background .2s, color .2s;
+    }
+    .n90-cd--volt .n90-cd__btn { background: var(--n90-carbon); color: var(--n90-volt); }
+    .n90-cd__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-spring); }
+    .n90-cd__btn:hover { transform: translateY(-2px); }
+    .n90-cd__btn:hover svg { transform: translateX(4px); }
+    .n90-cd__btn:active { transform: scale(.98); }
+    .n90-cd__btn:focus-visible { outline: 2px solid var(--cd-fg); outline-offset: 3px; }
+
+    .n90-cd__ended { display: none; margin: 0; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(32px, 4vw, 56px); line-height: .95; text-transform: uppercase; color: var(--cd-accent); }
+    .n90-cd.is-ended .n90-cd__timer { display: none; }
+    .n90-cd.is-ended .n90-cd__ended { display: block; }
+
+    @media screen and (max-width: 1023px) {
+      .n90-cd__box { grid-template-columns: 1fr; }
+    }
+    @media screen and (max-width: 599px) {
+      .n90-cd__sep { display: none; }
+      .n90-cd__timer { gap: 6px; }
+      .n90-cd__lbl { font-size: 11px; letter-spacing: .12em; }
+      .n90-cd--center .n90-cd__unit { flex: 1 1 0; }
+      .n90-cd__btn { width: 100%; }
+      .n90-cd__ctas { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .n90-cd__copy,
+      .n90-cd__timer-wrap,
+      .n90-cd__num.is-tick,
+      .n90-cd__live { animation: none; }
+      .n90-cd__btn,
+      .n90-cd__btn svg { transition: none; }
+    }
+  </style>
+
+  <div
+    class="n90-cd n90-cd--{{ section.settings.scheme }} n90-cd--{{ section.settings.layout }}{% if section.settings.full_width %} n90-cd--full{% endif %}{% if expired %} is-ended{% endif %}"
+    data-n90-cd
+    {% if cd_iso != blank %}
+      data-end="{{ cd_iso | escape }}"
+    {% endif %}
+    data-expired="{{ section.settings.expired_action }}"
+  >
+    <div{% unless section.settings.full_width %} class="page-width"{% endunless %}>
+      <div class="n90-cd__box">
+        <div class="n90-cd__copy">
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-cd__eyebrow"><span class="n90-cd__live" aria-hidden="true"></span>{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="n90-cd__heading">{{ section.settings.heading }}</h2>
+          {%- endif -%}
+          {%- if section.settings.subtitle != blank -%}
+            <p class="n90-cd__sub">{{ section.settings.subtitle | escape }}</p>
+          {%- endif -%}
+        </div>
+
+        <div class="n90-cd__timer-wrap">
+          {%- if cd_iso != blank -%}
+            {%- assign cd_human = cd_iso | date: '%A %-d %B %Y, %H:%M' -%}
+            <p class="ref-sr">{{ 'n90.countdown.ends' | t: date: cd_human }}</p>
+          {%- elsif request.design_mode -%}
+            <p class="n90-cd__sub" style="margin: 0;">{{ 'n90.countdown.setup' | t }}</p>
+          {%- endif -%}
+          <div class="n90-cd__timer" role="timer" aria-live="off">
+            <div class="n90-cd__unit"><span class="n90-cd__num" data-cd="d">00</span><span class="n90-cd__lbl">{{ section.settings.label_days | escape }}</span></div>
+            <span class="n90-cd__sep" aria-hidden="true"></span>
+            <div class="n90-cd__unit"><span class="n90-cd__num" data-cd="h">00</span><span class="n90-cd__lbl">{{ section.settings.label_hours | escape }}</span></div>
+            <span class="n90-cd__sep" aria-hidden="true"></span>
+            <div class="n90-cd__unit"><span class="n90-cd__num" data-cd="m">00</span><span class="n90-cd__lbl">{{ section.settings.label_minutes | escape }}</span></div>
+            <span class="n90-cd__sep" aria-hidden="true"></span>
+            <div class="n90-cd__unit"><span class="n90-cd__num" data-cd="s">00</span><span class="n90-cd__lbl">{{ section.settings.label_seconds | escape }}</span></div>
+          </div>
+          <p class="n90-cd__ended">{{ section.settings.expired_message | escape }}</p>
+
+          {%- if section.settings.button_label != blank -%}
+            <div class="n90-cd__ctas">
+              <a class="n90-cd__btn" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}">
+                {{- section.settings.button_label | escape -}}
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+              </a>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.querySelectorAll('[data-n90-cd]:not([data-cd-ready])').forEach(function (el) {
+        el.setAttribute('data-cd-ready', '');
+        var end = el.dataset.end ? Date.parse(el.dataset.end) : NaN;
+        if (isNaN(end)) return;
+        var nums = {};
+        el.querySelectorAll('[data-cd]').forEach(function (n) { nums[n.dataset.cd] = n; });
+        var timer;
+        function pad(n) { return n < 10 ? '0' + n : String(n); }
+        function set(key, value) {
+          var node = nums[key];
+          if (!node || node.textContent === value) return;
+          node.textContent = value;
+          if (reduce) return;
+          node.classList.remove('is-tick');
+          void node.offsetWidth;
+          node.classList.add('is-tick');
+        }
+        function tick() {
+          var left = Math.max(0, end - Date.now());
+          var s = Math.floor(left / 1000);
+          set('d', pad(Math.floor(s / 86400)));
+          set('h', pad(Math.floor((s % 86400) / 3600)));
+          set('m', pad(Math.floor((s % 3600) / 60)));
+          set('s', pad(s % 60));
+          if (left > 0) return;
+          clearInterval(timer);
+          if (el.dataset.expired === 'hide' && !(window.Shopify && window.Shopify.designMode)) {
+            var wrap = el.closest('.shopify-section');
+            (wrap || el).hidden = true;
+          } else {
+            el.classList.add('is-ended');
+          }
+        }
+        tick();
+        timer = setInterval(tick, 1000);
+      });
+    })();
+  </script>
+{%- endunless -%}
+
+{% schema %}
+{
+  "name": "Countdown banner",
+  "tag": "section",
+  "class": "section-n90-countdown",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Flash drop" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "info": "Italic text is highlighted.", "default": "Pre-season kit <em>drops in</em>" },
+    { "type": "text", "id": "subtitle", "label": "Subtitle", "default": "Limited run training gear and match kits. Lock in your squad's order before the countdown hits zero." },
+    { "type": "header", "content": "Timer" },
+    { "type": "text", "id": "end_date", "label": "End date", "info": "YYYY-MM-DD, e.g. 2026-11-01" },
+    { "type": "text", "id": "end_time", "label": "End time", "info": "24-hour HH:MM, e.g. 18:00", "default": "18:00" },
+    {
+      "type": "select",
+      "id": "utc_offset",
+      "label": "Time zone",
+      "options": [
+        { "value": "+00:00", "label": "UK winter — GMT (UTC+0)" },
+        { "value": "+01:00", "label": "UK summer — BST / CET (UTC+1)" },
+        { "value": "+02:00", "label": "CEST / EET (UTC+2)" },
+        { "value": "+04:00", "label": "Gulf (UTC+4)" },
+        { "value": "+05:00", "label": "Pakistan (UTC+5)" },
+        { "value": "+05:30", "label": "India (UTC+5:30)" },
+        { "value": "+10:00", "label": "Australia East (UTC+10)" },
+        { "value": "-05:00", "label": "US Eastern (UTC−5)" },
+        { "value": "-08:00", "label": "US Pacific (UTC−8)" }
+      ],
+      "default": "+00:00"
+    },
+    {
+      "type": "select",
+      "id": "expired_action",
+      "label": "When the timer ends",
+      "options": [
+        { "value": "message", "label": "Show the message below" },
+        { "value": "hide", "label": "Hide the section" }
+      ],
+      "default": "message"
+    },
+    { "type": "text", "id": "expired_message", "label": "Ended message", "default": "The drop is live" },
+    { "type": "text", "id": "label_days", "label": "Days label", "default": "Days" },
+    { "type": "text", "id": "label_hours", "label": "Hours label", "default": "Hours" },
+    { "type": "text", "id": "label_minutes", "label": "Minutes label", "default": "Mins" },
+    { "type": "text", "id": "label_seconds", "label": "Seconds label", "default": "Secs" },
+    { "type": "header", "content": "Button" },
+    { "type": "text", "id": "button_label", "label": "Label", "default": "Shop the drop" },
+    { "type": "url", "id": "button_link", "label": "Link" },
+    { "type": "header", "content": "Style" },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Colour",
+      "options": [
+        { "value": "carbon", "label": "Carbon" },
+        { "value": "volt", "label": "Volt" },
+        { "value": "surface", "label": "Surface" },
+        { "value": "canvas", "label": "Canvas" }
+      ],
+      "default": "carbon"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "split", "label": "Text left, timer right" },
+        { "value": "center", "label": "Centred" }
+      ],
+      "default": "split"
+    },
+    { "type": "checkbox", "id": "full_width", "label": "Full width", "default": false },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 48 }
+  ],
+  "presets": [
+    { "name": "Countdown banner" }
+  ]
+}
+{% endschema %}

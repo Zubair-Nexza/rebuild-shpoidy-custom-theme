@@ -1,0 +1,325 @@
+{%- comment -%}
+  sections/how-it-works.liquid
+  ROSTER · Section 4 — How it works
+  Reference: data-section="HowItWorks" (.sec.band-soft + .sec-head + ol.steps > li.step)
+
+  Soft surface band, four numbered steps with a 2px top rule. Motion from the
+  reference: a Carbon line draws across the steps on entry (1.6s), step numbers
+  spring 6px right on hover, heading and steps reveal on scroll (assets/n90-motion.js).
+{%- endcomment -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --hiw-pt: {{ section.settings.padding_top }}px;
+    --hiw-pb: {{ section.settings.padding_bottom }}px;
+    --hiw-cols: {{ section.blocks.size | at_most: 4 | at_least: 1 }};
+  }
+{%- endstyle -%}
+
+<style>
+  /* ref .sec.band-soft */
+  .n90-hiw {
+    padding: var(--hiw-pt) 0 var(--hiw-pb);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* ref .sec-head */
+  .n90-hiw__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .n90-hiw__eyebrow {
+    margin: 0 0 16px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-hiw__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(42px, 4.2vw, 60px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-hiw__heading em { font-style: normal; }
+  .n90-hiw__sub {
+    margin-top: 16px;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--n90-muted);
+  }
+  .n90-hiw__sub > * { margin: 0; }
+
+  /* Optional button — ref .btn */
+  .n90-hiw__btn {
+    position: relative;
+    overflow: hidden;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 28px;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: var(--n90-radius);
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-hiw__btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-hiw__btn:hover::after { animation: n90-hiw-shine .9s var(--n90-ease); }
+  .n90-hiw__btn:active { transform: scale(.97); }
+  .n90-hiw__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-hiw__btn:hover svg { transform: translateX(4px); }
+  @keyframes n90-hiw-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  /* ref .steps — line draws across on entry */
+  .n90-hiw__steps {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--hiw-cols), minmax(0, 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-hiw__steps::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 1;
+    height: 2px;
+    background: var(--n90-carbon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1.6s .2s var(--n90-ease);
+  }
+  .n90-hiw__steps.n90-in::before { transform: none; }
+
+  /* ref .step (band-soft rule colour) */
+  .n90-hiw__step {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding-top: 24px;
+    border-top: 2px solid #D4D4D8;
+  }
+  /* ref .step-n — springs right on hover */
+  .n90-hiw__num {
+    display: block;
+    margin-bottom: 24px;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: 56px;
+    line-height: 1;
+    transition: transform .6s var(--n90-spring);
+  }
+  .n90-hiw__step:hover .n90-hiw__num { transform: translateX(6px); }
+  /* ref .d.h4 */
+  .n90-hiw__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  /* ref .small.muted */
+  .n90-hiw__desc {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--n90-muted);
+  }
+  .n90-hiw__desc > * { margin: 0; }
+
+  .n90-hiw__btn:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 3px; }
+
+  /* Tablet 768–1023: 2 × 2, per-step rules carry the line */
+  @media screen and (max-width: 1023px) {
+    .n90-hiw__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 24px; }
+    .n90-hiw__steps::before { display: none; }
+    .n90-hiw__step { border-top-color: var(--n90-carbon); }
+    .n90-hiw__num { font-size: 48px; margin-bottom: 16px; }
+    .n90-hiw__head { margin-bottom: 36px; }
+  }
+
+  /* Mobile 320–767 — ref .is-m */
+  @media screen and (max-width: 767px) {
+    .n90-hiw { padding: min(var(--hiw-pt), 64px) 0 min(var(--hiw-pb), 64px); }
+    .n90-hiw__head { flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+    .n90-hiw__steps { grid-template-columns: 1fr; gap: 28px; }
+    .n90-hiw__num { font-size: 36px; margin-bottom: 8px; }
+    .n90-hiw__sub { font-size: 16px; }
+    .n90-hiw__btn { width: 100%; }
+  }
+
+  @media (hover: none) {
+    .n90-hiw__step:hover .n90-hiw__num { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-hiw__steps::before { transform: none; transition: none; }
+    .n90-hiw__num,
+    .n90-hiw__btn { transition: none; }
+    .n90-hiw__btn:hover::after { animation: none; }
+  }
+</style>
+
+<section class="n90-hiw" aria-labelledby="n90-hiw-title-{{ section.id }}">
+  <div class="page-width">
+    <div class="n90-hiw__head" data-n90-reveal>
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-hiw__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-hiw__heading" id="n90-hiw-title-{{ section.id }}">{{ section.settings.heading }}</h2>
+        {%- if section.settings.subtext != blank -%}
+          <div class="n90-hiw__sub">{{ section.settings.subtext }}</div>
+        {%- endif -%}
+      </div>
+      {%- if section.settings.btn_label != blank -%}
+        <a href="{{ section.settings.btn_url | default: routes.all_products_collection_url }}" class="n90-hiw__btn">
+          {{- section.settings.btn_label | escape -}}
+          {%- render 'icon', name: 'arrow' -%}
+        </a>
+      {%- endif -%}
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      <ol class="n90-hiw__steps" role="list" data-n90-stagger data-n90-inview>
+        {%- for block in section.blocks -%}
+          <li class="n90-hiw__step" {{ block.shopify_attributes }}>
+            <span class="n90-hiw__num" aria-hidden="true">
+              {{- block.settings.step_num | default: forloop.index | prepend: '0' | slice: -2, 2 -}}
+            </span>
+            <h3 class="n90-hiw__title">{{ block.settings.title | escape }}</h3>
+            {%- if block.settings.description != blank -%}
+              <div class="n90-hiw__desc">{{ block.settings.description }}</div>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ol>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "How it works",
+  "tag": "div",
+  "class": "section-how-it-works",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 4,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "How it works" },
+    {
+      "type": "inline_richtext", "id": "heading", "label": "Heading",
+      "default": "Four steps to <em>match day<\/em>"
+    },
+    { "type": "richtext", "id": "subtext", "label": "Intro text (optional)" },
+    { "type": "header", "content": "Button (optional)" },
+    {
+      "type": "text", "id": "btn_label", "label": "Button label",
+      "info": "Leave empty to hide the button, as in the reference."
+    },
+    {
+      "type": "url", "id": "btn_url", "label": "Button link",
+      "info": "Defaults to all products."
+    },
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        {
+          "type": "text", "id": "step_num", "label": "Step number",
+          "info": "Leave empty to number automatically (01, 02 …)."
+        },
+        { "type": "text", "id": "title", "label": "Title", "default": "Tell us what you need" },
+        {
+          "type": "richtext", "id": "description", "label": "Description",
+          "default": "<p>Sport, items, team size and deadline.<\/p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "How it works",
+      "blocks": [
+        {
+          "type": "step",
+          "settings": {
+            "title": "Tell us what you need",
+            "description": "<p>Sport, items, team size and deadline.<\/p>"
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Get a free mockup",
+            "description": "<p>We design your kit with your crest and colours, and send a quote.<\/p>"
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Approve and order",
+            "description": "<p>Tweak it until it’s right, then confirm sizes. From 10 pieces.<\/p>"
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Kit in 3–4 weeks",
+            "description": "<p>Made for your club. Add a free club shop so players order their own.<\/p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

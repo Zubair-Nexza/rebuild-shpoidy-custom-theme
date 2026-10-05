@@ -1,0 +1,571 @@
+{%- comment -%}
+  sections/reviews-wall.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+  Reviews / Testimonials Wall — Horizontal snap-carousel
+{%- endcomment -%}
+
+{%- liquid
+  assign bg      = section.settings.color_background
+  assign ink     = section.settings.color_text
+  assign muted   = section.settings.color_muted
+  assign accent  = section.settings.color_accent
+  assign line_col = section.settings.color_line
+  assign surface = section.settings.color_surface
+  assign pt      = section.settings.padding_top
+  assign pb      = section.settings.padding_bottom
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture accent -%}{%- render 'n90-color-token', value: accent -%}{%- endcapture -%}
+{%- capture line_col -%}{%- render 'n90-color-token', value: line_col -%}{%- endcapture -%}
+{%- capture surface -%}{%- render 'n90-color-token', value: surface -%}{%- endcapture -%}
+
+{%- style -%}
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     N90 Reviews Wall — scoped CSS custom properties
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  #shopify-section-{{ section.id }} {
+    --nn-bg:      {{ bg }};
+    --nn-ink:     {{ ink }};
+    --nn-muted:   {{ muted }};
+    --nn-accent:  {{ accent }};
+    --nn-line:    {{ line_col }};
+    --nn-surface: {{ surface }};
+    --nn-ease:    cubic-bezier(.2,.7,.2,1);
+    --nn-gap:     16px;
+    --nn-card-w:  calc((100% - (3 * var(--nn-gap))) / 4);
+    --nn-radius:  16px;
+  }
+  
+  @media screen and (max-width:1199px) {
+    #shopify-section-{{ section.id }} { --nn-card-w: calc((100% - (2 * var(--nn-gap))) / 3); }
+  }
+  @media screen and (max-width:899px) {
+    #shopify-section-{{ section.id }} { --nn-card-w: calc((100% - var(--nn-gap)) / 2); }
+  }
+  @media screen and (max-width:749px) {
+    #shopify-section-{{ section.id }} { --nn-card-w: 85%; --nn-gap: 12px; }
+  }
+
+  /* ── Section shell ─────────────────────────────── */
+  .n90-rw {
+    padding-top:    {{ pt }}px;
+    padding-bottom: {{ pb }}px;
+    background: var(--nn-bg);
+    color: var(--nn-ink);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .n90-rw__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .n90-rw__head-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .n90-rw__eyebrow {
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .18em;
+    color: var(--nn-accent); margin: 0;
+  }
+  .n90-rw__heading {
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-size: clamp(28px,3.2vw,48px); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .01em;
+    line-height: 1.05; margin: 0; color: var(--nn-ink);
+  }
+  
+  /* ── Overall Rating Badge ──────────────────────── */
+  .n90-rw__overall-rating {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .n90-rw__stars-overall {
+    display: flex;
+    gap: 2px;
+    color: var(--nn-accent);
+  }
+  .n90-rw__stars-overall svg {
+    width: 20px;
+    height: 20px;
+  }
+  .n90-rw__rating-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nn-muted);
+  }
+  .n90-rw__rating-text strong {
+    color: var(--nn-ink);
+  }
+
+  /* ── Carousel controls ─────────────────────────── */
+  .n90-rw__controls { 
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0; 
+  }
+  .n90-rw__arrow {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1.5px solid var(--nn-line); background: transparent;
+    color: var(--nn-ink); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background .2s var(--nn-ease), border-color .2s;
+  }
+  .n90-rw__arrow:hover { background: var(--nn-surface); border-color: var(--nn-ink); }
+  .n90-rw__arrow[disabled] { opacity: .3; cursor: not-allowed; }
+  .n90-rw__arrow svg { width: 18px; height: 18px; pointer-events: none; }
+
+  /* ── Track ─────────────────────────────────────── */
+  .n90-rw__track {
+    display: flex; gap: var(--nn-gap);
+    overflow-x: auto; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding-bottom: 24px;
+  }
+  .n90-rw__track::-webkit-scrollbar { display: none; }
+
+  /* ━━━━ REVIEW CARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .n90-rw__card {
+    flex: 0 0 var(--nn-card-w);
+    scroll-snap-align: start;
+    position: relative; 
+    border-radius: var(--nn-radius);
+    background: var(--nn-surface);
+    border: 1px solid var(--nn-line);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transition: transform .3s var(--nn-ease), box-shadow .3s var(--nn-ease);
+  }
+  .n90-rw__card:hover { 
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.06); 
+  }
+  
+  .n90-rw__card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .n90-rw__stars {
+    display: flex;
+    gap: 2px;
+    color: var(--nn-accent);
+  }
+  .n90-rw__stars svg { width: 16px; height: 16px; }
+  
+  .n90-rw__date {
+    font-size: 12px;
+    color: var(--nn-muted);
+  }
+  
+  .n90-rw__title {
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--nn-ink);
+    margin: 0 0 12px 0;
+    line-height: 1.2;
+  }
+  
+  .n90-rw__body {
+    font-size: 15px;
+    color: var(--nn-muted);
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    flex-grow: 1;
+  }
+  
+  .n90-rw__author-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--nn-line);
+    margin-bottom: 16px;
+  }
+  
+  .n90-rw__author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--nn-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--nn-ink);
+    flex-shrink: 0;
+  }
+  
+  .n90-rw__author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .n90-rw__author-name {
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--nn-ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .n90-rw__verified {
+    color: var(--nn-accent);
+    display: inline-flex;
+  }
+  .n90-rw__verified svg { width: 14px; height: 14px; }
+  
+  .n90-rw__author-meta {
+    font-size: 12px;
+    color: var(--nn-muted);
+  }
+  
+  .n90-rw__discipline {
+    display: inline-block;
+    background: var(--nn-bg);
+    border: 1px solid var(--nn-line);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--nn-ink);
+    margin-top: 4px;
+    width: fit-content;
+  }
+  
+  .n90-rw__product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--nn-bg);
+    border-radius: 8px;
+    padding: 8px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  .n90-rw__product:hover {
+    background: var(--nn-line);
+  }
+  .n90-rw__product-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--nn-line);
+    flex-shrink: 0;
+  }
+  .n90-rw__product-img-ph {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    background: var(--nn-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nn-muted);
+    flex-shrink: 0;
+  }
+  .n90-rw__product-img-ph svg { width: 20px; height: 20px; }
+  .n90-rw__product-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .n90-rw__product-title {
+    font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--nn-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .n90-rw__product-link {
+    font-size: 11px;
+    color: var(--nn-muted);
+    text-decoration: underline;
+    margin-top: 2px;
+  }
+
+  /* Responsive */
+  @media screen and (max-width:749px) {
+    .n90-rw { padding-top: {{ pt | at_most: 64 }}px; padding-bottom: {{ pb | at_most: 64 }}px; }
+    .n90-rw__head { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .n90-rw__controls { display: none; }
+    .n90-rw__card { padding: 20px; }
+  }
+{%- endstyle -%}
+
+{%- comment -%}━━━━━━━━━━━ SECTION HTML ━━━━━━━━━━━{%- endcomment -%}
+<section
+  class="n90-rw"
+  id="n90-rw-{{ section.id }}"
+  data-section="ReviewsWall"
+  aria-label="{{ section.settings.heading | default: 'Customer Reviews' | escape }}"
+>
+  <div class="page-width">
+    {%- comment -%}── Header ──{%- endcomment -%}
+    <div class="n90-rw__head">
+      <div class="n90-rw__head-left">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-rw__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="n90-rw__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+        
+        <div class="n90-rw__overall-rating">
+          <div class="n90-rw__stars-overall" aria-label="{{ 'n90.ui.stars' | t: rating: section.settings.rating_score }}">
+            {%- for i in (1..5) -%}
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            {%- endfor -%}
+          </div>
+          <div class="n90-rw__rating-text">
+            <strong>{{ section.settings.rating_score }} / 5</strong> {{ section.settings.total_reviews | escape }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="n90-rw__controls" aria-label="{{ 'n90.ui.carousel_controls' | t }}">
+        <button class="n90-rw__arrow" id="rw-prev-{{ section.id }}" aria-label="{{ 'n90.ui.previous_reviews' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="n90-rw__arrow" id="rw-next-{{ section.id }}" aria-label="{{ 'n90.ui.next_reviews' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    {%- comment -%}── Review track ──{%- endcomment -%}
+    <div class="n90-rw__track" id="rw-track-{{ section.id }}" role="list">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign b = block.settings
+          assign rating = b.rating | default: 5
+          assign has_product = false
+          if b.product != blank
+            assign has_product = true
+            assign prod = b.product
+          endif
+          
+          assign initials = b.author | default: '?' | slice: 0, 1 | capitalize
+        -%}
+        <article class="n90-rw__card" role="listitem" {{ block.shopify_attributes }}>
+          <div class="n90-rw__card-head">
+            <div class="n90-rw__stars" aria-label="{{ 'n90.ui.stars' | t: rating: rating }}">
+              {%- for i in (1..5) -%}
+                {%- if i <= rating -%}
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {%- else -%}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+            {%- if b.date != blank -%}
+              <span class="n90-rw__date">{{ b.date | escape }}</span>
+            {%- endif -%}
+          </div>
+          
+          <h3 class="n90-rw__title">{{ b.title | escape }}</h3>
+          <div class="n90-rw__body">{{ b.body | escape | newline_to_br }}</div>
+          
+          <div class="n90-rw__author-block">
+            <div class="n90-rw__author-avatar" aria-hidden="true">{{ initials }}</div>
+            <div class="n90-rw__author-info">
+              <div class="n90-rw__author-name">
+                {{ b.author | escape }}
+                {%- if b.verified -%}
+                  <span class="n90-rw__verified" aria-label="{{ 'n90.ui.verified_buyer' | t }}" title="{{ 'n90.ui.verified_buyer' | t }}">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path fill="#0E1B33" d="M10 15.17L7.83 13l-1.42 1.41L10 18l8-8-1.41-1.41z"/></svg>
+                  </span>
+                {%- endif -%}
+              </div>
+              <div class="n90-rw__author-meta">
+                {%- if b.location != blank -%}{{ b.location | escape }}{%- endif -%}
+              </div>
+              {%- if b.discipline != blank -%}
+                <span class="n90-rw__discipline">{{ b.discipline | escape }}</span>
+              {%- endif -%}
+            </div>
+          </div>
+          
+          {%- if has_product -%}
+            <a href="{{ prod.url }}" class="n90-rw__product">
+              {%- if prod.featured_media != blank -%}
+                <img class="n90-rw__product-img" src="{{ prod.featured_media.preview_image | image_url: width: 96 }}" alt="{{ prod.title | escape }}" width="48" height="48" decoding="async" loading="lazy">
+              {%- else -%}
+                <div class="n90-rw__product-img-ph">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1zM16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                </div>
+              {%- endif -%}
+              <div class="n90-rw__product-info">
+                <span class="n90-rw__product-title">{{ prod.title | escape }}</span>
+                <span class="n90-rw__product-link">{{ 'n90.ui.view_product' | t }}</span>
+              </div>
+            </a>
+          {%- endif -%}
+          
+        </article>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+  var sid      = {{ section.id | json }};
+  var track    = document.getElementById('rw-track-' + sid);
+  if (!track) return;
+  
+  var btnPrev  = document.getElementById('rw-prev-' + sid);
+  var btnNext  = document.getElementById('rw-next-' + sid);
+  var cards    = Array.from(track.querySelectorAll('.n90-rw__card'));
+  
+  if (!cards.length) return;
+  
+  function updateBtns() {
+    if (!btnPrev || !btnNext) return;
+    var scrollLeft = track.scrollLeft;
+    var maxScroll = track.scrollWidth - track.clientWidth;
+    btnPrev.disabled = scrollLeft <= 0;
+    btnNext.disabled = scrollLeft >= maxScroll - 1;
+  }
+  
+  track.addEventListener('scroll', updateBtns, { passive: true });
+  window.addEventListener('resize', updateBtns, { passive: true });
+  
+  function scrollByCard(dir) {
+    var gap = parseInt(window.getComputedStyle(track).gap) || 16;
+    var cardW = cards[0].offsetWidth;
+    var amount = (cardW + gap) * dir;
+    track.scrollBy({ left: amount, behavior: 'smooth' });
+  }
+  
+  if (btnPrev) btnPrev.addEventListener('click', function() { scrollByCard(-1); });
+  if (btnNext) btnNext.addEventListener('click', function() { scrollByCard(1); });
+  
+  // Init
+  setTimeout(updateBtns, 100);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Reviews Wall",
+  "tag": "section",
+  "class": "section-reviews-wall",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    { "type": "header", "content": "Colour scheme" },
+    { "type": "color", "id": "color_background", "label": "Section background", "default": "#FFFFFF" },
+    { "type": "color", "id": "color_text",       "label": "Text / ink",         "default": "#0E1B33" },
+    { "type": "color", "id": "color_muted",      "label": "Muted text",         "default": "#4A5568" },
+    { "type": "color", "id": "color_accent",     "label": "Accent",             "default": "#D4FF3A" },
+    { "type": "color", "id": "color_line",       "label": "Border / divider",   "default": "#E2E6ED" },
+    { "type": "color", "id": "color_surface",    "label": "Card surface fill",  "default": "#F3F5F8" },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top",    "label": "Padding top",    "min": 0, "max": 200, "step": 8, "unit": "px", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 200, "step": 8, "unit": "px", "default": 96 },
+    { "type": "header", "content": "Section header" },
+    { "type": "text",     "id": "eyebrow",     "label": "Eyebrow",     "default": "Tested by athletes" },
+    { "type": "text",     "id": "heading",     "label": "Heading",     "default": "Don't just take our word for it" },
+    { "type": "text",     "id": "rating_score", "label": "Rating score", "default": "4.9" },
+    { "type": "text",     "id": "total_reviews", "label": "Total reviews text", "default": "from 1,200+ Verified Athletes" }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        { "type": "range", "id": "rating", "label": "Rating", "min": 1, "max": 5, "step": 1, "default": 5 },
+        { "type": "text", "id": "date", "label": "Date", "default": "2 weeks ago" },
+        { "type": "text", "id": "title", "label": "Review headline", "default": "Unreal quality for the price." },
+        { "type": "textarea", "id": "body", "label": "Review body", "default": "Ordered a full set of match kits for our squad. The sublimation is crisp, colours are vibrant, and the fabric breathes incredibly well during 90 minutes." },
+        { "type": "header", "content": "Customer" },
+        { "type": "text", "id": "author", "label": "Name", "default": "James T." },
+        { "type": "text", "id": "location", "label": "Location", "default": "London, UK" },
+        { "type": "checkbox", "id": "verified", "label": "Show 'Verified Buyer' badge", "default": true },
+        { "type": "text", "id": "discipline", "label": "Sport / Discipline", "default": "Midfielder", "info": "e.g., 'Pro Goalkeeper', 'Marathon Runner'" },
+        { "type": "header", "content": "Product" },
+        { "type": "product", "id": "product", "label": "Tagged product" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Reviews Wall",
+      "blocks": [
+        {
+          "type": "review",
+          "settings": {
+            "title": "Unreal quality for the price.",
+            "body": "Ordered a full set of match kits for our squad. The sublimation is crisp, colours are vibrant, and the fabric breathes incredibly well during 90 minutes.",
+            "author": "James T.",
+            "discipline": "Central Midfielder",
+            "date": "1 week ago"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "title": "Best fit I've ever worn.",
+            "body": "Usually struggle with rugby jerseys being too boxy. The athletic fit on these is perfect. Snug where it needs to be, but full range of motion in the shoulders.",
+            "author": "Marcus R.",
+            "discipline": "Rugby Union / Flanker",
+            "date": "3 weeks ago"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "title": "Survived a full season",
+            "body": "These kits have been slide-tackled, muddy, and washed 40+ times. Not a single thread loose, and the sponsor logos haven't peeled because they are fully sublimated. 10/10.",
+            "author": "Dave W.",
+            "discipline": "Sunday League Coach",
+            "date": "1 month ago"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "title": "Lightning fast delivery",
+            "body": "Needed emergency kits for a tournament after our old supplier let us down. ROSTER delivered custom sublimated shirts in exactly 3 weeks. Saved our tour.",
+            "author": "Sarah M.",
+            "discipline": "Netball Centre",
+            "date": "2 months ago"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+

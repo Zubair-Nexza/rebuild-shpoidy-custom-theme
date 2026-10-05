@@ -1,0 +1,116 @@
+{%- comment -%}
+  snippets/n90-localization.liquid
+  Shopify Markets country / currency and language selectors ({% form 'localization' %}).
+  Compact disclosure buttons ("[flag] GBP £", "EN") with a dropdown list; each option is a
+  submit button, so choosing works without JavaScript. assets/n90-localization.js adds
+  open / close, Esc, outside click, arrow keys and the country filter.
+  Styles: assets/n90-tokens.css (.n90-loc). Renders nothing for single-market stores.
+
+  Accepts:
+  - id: {String} unique prefix
+  - tone: {String} 'light' (default) or 'dark' (on Carbon)
+  - direction: {String} 'down' (default) or 'up'
+  - align: {String} 'left' (default) or 'right'
+  - show_country, show_language: {Boolean} default true
+{%- endcomment -%}
+
+{%- liquid
+  assign loc_id = id | default: 'n90-loc'
+  assign has_country = false
+  if show_country != false and localization.available_countries.size > 1
+    assign has_country = true
+  endif
+  assign has_language = false
+  if show_language != false and localization.available_languages.size > 1
+    assign has_language = true
+  endif
+  assign loc_tone = tone | default: 'light'
+  assign loc_dir = direction | default: 'down'
+  assign loc_align = align | default: 'left'
+  assign loc_class = 'n90-loc n90-loc--' | append: loc_tone | append: ' n90-loc--' | append: loc_dir | append: ' n90-loc--' | append: loc_align
+-%}
+
+{%- if has_country or has_language -%}
+  <script src="{{ 'n90-localization.js' | asset_url }}" defer="defer"></script>
+  {%- form 'localization', id: loc_id, class: loc_class -%}
+    {%- if has_country -%}
+      {%- assign current = localization.country -%}
+      <div class="n90-loc__dd" data-n90-loc>
+        <button
+          type="button"
+          class="n90-loc__btn"
+          aria-expanded="false"
+          aria-controls="{{ loc_id }}-country"
+          data-n90-loc-btn
+        >
+          <span class="ref-sr">{{ 'localization.country_label' | t }}:</span>
+          {{ current | image_url: width: 40 | image_tag: class: 'n90-loc__flag', width: 20, height: 15, alt: '', loading: 'lazy' }}
+          <span class="n90-loc__code">{{ current.currency.iso_code }} {{ current.currency.symbol }}</span>
+          <svg class="n90-loc__chev" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="m1 1.5 5 5 5-5"/></svg>
+        </button>
+        <div class="n90-loc__panel" id="{{ loc_id }}-country" hidden data-n90-loc-panel>
+          {%- if localization.available_countries.size > 8 -%}
+            <label class="ref-sr" for="{{ loc_id }}-filter">{{ 'localization.search' | t }}</label>
+            <input class="n90-loc__filter" id="{{ loc_id }}-filter" type="search" placeholder="{{ 'localization.search' | t }}" autocomplete="off" data-n90-loc-filter>
+          {%- endif -%}
+          <ul class="n90-loc__list" role="list" data-n90-loc-list>
+            {%- for country in localization.available_countries -%}
+              <li data-name="{{ country.name | downcase | escape }} {{ country.currency.iso_code | downcase }}">
+                <button
+                  type="submit"
+                  name="country_code"
+                  value="{{ country.iso_code }}"
+                  class="n90-loc__opt"
+                  {% if country.iso_code == current.iso_code %}
+                    aria-current="true"
+                  {% endif %}
+                >
+                  {{ country | image_url: width: 40 | image_tag: class: 'n90-loc__flag', width: 20, height: 15, alt: '', loading: 'lazy' }}
+                  <span class="n90-loc__name">{{ country.name | escape }}</span>
+                  <span class="n90-loc__cur">{{ country.currency.iso_code }} {{ country.currency.symbol }}</span>
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if has_language -%}
+      <div class="n90-loc__dd" data-n90-loc>
+        <button
+          type="button"
+          class="n90-loc__btn"
+          aria-expanded="false"
+          aria-controls="{{ loc_id }}-language"
+          data-n90-loc-btn
+        >
+          <span class="ref-sr">{{ 'localization.language_label' | t }}:</span>
+          <span class="n90-loc__code">{{ localization.language.iso_code | upcase }}</span>
+          <svg class="n90-loc__chev" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="m1 1.5 5 5 5-5"/></svg>
+        </button>
+        <div class="n90-loc__panel n90-loc__panel--sm" id="{{ loc_id }}-language" hidden data-n90-loc-panel>
+          <ul class="n90-loc__list" role="list" data-n90-loc-list>
+            {%- for language in localization.available_languages -%}
+              <li>
+                <button
+                  type="submit"
+                  name="language_code"
+                  value="{{ language.iso_code }}"
+                  class="n90-loc__opt"
+                  lang="{{ language.iso_code }}"
+                  {% if language.iso_code == localization.language.iso_code %}
+                    aria-current="true"
+                  {% endif %}
+                >
+                  <span class="n90-loc__name">{{ language.endonym_name | capitalize | escape }}</span>
+                  <span class="n90-loc__cur">{{ language.iso_code | upcase }}</span>
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      </div>
+    {%- endif -%}
+  {%- endform -%}
+{%- endif -%}

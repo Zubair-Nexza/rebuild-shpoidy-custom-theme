@@ -1,0 +1,422 @@
+{%- comment -%}
+  sections/main-about.liquid
+  ROSTER — About / brand story (template: page.about)
+
+  Editorial hero (eyebrow, large letter-spaced headline, intro) + 16:9 pitch visual,
+  the page's own content as the story, a stat strip, three pillar cards and a Carbon
+  closing banner into Club Shops / the kit quote form.
+  Blocks: stat (value + label), pillar (number, title, text).
+{%- endcomment -%}
+
+{%- liquid
+  assign stats = section.blocks | where: 'type', 'stat'
+  assign pillars = section.blocks | where: 'type', 'pillar'
+-%}
+
+<style>
+  @keyframes n90-ab-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-ab-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  .n90-ab {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  .n90-ab__eyebrow { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; }
+
+  /* Hero */
+  .n90-ab__hero {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: end;
+    padding-bottom: 48px;
+    animation: n90-ab-up .7s var(--n90-ease) both;
+  }
+  .n90-ab__hero-copy { grid-column: 1 / span 9; display: flex; flex-direction: column; gap: 20px; }
+  .n90-ab__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(48px, 7.4vw, 120px);
+    line-height: .9;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .n90-ab__title em { font-style: normal; background: linear-gradient(transparent 62%, var(--n90-volt) 62%, var(--n90-volt) 92%, transparent 92%); }
+  .n90-ab__intro { grid-column: 10 / span 3; margin: 0; font-size: 16px; line-height: 1.65; color: var(--n90-muted); }
+
+  .n90-ab__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+  }
+  .n90-ab__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--n90-ease); }
+  .n90-ab__media:hover img { transform: scale(1.02); }
+  .n90-ab__pitch { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .08; }
+  .n90-ab__caption { position: absolute; left: 16px; bottom: 14px; z-index: 2; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 12px; color: var(--n90-muted); }
+  .n90-ab__media--photo .n90-ab__caption { color: var(--n90-canvas); text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+
+  /* Story */
+  .n90-ab__story {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    padding: 96px 0;
+  }
+  .n90-ab__story-k { grid-column: 1 / span 4; }
+  .n90-ab__story-body { grid-column: 5 / span 7; font-size: 19px; line-height: 1.75; }
+  .n90-ab__story-body > :first-child { margin-top: 0; }
+  .n90-ab__story-body > :last-child { margin-bottom: 0; }
+  .n90-ab__story-body h2,
+  .n90-ab__story-body h3 { font-family: var(--n90-font-display); font-weight: 700; text-transform: uppercase; line-height: 1.05; }
+
+  /* Stat strip */
+  .n90-ab__stats {
+    display: grid;
+    grid-template-columns: repeat(var(--ab-stats, 4), minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+  }
+  .n90-ab__stat { padding: 40px 24px; border-left: 1px solid rgba(0, 0, 0, .08); }
+  .n90-ab__stat:first-child { border-left: 0; padding-left: 0; }
+  .n90-ab__stat-v {
+    display: block;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(48px, 5.6vw, 88px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-ab__stat-l {
+    display: block;
+    margin-top: 10px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--n90-muted);
+  }
+
+  /* Pillars */
+  .n90-ab__pillars-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 112px 0 40px; }
+  .n90-ab__h2 {
+    margin: 12px 0 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(36px, 4.2vw, 60px);
+    line-height: .95;
+    text-transform: uppercase;
+  }
+  .n90-ab__pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+  .n90-ab__pillar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 32px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-surface);
+    transition: transform .45s var(--n90-spring), border-color .25s;
+  }
+  .n90-ab__pillar:hover { transform: translateY(-4px); border-color: var(--n90-carbon); }
+  .n90-ab__pillar-n {
+    align-self: flex-start;
+    padding: 4px 10px 3px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .12em;
+  }
+  .n90-ab__pillar-t { margin: 8px 0 0; font-family: var(--n90-font-display); font-weight: 700; font-size: 28px; line-height: 1.05; text-transform: uppercase; }
+  .n90-ab__pillar-p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--n90-muted); }
+
+  /* Closing banner */
+  .n90-ab__close {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: end;
+    margin-top: 112px;
+    padding: clamp(40px, 5vw, 72px);
+    border-radius: 12px;
+    background: var(--n90-carbon);
+    color: var(--n90-canvas);
+  }
+  .n90-ab__close-copy { grid-column: 1 / span 7; }
+  .n90-ab__close .n90-ab__h2 { color: var(--n90-canvas); }
+  .n90-ab__close-p { margin: 16px 0 0; max-width: 520px; font-size: 17px; line-height: 1.6; color: var(--n90-muted-on-dark); }
+  .n90-ab__close-act { grid-column: 8 / span 5; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .n90-ab__btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-ab__btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: rgba(255, 255, 255, .5); transform: translateX(-140%) skewX(-20deg); pointer-events: none; }
+  .n90-ab__btn:hover { transform: translateY(-2px); }
+  .n90-ab__btn:hover::after { animation: n90-ab-shine .9s var(--n90-ease); }
+  .n90-ab__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-ab__btn:hover svg { transform: translateX(4px); }
+  .n90-ab__tlink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--n90-canvas);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    transition: text-underline-offset .25s var(--n90-ease);
+  }
+  .n90-ab__tlink:hover { text-underline-offset: 4px; }
+  .n90-ab a:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 3px; }
+  .n90-ab__close a:focus-visible { outline-color: var(--n90-volt); }
+
+  @media screen and (max-width: 1023px) {
+    .n90-ab__hero { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+    .n90-ab__story { display: flex; flex-direction: column; gap: 20px; padding: 72px 0; }
+    .n90-ab__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .n90-ab__stat:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .n90-ab__stat:nth-child(n + 3) { border-top: 1px solid rgba(0, 0, 0, .08); }
+    .n90-ab__pillars { grid-template-columns: 1fr; gap: 16px; }
+    .n90-ab__close { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
+    .n90-ab__close-act { align-items: flex-start; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-ab { padding: min({{ section.settings.padding_top }}px, 24px) 0 min({{ section.settings.padding_bottom }}px, 64px); }
+    .n90-ab__hero { padding-bottom: 32px; }
+    .n90-ab__story-body { font-size: 17px; }
+    .n90-ab__stat { padding: 28px 12px; }
+    .n90-ab__pillars-head { padding: 72px 0 28px; }
+    .n90-ab__pillar { padding: 24px; }
+    .n90-ab__close { margin-top: 72px; }
+    .n90-ab__close-act { align-self: stretch; align-items: stretch; }
+    .n90-ab__btn { justify-content: center; }
+    .n90-ab__tlink { justify-content: center; }
+  }
+  @media (hover: none) {
+    .n90-ab__pillar:hover { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-ab__hero,
+    .n90-ab__btn:hover::after { animation: none; }
+    .n90-ab__media img,
+    .n90-ab__pillar,
+    .n90-ab__btn { transition: none; }
+  }
+</style>
+
+<div class="n90-ab">
+  <div class="page-width">
+    {%- comment -%} ── Hero ── {%- endcomment -%}
+    <header class="n90-ab__hero">
+      <div class="n90-ab__hero-copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-ab__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="n90-ab__title">{{ section.settings.heading }}</h1>
+      </div>
+      {%- if section.settings.intro != blank -%}
+        <p class="n90-ab__intro">{{ section.settings.intro | escape }}</p>
+      {%- endif -%}
+    </header>
+
+    <div class="n90-ab__media{% if section.settings.image != blank %} n90-ab__media--photo{% endif %}" data-n90-reveal>
+      {%- if section.settings.image != blank -%}
+        {{
+          section.settings.image
+          | image_url: width: 2400
+          | image_tag:
+            widths: '600, 900, 1200, 1600, 2000, 2400',
+            sizes: '(min-width: 1440px) 1360px, calc(100vw - 32px)',
+            loading: 'eager',
+            fetchpriority: 'high',
+            alt: section.settings.image.alt
+        }}
+      {%- else -%}
+        <svg class="n90-ab__pitch" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true" focusable="false">
+          <rect x="60" y="60" width="1480" height="780"/><line x1="800" y1="60" x2="800" y2="840"/><circle cx="800" cy="450" r="120"/><circle cx="800" cy="450" r="6" fill="currentColor"/><rect x="60" y="250" width="200" height="400"/><rect x="1340" y="250" width="200" height="400"/><rect x="60" y="360" width="70" height="180"/><rect x="1470" y="360" width="70" height="180"/><path d="M260 375a90 90 0 0 1 0 150M1340 375a90 90 0 0 0 0 150"/>
+        </svg>
+      {%- endif -%}
+      {%- if section.settings.caption != blank -%}
+        <p class="n90-ab__caption">
+          {%- render 'header-camera' -%}
+          <span>{{ section.settings.caption | escape }}</span>
+        </p>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} ── Story (page content from Shopify admin) ── {%- endcomment -%}
+    {%- if page.content != blank -%}
+      <div class="n90-ab__story">
+        <div class="n90-ab__story-k">
+          <p class="n90-ab__eyebrow">{{ section.settings.story_label | escape }}</p>
+        </div>
+        <div class="n90-ab__story-body rte" data-n90-reveal>{{ page.content }}</div>
+      </div>
+    {%- else -%}
+      <div style="height: 72px;" aria-hidden="true"></div>
+    {%- endif -%}
+
+    {%- comment -%} ── Stat strip ── {%- endcomment -%}
+    {%- if stats.size > 0 -%}
+      <ul class="n90-ab__stats" role="list" style="--ab-stats: {{ stats.size | at_most: 4 }};" data-n90-stagger>
+        {%- for block in stats -%}
+          <li class="n90-ab__stat" {{ block.shopify_attributes }}>
+            <span class="n90-ab__stat-v">{{ block.settings.value | escape }}</span>
+            <span class="n90-ab__stat-l">{{ block.settings.label | escape }}</span>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {%- comment -%} ── Pillars ── {%- endcomment -%}
+    {%- if pillars.size > 0 -%}
+      <div class="n90-ab__pillars-head" data-n90-reveal>
+        <div>
+          {%- if section.settings.pillars_eyebrow != blank -%}
+            <p class="n90-ab__eyebrow">{{ section.settings.pillars_eyebrow | escape }}</p>
+          {%- endif -%}
+          <h2 class="n90-ab__h2">{{ section.settings.pillars_heading | escape }}</h2>
+        </div>
+      </div>
+      <ul class="n90-ab__pillars" role="list" data-n90-stagger>
+        {%- for block in pillars -%}
+          <li {{ block.shopify_attributes }}>
+            <div class="n90-ab__pillar">
+              <span class="n90-ab__pillar-n">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <h3 class="n90-ab__pillar-t">{{ block.settings.title | escape }}</h3>
+              <p class="n90-ab__pillar-p">{{ block.settings.text | escape }}</p>
+            </div>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {%- comment -%} ── Closing banner ── {%- endcomment -%}
+    <div class="n90-ab__close" data-n90-reveal>
+      <div class="n90-ab__close-copy">
+        {%- if section.settings.close_eyebrow != blank -%}
+          <p class="n90-ab__eyebrow">{{ section.settings.close_eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-ab__h2">{{ section.settings.close_heading | escape }}</h2>
+        {%- if section.settings.close_text != blank -%}
+          <p class="n90-ab__close-p">{{ section.settings.close_text | escape }}</p>
+        {%- endif -%}
+      </div>
+      <div class="n90-ab__close-act">
+        <a class="n90-ab__btn" href="{{ section.settings.close_primary_url | default: '/pages/contact' }}">
+          {{- section.settings.close_primary_label | escape -}}
+          {%- render 'icon', name: 'arrow' -%}
+        </a>
+        <a class="n90-ab__tlink" href="{{ section.settings.close_secondary_url | default: '/pages/club-shops' }}">{{ section.settings.close_secondary_label | escape }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "About / brand story",
+  "tag": "section",
+  "class": "section-main-about",
+  "enabled_on": { "templates": ["page"] },
+  "max_blocks": 7,
+  "settings": [
+    { "type": "header", "content": "Hero" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "About ROSTER" },
+    {
+      "type": "inline_richtext", "id": "heading", "label": "Headline",
+      "default": "Built for the grassroots. <em>Engineered for motion.</em>",
+      "info": "Italic text gets a Volt highlight."
+    },
+    {
+      "type": "textarea", "id": "intro", "label": "Intro",
+      "default": "Custom teamwear designed with clubs, made for match day and priced for the people who run grassroots sport."
+    },
+    { "type": "image_picker", "id": "image", "label": "Hero image", "info": "Shown at 16:9. Without an image, pitch lines are shown." },
+    { "type": "text", "id": "caption", "label": "Image caption" },
+    { "type": "header", "content": "Story" },
+    { "type": "text", "id": "story_label", "label": "Story label", "default": "Our story", "info": "The story text is the page content in Shopify admin." },
+    { "type": "header", "content": "Pillars" },
+    { "type": "text", "id": "pillars_eyebrow", "label": "Eyebrow", "default": "What we stand for" },
+    { "type": "text", "id": "pillars_heading", "label": "Heading", "default": "Three things we won’t compromise on" },
+    { "type": "header", "content": "Closing banner" },
+    { "type": "text", "id": "close_eyebrow", "label": "Eyebrow", "default": "Free design · Free quote" },
+    { "type": "text", "id": "close_heading", "label": "Heading", "default": "Ready to kit out your club?" },
+    { "type": "textarea", "id": "close_text", "label": "Text", "default": "Start with a free mockup, or set up a club shop so players and parents order their own." },
+    { "type": "text", "id": "close_primary_label", "label": "Button label", "default": "Get a free kit mockup" },
+    { "type": "url", "id": "close_primary_url", "label": "Button link", "info": "Defaults to /pages/contact." },
+    { "type": "text", "id": "close_secondary_label", "label": "Link label", "default": "Explore club shops" },
+    { "type": "url", "id": "close_secondary_url", "label": "Link", "info": "Defaults to /pages/club-shops." },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112 }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "limit": 4,
+      "settings": [
+        { "type": "text", "id": "value", "label": "Value", "default": "100%" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Bespoke kits" }
+      ]
+    },
+    {
+      "type": "pillar",
+      "name": "Pillar",
+      "limit": 3,
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Athletic innovation" },
+        { "type": "textarea", "id": "text", "label": "Text", "default": "Lightweight, breathable match fabrics built to last a season." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "About / brand story",
+      "blocks": [
+        { "type": "stat", "settings": { "value": "100%", "label": "Bespoke kits" } },
+        { "type": "stat", "settings": { "value": "3–4 wk", "label": "Delivery" } },
+        { "type": "stat", "settings": { "value": "0", "label": "Middlemen" } },
+        { "type": "pillar", "settings": { "title": "Athletic innovation", "text": "Lightweight, breathable match fabrics built to last a season." } },
+        { "type": "pillar", "settings": { "title": "Transparent grassroots support", "text": "Honest club pricing without retail markups." } },
+        { "type": "pillar", "settings": { "title": "Bespoke identity", "text": "Free in-house design mockups tailored to your club’s tradition." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,224 @@
+{%- comment -%}
+  sections/quote-band.liquid
+  ROSTER — Pre-footer CTA ("Free design · Free quote / Get your free kit mockup")
+  Reference: data-section="QuoteBand" (.band / .cols.band-in / .s7 copy / .s5.band-act)
+
+  Full-width Carbon band in the footer group. Copy on the left (7 cols); Volt button,
+  white text link and ROSTER10 micro-copy stacked on the right (5 cols), aligned
+  to the bottom of the copy. Button shine + arrow nudge, scroll reveal.
+{%- endcomment -%}
+
+{%- liquid
+  assign show_band = true
+  if section.settings.visibility == 'home' and template.name != 'index'
+    assign show_band = false
+  endif
+-%}
+
+{%- if show_band -%}
+  <style>
+    @keyframes n90-qb-shine {
+      from { transform: translateX(-140%) skewX(-20deg); }
+      to   { transform: translateX(260%) skewX(-20deg); }
+    }
+
+    /* ref .band */
+    .n90-qb {
+      background: var(--n90-carbon);
+      color: var(--n90-canvas);
+      font-family: var(--n90-font-body);
+    }
+    .n90-qb__in {
+      max-width: var(--n90-page-width);
+      margin: 0 auto;
+      padding: clamp(40px, 5vw, 64px) var(--n90-gutter);
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+      align-items: end;
+    }
+    .n90-qb__copy { grid-column: 1 / span 7; min-width: 0; }
+    .n90-qb__eyebrow {
+      margin: 0;
+      font-family: var(--n90-font-display);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .n90-qb__heading {
+      margin: 16px 0 0;
+      font-family: var(--n90-font-display);
+      font-weight: 700;
+      font-size: clamp(40px, 4.2vw, 60px);
+      line-height: .95;
+      letter-spacing: .005em;
+      text-transform: uppercase;
+      color: var(--n90-canvas);
+    }
+    .n90-qb__lead {
+      margin: 16px 0 0;
+      max-width: 560px;
+      font-size: 18px;
+      line-height: 1.55;
+      color: var(--n90-muted-on-dark);
+    }
+
+    /* ref .band-act */
+    .n90-qb__act {
+      grid-column: 8 / span 5;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .n90-qb__btn {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 28px;
+      background: var(--n90-volt);
+      color: var(--n90-carbon);
+      font-family: var(--n90-font-display);
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      border-radius: var(--n90-radius);
+      transition: transform .35s var(--n90-ease);
+    }
+    .n90-qb__btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 40%;
+      background: rgba(255, 255, 255, .5);
+      transform: translateX(-140%) skewX(-20deg);
+      pointer-events: none;
+    }
+    .n90-qb__btn:hover { transform: translateY(-2px); }
+    .n90-qb__btn:hover::after { animation: n90-qb-shine .9s var(--n90-ease); }
+    .n90-qb__btn:active { transform: scale(.97); }
+    .n90-qb__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+    .n90-qb__btn:hover svg { transform: translateX(4px); }
+    /* ref .band .tlink — underline in currentColor */
+    .n90-qb__tlink {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      color: var(--n90-canvas);
+      font-family: var(--n90-font-display);
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      text-decoration: underline;
+      text-decoration-color: currentColor;
+      text-underline-offset: 7px;
+      text-decoration-thickness: 1px;
+      transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+    }
+    .n90-qb__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+    .n90-qb__note { margin: 0; font-size: 12px; color: var(--n90-muted-on-dark); }
+    .n90-qb :focus-visible { outline: 2px solid var(--n90-volt); outline-offset: 3px; }
+
+    /* Tablet 768–1023: copy over actions */
+    @media screen and (max-width: 1023px) {
+      .n90-qb__in { display: flex; flex-direction: column; align-items: stretch; gap: 28px; }
+      .n90-qb__act { align-items: flex-start; }
+    }
+    /* Mobile < 768: full-width actions — ref .is-m .band-act */
+    @media screen and (max-width: 767px) {
+      .n90-qb__lead { font-size: 16px; }
+      .n90-qb__act { align-items: stretch; gap: 4px; }
+      .n90-qb__btn { width: 100%; }
+      .n90-qb__tlink { justify-content: center; }
+      .n90-qb__note { text-align: center; margin-top: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .n90-qb__btn,
+      .n90-qb__btn svg { transition: none; }
+      .n90-qb__btn:hover::after { animation: none; }
+    }
+  </style>
+
+  <section class="n90-qb" aria-labelledby="n90-qb-title-{{ section.id }}">
+    <div class="n90-qb__in page-width" data-n90-stagger>
+      <div class="n90-qb__copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-qb__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-qb__heading" id="n90-qb-title-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+        {%- if section.settings.text != blank -%}
+          <p class="n90-qb__lead">{{ section.settings.text | escape }}</p>
+        {%- endif -%}
+      </div>
+      <div class="n90-qb__act">
+        {%- if section.settings.button_label != blank -%}
+          <a href="{{ section.settings.button_url | default: routes.all_products_collection_url }}" class="n90-qb__btn">
+            {{- section.settings.button_label | escape -}}
+            {%- render 'icon', name: 'arrow' -%}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.link_label != blank and section.settings.link_url != blank -%}
+          <a href="{{ section.settings.link_url }}" class="n90-qb__tlink" target="_blank" rel="noopener">
+            {{- section.settings.link_label | escape -}}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.note != blank -%}
+          <p class="n90-qb__note">{{ section.settings.note | escape }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Quote band",
+  "tag": "div",
+  "class": "section-quote-band",
+  "enabled_on": { "groups": ["footer"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Free design · Free quote" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Get your free kit mockup" },
+    {
+      "type": "textarea", "id": "text", "label": "Text",
+      "default": "Tell us your sport, team size and colours. We’ll design your kit and send a quote, with no obligation."
+    },
+    { "type": "header", "content": "Button" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Get a free kit mockup" },
+    {
+      "type": "url", "id": "button_url", "label": "Button link",
+      "info": "Defaults to all products until your quote page exists."
+    },
+    { "type": "header", "content": "Text link" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "Chat on WhatsApp" },
+    {
+      "type": "url", "id": "link_url", "label": "Link",
+      "info": "For WhatsApp use https://wa.me/ followed by your number in international format (e.g. https://wa.me/447700900000). Hidden until set."
+    },
+    { "type": "text", "id": "note", "label": "Small print", "default": "10% off your first order with ROSTER10" },
+    { "type": "header", "content": "Visibility" },
+    {
+      "type": "select", "id": "visibility", "label": "Show on",
+      "options": [
+        { "value": "all", "label": "Every page" },
+        { "value": "home", "label": "Homepage only" }
+      ],
+      "default": "all"
+    }
+  ],
+  "presets": [
+    { "name": "Quote band" }
+  ]
+}
+{% endschema %}

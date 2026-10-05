@@ -1,0 +1,685 @@
+{%- comment -%}
+  sections/bundle-spotlight.liquid
+  ROSTER · Section 5 — Bundle spotlight ("Match bundles / One bundle. Whole kit.")
+  Reference: data-section="BundleSpotlight" (.bundle / .bundle-media / .bundle-info /
+  .pills / .bundle-main / .price / .teamprice / .cta / .addons / .addon / .qadd-sm)
+
+  Blocks:
+    bundle — one pill tab each (media + name + price + team price + included + button)
+    addon  — "Add to your order" rows with quick add
+  Media is a strict 1:1 square. Motion from the reference: media fades up (mUp .6s)
+  and copy slides in (mSlide .5s) on every tab switch; add-on rows nudge 4px on hover;
+  pills ease to Carbon; media + info reveal on scroll. Quick add: assets/n90-cart.js.
+{%- endcomment -%}
+
+{%- liquid
+  assign bundles = section.blocks | where: 'type', 'bundle'
+  assign addons = section.blocks | where: 'type', 'addon'
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --bs-pt: {{ section.settings.padding_top }}px;
+    --bs-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-bs-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-bs-slide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-bs-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+  @keyframes n90-bs-spin { to { transform: rotate(360deg); } }
+
+  /* ref .sec */
+  .n90-bs {
+    padding: var(--bs-pt) 0 var(--bs-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* ref .bundle — media 6 cols, info 8 / span 5 */
+  .n90-bs__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: center;
+  }
+  .n90-bs__media-col { grid-column: 1 / span 6; min-width: 0; }
+  .n90-bs__info {
+    grid-column: 8 / span 5;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  /* ref .bundle-media — 1:1 */
+  .n90-bs__media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+  }
+  @media screen and (min-width: 1024px) {
+    .n90-bs__media { max-height: max(480px, calc(100svh - 160px)); }
+  }
+  .n90-bs__media[hidden] { display: none; }
+  .n90-bs__media img,
+  .n90-bs__pitch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .n90-bs__media img {
+    object-fit: cover;
+    animation: n90-bs-up .6s var(--n90-ease) both;
+  }
+  .n90-bs__pitch { opacity: .07; pointer-events: none; }
+
+  .n90-bs__eyebrow {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-bs__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(42px, 4.2vw, 60px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+
+  /* ref .pills / .pill */
+  .n90-bs__pills {
+    align-self: flex-start;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--n90-surface);
+  }
+  .n90-bs__pill {
+    min-height: 44px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--n90-muted);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .3s var(--n90-ease), color .3s;
+  }
+  .n90-bs__pill:hover { color: var(--n90-carbon); }
+  .n90-bs__pill[aria-selected="true"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+
+  /* ref .bundle-main / .bundle-copy — slides in on switch */
+  .n90-bs__panel { display: flex; flex-direction: column; gap: 20px; }
+  .n90-bs__panel[hidden] { display: none; }
+  .n90-bs__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: n90-bs-slide .5s var(--n90-ease) both;
+  }
+  .n90-bs__name {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: 32px;
+    line-height: 1.08;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  /* ref .dir-c .price */
+  .n90-bs__price {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 1.1;
+  }
+  .n90-bs__price s { font-size: 20px; color: var(--n90-muted); margin-left: 8px; }
+  /* ref .teamprice */
+  .n90-bs__team {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .n90-bs__team span { color: var(--n90-muted); }
+  .n90-bs__included { margin: 0; font-size: 14px; color: var(--n90-muted); }
+
+  /* ref .cta / .btn / .tlink */
+  .n90-bs__cta { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; margin-top: 8px; }
+  .n90-bs__btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 28px;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: var(--n90-radius);
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-bs__btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-bs__btn:hover::after { animation: n90-bs-shine .9s var(--n90-ease); }
+  .n90-bs__btn:active { transform: scale(.97); }
+  .n90-bs__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-bs__btn:hover svg { transform: translateX(4px); }
+  .n90-bs__tlink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    text-decoration-thickness: 1px;
+    transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+  }
+  .n90-bs__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+  /* ref .addons / .addon */
+  .n90-bs__addons-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--n90-line);
+  }
+  .n90-bs__addons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-bs__addons-title { margin: 0; font-size: 14px; font-weight: 600; }
+  .n90-bs__addon {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px;
+    border: 1px solid var(--n90-line);
+    border-radius: var(--n90-radius);
+    transition: border-color .2s, transform .3s var(--n90-ease);
+  }
+  .n90-bs__addon:hover { border-color: var(--n90-carbon); transform: translateX(4px); }
+  .n90-bs__addon-art {
+    position: relative;
+    width: 56px;
+    aspect-ratio: 1 / 1;
+    flex: none;
+    overflow: hidden;
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+  }
+  .n90-bs__addon-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .n90-bs__addon-text { flex: 1; min-width: 0; }
+  .n90-bs__addon-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+  }
+  a.n90-bs__addon-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .n90-bs__addon-price { display: block; font-size: 12px; color: var(--n90-muted); }
+
+  /* ref .qadd.qadd-sm — Volt on hover */
+  .n90-bs__qadd {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--n90-line);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .35s var(--n90-spring);
+  }
+  .n90-bs__qadd:hover,
+  .n90-bs__qadd.is-added { background: var(--n90-volt); border-color: var(--n90-volt); }
+  .n90-bs__qadd:active { transform: scale(.92); }
+  .n90-bs__qadd svg { width: 16px; height: 16px; }
+  .n90-bs__qadd .is-check,
+  .n90-bs__qadd .is-spin,
+  .n90-bs__qadd.is-loading .is-plus,
+  .n90-bs__qadd.is-added .is-plus { display: none; }
+  .n90-bs__qadd.is-added .is-check { display: block; }
+  .n90-bs__qadd.is-loading .is-spin {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: n90-bs-spin .8s linear infinite;
+  }
+
+  .n90-bs__error { margin: 0; font-size: 14px; color: #B42318; }
+  .n90-bs__error:empty { display: none; }
+  .n90-bs :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Laptop / tablet 768–1023: two equal columns */
+  @media screen and (max-width: 1023px) {
+    .n90-bs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+    .n90-bs__media-col,
+    .n90-bs__info { grid-column: auto; }
+    .n90-bs__name,
+    .n90-bs__price { font-size: 28px; }
+  }
+
+  /* Mobile 320–767 — ref .is-m: stacked */
+  @media screen and (max-width: 767px) {
+    .n90-bs { padding: min(var(--bs-pt), 64px) 0 min(var(--bs-pb), 64px); }
+    .n90-bs__grid { display: flex; flex-direction: column; align-items: stretch; gap: 28px; }
+    .n90-bs__cta { flex-direction: column; align-items: stretch; gap: 4px; }
+    .n90-bs__btn { width: 100%; }
+    .n90-bs__tlink { justify-content: center; }
+    .n90-bs__pills { align-self: stretch; }
+    .n90-bs__pill { flex: 1; }
+  }
+
+  @media (hover: none) {
+    .n90-bs__qadd { width: 44px; height: 44px; }
+    .n90-bs__addon:hover { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-bs__media img,
+    .n90-bs__copy { animation: none; }
+    .n90-bs__addon,
+    .n90-bs__pill,
+    .n90-bs__btn,
+    .n90-bs__qadd { transition: none; }
+    .n90-bs__btn:hover::after { animation: none; }
+  }
+</style>
+
+<section
+  class="n90-bs"
+  id="n90-bs-{{ section.id }}"
+  aria-labelledby="n90-bs-title-{{ section.id }}"
+  data-n90-qadd-scope
+>
+  <div class="page-width">
+    <div class="n90-bs__grid" data-n90-stagger>
+      {%- comment -%} ── Media: one square per bundle, active one shown ── {%- endcomment -%}
+      <div class="n90-bs__media-col">
+        {%- for block in bundles -%}
+          {%- liquid
+            assign prod = block.settings.product
+            assign img = block.settings.image
+            if img == blank and prod != blank
+              assign img = prod.featured_media.preview_image
+            endif
+            assign media_alt = img.alt | default: block.settings.title | default: prod.title
+          -%}
+          <div
+            class="n90-bs__media"
+            id="n90-bs-media-{{ block.id }}"
+            {% unless forloop.first %}hidden{% endunless %}
+          >
+            {%- if img != blank -%}
+              {{
+                img
+                | image_url: width: 1400
+                | image_tag:
+                  widths: '400, 600, 800, 1000, 1400',
+                  sizes: '(min-width: 1024px) 50vw, (min-width: 768px) 50vw, 100vw',
+                  loading: 'lazy', decoding: 'async',
+                  alt: media_alt
+              }}
+            {%- else -%}
+              <svg class="n90-bs__pitch" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <rect x="40" y="140" width="720" height="520"/><line x1="400" y1="140" x2="400" y2="660"/><circle cx="400" cy="400" r="80"/><circle cx="400" cy="400" r="4" fill="currentColor"/><rect x="40" y="260" width="120" height="280"/><rect x="640" y="260" width="120" height="280"/><rect x="40" y="340" width="44" height="120"/><rect x="716" y="340" width="44" height="120"/><path d="M160 350a60 60 0 0 1 0 100M640 350a60 60 0 0 0 0 100"/>
+              </svg>
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <div class="n90-bs__media"></div>
+        {%- endfor -%}
+      </div>
+
+      {%- comment -%} ── Info ── {%- endcomment -%}
+      <div class="n90-bs__info">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-bs__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-bs__heading" id="n90-bs-title-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+
+        {%- if bundles.size > 1 -%}
+          <div class="n90-bs__pills" role="tablist" aria-label="{{ section.settings.heading | escape }}">
+            {%- for block in bundles -%}
+              {%- assign tab_label = block.settings.tab_label | default: block.settings.title | default: block.settings.product.title -%}
+              <button
+                type="button"
+                class="n90-bs__pill"
+                role="tab"
+                id="n90-bs-tab-{{ block.id }}"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                aria-controls="n90-bs-panel-{{ block.id }}"
+                {% unless forloop.first %}tabindex="-1"{% endunless %}
+                data-bs-tab="{{ block.id }}"
+                {{ block.shopify_attributes }}
+              >
+                {{- tab_label | escape -}}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- for block in bundles -%}
+          {%- liquid
+            assign b = block.settings
+            assign prod = b.product
+            assign title = b.title | default: prod.title
+            assign variant = prod.selected_or_first_available_variant
+            assign p_money = prod.price | money
+            assign btn_url = b.button_url
+            if btn_url == blank and prod != blank
+              assign btn_url = prod.url
+            endif
+            if btn_url == blank
+              assign btn_url = routes.all_products_collection_url
+            endif
+          -%}
+          <div
+            class="n90-bs__panel"
+            id="n90-bs-panel-{{ block.id }}"
+            {% if bundles.size > 1 %}role="tabpanel" aria-labelledby="n90-bs-tab-{{ block.id }}"{% endif %}
+            {% unless forloop.first %}hidden{% endunless %}
+            {% if bundles.size == 1 %}{{ block.shopify_attributes }}{% endif %}
+          >
+            <div class="n90-bs__copy">
+              <p class="n90-bs__name">{{ title | escape }}</p>
+              <p class="n90-bs__price">
+                {%- if prod != blank -%}
+                  {%- if prod.price_varies -%}
+                    {{ 'products.product.price.from_price_html' | t: price: p_money }}
+                  {%- else -%}
+                    {{ variant.price | money }}
+                  {%- endif -%}
+                  {%- if variant.compare_at_price > variant.price -%}
+                    <s><span class="n90-bs-sr">{{ 'products.product.price.regular_price' | t }}</span>{{ variant.compare_at_price | money }}</s>
+                  {%- endif -%}
+                {%- else -%}
+                  {{ b.price_text | escape }}
+                {%- endif -%}
+              </p>
+              {%- if b.team_price != blank -%}
+                <p class="n90-bs__team"><span>{{ b.team_label | default: 'Team price' | escape }}</span><strong>{{ b.team_price | escape }}</strong></p>
+              {%- endif -%}
+              {%- if b.included != blank -%}
+                <p class="n90-bs__included">{{ b.included | escape }}</p>
+              {%- endif -%}
+            </div>
+            <div class="n90-bs__cta">
+              <a href="{{ btn_url }}" class="n90-bs__btn">
+                {{- b.button_label | default: 'Shop the bundle' | escape -}}
+                {%- render 'icon', name: 'arrow' -%}
+              </a>
+              {%- if section.settings.quote_label != blank -%}
+                <a href="{{ section.settings.quote_url | default: routes.all_products_collection_url }}" class="n90-bs__tlink">
+                  {{- section.settings.quote_label | escape -}}
+                </a>
+              {%- endif -%}
+            </div>
+          </div>
+        {%- endfor -%}
+
+        {%- if addons.size > 0 -%}
+          <div class="n90-bs__addons-wrap">
+            <p class="n90-bs__addons-title" id="n90-bs-addons-{{ section.id }}">{{ section.settings.addons_heading | escape }}</p>
+            <ul class="n90-bs__addons" role="list" aria-labelledby="n90-bs-addons-{{ section.id }}">
+              {%- for block in addons -%}
+                {%- liquid
+                  assign prod = block.settings.product
+                  assign a_title = block.settings.title | default: prod.title
+                  assign a_img = prod.featured_media.preview_image
+                  assign a_money = prod.price | money
+                -%}
+                <li class="n90-bs__addon" {{ block.shopify_attributes }}>
+                  <span class="n90-bs__addon-art">
+                    {%- if a_img != blank -%}
+                      {{ a_img | image_url: width: 112 | image_tag: width: 56, height: 56, loading: 'lazy', decoding: 'async', alt: '' }}
+                    {%- endif -%}
+                  </span>
+                  <span class="n90-bs__addon-text">
+                    {%- if prod != blank -%}
+                      <a href="{{ prod.url }}" class="n90-bs__addon-name">{{ a_title | escape }}</a>
+                    {%- else -%}
+                      <span class="n90-bs__addon-name">{{ a_title | escape }}</span>
+                    {%- endif -%}
+                    <span class="n90-bs__addon-price">
+                      {%- if prod != blank -%}
+                        {%- if prod.price_varies -%}{{ 'products.product.price.from_price_html' | t: price: a_money }}{%- else -%}{{ a_money }}{%- endif -%}
+                      {%- else -%}
+                        {{ block.settings.price_text | escape }}
+                      {%- endif -%}
+                    </span>
+                  </span>
+                  {%- if prod != blank and prod.available -%}
+                    {%- if prod.has_only_default_variant -%}
+                      <button
+                        type="button"
+                        class="n90-bs__qadd"
+                        data-n90-qadd="{{ prod.selected_or_first_available_variant.id }}"
+                        aria-label="{{ 'products.product.add_to_cart' | t }}: {{ a_title | escape }}"
+                      >
+                        <svg class="is-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+                        <svg class="is-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                        <span class="is-spin" aria-hidden="true"></span>
+                      </button>
+                    {%- else -%}
+                      <a
+                        href="{{ prod.url }}"
+                        class="n90-bs__qadd"
+                        aria-label="{{ 'products.product.choose_options' | t }}: {{ a_title | escape }}"
+                      >
+                        <svg class="is-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+                      </a>
+                    {%- endif -%}
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+            <p class="n90-bs__error" role="alert" data-n90-qadd-error></p>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .n90-bs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-bs-' + {{ section.id | json }});
+    if (!root) return;
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-bs-tab]'));
+    if (tabs.length < 2) return;
+
+    /* Re-showing a panel restarts its CSS entrance animations (ref mUp / mSlide) */
+    function select(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        var id = t.dataset.bsTab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        root.querySelector('#n90-bs-panel-' + id).hidden = !on;
+        root.querySelector('#n90-bs-media-' + id).hidden = !on;
+      });
+      if (focus) tab.focus();
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab, false); });
+      tab.addEventListener('keydown', function (e) {
+        var next = null;
+        if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') next = tabs[0];
+        else if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (next) {
+          e.preventDefault();
+          select(next, true);
+        }
+      });
+    });
+
+    /* Theme editor: selecting a bundle block shows it */
+    document.addEventListener('shopify:block:select', function (e) {
+      var tab = tabs.filter(function (t) { return t === e.target; })[0];
+      if (tab) select(tab, false);
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Bundle spotlight",
+  "tag": "div",
+  "class": "section-bundle-spotlight",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 10,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Match bundles" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "One bundle. Whole kit." },
+    { "type": "header", "content": "Quote link" },
+    { "type": "text", "id": "quote_label", "label": "Link label", "default": "Get a team quote" },
+    {
+      "type": "url", "id": "quote_url", "label": "Link",
+      "info": "Defaults to all products until your quote page exists."
+    },
+    { "type": "header", "content": "Add-ons" },
+    { "type": "text", "id": "addons_heading", "label": "Add-ons heading", "default": "Add to your order" },
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "bundle",
+      "name": "Bundle",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "product", "id": "product", "label": "Bundle product",
+          "info": "Supplies the name, price, image and button link."
+        },
+        { "type": "text", "id": "tab_label", "label": "Tab label", "default": "Pulse" },
+        {
+          "type": "image_picker", "id": "image", "label": "Image",
+          "info": "Overrides the product image. Cropped to a 1:1 square."
+        },
+        {
+          "type": "text", "id": "title", "label": "Name",
+          "info": "Overrides the product title.", "default": "Pulse Match Bundle"
+        },
+        {
+          "type": "text", "id": "price_text", "label": "Price (when no product is chosen)",
+          "default": "£149.99"
+        },
+        { "type": "text", "id": "team_label", "label": "Team price label", "default": "Team price" },
+        { "type": "text", "id": "team_price", "label": "Team price", "default": "Quote for 10+ players" },
+        { "type": "text", "id": "included", "label": "What's included", "default": "Match shirt, shorts and socks" },
+        { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop the bundle" },
+        {
+          "type": "url", "id": "button_url", "label": "Button link",
+          "info": "Defaults to the bundle product, then all products."
+        }
+      ]
+    },
+    {
+      "type": "addon",
+      "name": "Add-on",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "product", "id": "product", "label": "Product",
+          "info": "Single-variant products add straight to the cart; sized products open the product page."
+        },
+        { "type": "text", "id": "title", "label": "Name", "info": "Overrides the product title." },
+        { "type": "text", "id": "price_text", "label": "Price (when no product is chosen)" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bundle spotlight",
+      "blocks": [
+        {
+          "type": "bundle",
+          "settings": { "tab_label": "Pulse", "title": "Pulse Match Bundle", "price_text": "£149.99" }
+        },
+        {
+          "type": "bundle",
+          "settings": { "tab_label": "APEX", "title": "APEX Match Bundle", "price_text": "£149.99" }
+        },
+        { "type": "addon", "settings": { "title": "Headband", "price_text": "£5.99" } },
+        { "type": "addon", "settings": { "title": "ORBIT Training Football", "price_text": "£10.99" } },
+        { "type": "addon", "settings": { "title": "Kit bag" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

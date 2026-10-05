@@ -1,0 +1,133 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "club-shops-portal",
+      "blocks": {
+        "club_1": {
+          "type": "club",
+          "settings": {
+            "name": "Kestrel Park FC",
+            "sport": "football",
+            "location": "West Yorkshire",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        },
+        "club_2": {
+          "type": "club",
+          "settings": {
+            "name": "Harbourside RFC",
+            "sport": "rugby",
+            "location": "Bristol",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        },
+        "club_3": {
+          "type": "club",
+          "settings": {
+            "name": "Millbrook CC",
+            "sport": "cricket",
+            "location": "Kent",
+            "url": "",
+            "private": true,
+            "orders_close": ""
+          }
+        },
+        "club_4": {
+          "type": "club",
+          "settings": {
+            "name": "Oakhaven Darts League",
+            "sport": "darts",
+            "location": "Lancashire",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        },
+        "club_5": {
+          "type": "club",
+          "settings": {
+            "name": "Northgate Juniors FC",
+            "sport": "football",
+            "location": "Tyne & Wear",
+            "url": "",
+            "private": true,
+            "orders_close": ""
+          }
+        },
+        "club_6": {
+          "type": "club",
+          "settings": {
+            "name": "Lindale Bowls Club",
+            "sport": "bowls",
+            "location": "Cumbria",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        },
+        "club_7": {
+          "type": "club",
+          "settings": {
+            "name": "Fairway Golf Society",
+            "sport": "golf",
+            "location": "Surrey",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        },
+        "club_8": {
+          "type": "club",
+          "settings": {
+            "name": "Riverside Ladies FC",
+            "sport": "football",
+            "location": "Greater Manchester",
+            "url": "",
+            "private": false,
+            "orders_close": ""
+          }
+        }
+      },
+      "block_order": [
+        "club_1",
+        "club_2",
+        "club_3",
+        "club_4",
+        "club_5",
+        "club_6",
+        "club_7",
+        "club_8"
+      ],
+      "settings": {
+        "eyebrow": "Grassroots & semi-pro partners",
+        "heading": "Official club shops",
+        "subheading": "Find your team, order direct-to-door matchwear & training apparel, or register your club for a dedicated storefront.",
+        "cta_label": "Launch your club shop",
+        "search_placeholder": "Search your club by name, town, or league...",
+        "apply_eyebrow": "For coaches, managers & committees",
+        "apply_heading": "Run a club? Get a free club shop.",
+        "apply_text": "We set it up for free. Players and parents order their own kit, and we deliver to the club.",
+        "apply_perks": "No minimum orders • Zero upfront cost • Profit share for your club",
+        "apply_button": "Apply for a club shop",
+        "success_message": "Thanks — your application is in. We’ll be in touch within 2 working days.",
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

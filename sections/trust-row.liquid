@@ -1,0 +1,411 @@
+﻿{%- comment -%}
+  sections/trust-row.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+  Source: <div class="wrap trust-wrap trust-top"> / <section class="trust" data-section="TrustRow">
+  CSS source: ref lines 208-230, 896-937
+  Architecture: Shopify 2.0 / Dawn baseline-compatible
+    - Two block types: "crest" and "fact"
+    - Section-level colour tokens from schema pickers
+    - Mobile: column layout + horizontal crest scroll + 2-col facts grid
+{%- endcomment -%}
+
+{%- liquid
+  assign bg        = section.settings.color_background
+  assign ink       = section.settings.color_text
+  assign muted     = section.settings.color_muted
+  assign line_col  = section.settings.color_line
+  assign surface   = section.settings.color_surface
+  assign pt        = section.settings.padding_top
+  assign pb        = section.settings.padding_bottom
+  assign crest_blocks = section.blocks | where: 'type', 'crest'
+  assign fact_blocks  = section.blocks | where: 'type', 'fact'
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture line_col -%}{%- render 'n90-color-token', value: line_col -%}{%- endcapture -%}
+{%- capture surface -%}{%- render 'n90-color-token', value: surface -%}{%- endcapture -%}
+
+{%- style -%}
+  /* ── N90 TrustRow · colour tokens ─────────────────────────────── */
+  #shopify-section-{{ section.id }} {
+    --tr-bg:      {{ bg }};
+    --tr-ink:     {{ ink }};
+    --tr-muted:   {{ muted }};
+    --tr-line:    {{ line_col }};
+    --tr-surface: {{ surface }};
+    --tr-ease:    cubic-bezier(.2,.7,.2,1);
+    --tr-radius:  4px;
+  }
+
+  /* ── Outer wrapper (mirrors .trust-wrap.trust-top) ─────────────── */
+  /* ref line 896: .trust-wrap{padding-bottom:0}
+     ref line 935: .trust-top{padding-top:0}
+     ref line 936: .trust-top .trust{border-top:1px solid var(--line)} */
+  .n90-tr-wrap {
+    background: var(--tr-bg);
+    padding-top: {{ pt }}px;
+    padding-bottom: {{ pb }}px;
+  }
+
+  /* ── Trust row (ref line 209) ──────────────────────────────────── */
+  /* .trust{display:flex;align-items:center;justify-content:space-between;
+             gap:32px;padding:28px 0;border-top:1px solid var(--line);
+             border-bottom:1px solid var(--line)} */
+  .n90-tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 28px 0;
+    border-top: 1px solid var(--tr-line);
+    border-bottom: 1px solid var(--tr-line);
+    color: var(--tr-ink);
+  }
+
+  /* ── Crests (ref lines 210-211) ────────────────────────────────── */
+  /* .crests{display:flex;gap:10px}
+     .crest{width:52px;height:52px;border-radius:50%;border:1px solid var(--line-strong);
+            display:flex;align-items:center;justify-content:center;font-size:10px;
+            color:var(--muted);letter-spacing:.04em;flex:none;background:var(--surface)} */
+  .n90-tr__crests {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .n90-tr__crest {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid var(--tr-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--tr-muted);
+    letter-spacing: .04em;
+    flex: none;
+    background: var(--tr-surface);
+    overflow: hidden;
+  }
+  .n90-tr__crest img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 50%;
+  }
+
+  /* ── Rating (ref lines 213-215) ─────────────────────────────────── */
+  /* .rating{display:flex;align-items:center;gap:10px}
+     .stars{display:inline-flex;gap:2px;color:var(--ink)} */
+  .n90-tr__rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .n90-tr__stars {
+    display: inline-flex;
+    gap: 2px;
+    color: var(--tr-ink);
+  }
+  .n90-tr__stars svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  .n90-tr__rating-text {
+    font-size: 14px;
+    color: var(--tr-muted);
+    line-height: 1.3;
+  }
+  .n90-tr__rating-text strong {
+    color: var(--tr-ink);
+    font-weight: 600;
+  }
+
+  /* ── Facts row — dir-c overrides (ref lines 220-223) ─────────────── */
+  /* .dir-c .facts-row{gap:0}
+     .dir-c .fact{display:flex;flex-direction:column;padding:0 24px;border-left:1px solid var(--line)}
+     .dir-c .fact-k{font-family:var(--dfam);font-size:30px;line-height:1;
+                    text-transform:uppercase;font-weight:600}
+     .dir-c .fact-v{font-size:13px;color:var(--muted);margin-top:4px} */
+  .n90-tr__facts {
+    display: flex;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+  .n90-tr__fact {
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px;
+    border-left: 1px solid var(--tr-line);
+    white-space: nowrap;
+  }
+  .n90-tr__fact:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+  /* fact-k: Barlow Condensed 30px uppercase — ref line 222 */
+  .n90-tr__fact-k {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 30px;
+    line-height: 1;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--tr-ink);
+  }
+  /* fact-v: 13px muted — ref line 223 */
+  .n90-tr__fact-v {
+    font-size: 13px;
+    color: var(--tr-muted);
+    margin-top: 4px;
+  }
+
+  /* ── Mobile (ref lines 224-230) ────────────────────────────────── */
+  /* .is-m .trust{flex-direction:column;align-items:flex-start;gap:20px;padding:24px 0}
+     .is-m .crests{overflow-x:auto;max-width:100%}
+     .is-m .facts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;width:100%}
+     .is-m .fact{white-space:normal}
+     .is-m.dir-c .fact{padding:0 0 0 12px} */
+  @media screen and (max-width: 749px) {
+    .n90-tr-wrap {
+      padding-top: {{ pt | at_most: 24 }}px;
+      padding-bottom: {{ pb | at_most: 24 }}px;
+    }
+    .n90-tr {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 24px 0;
+    }
+    /* Horizontal scroll for crests */
+    .n90-tr__crests {
+      overflow-x: auto;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .n90-tr__crests::-webkit-scrollbar { display: none; }
+    /* 2-column grid for facts */
+    .n90-tr__facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 16px;
+      width: 100%;
+    }
+    .n90-tr__fact {
+      white-space: normal;
+      padding: 0 0 0 12px;
+      border-left: 1px solid var(--tr-line);
+    }
+    .n90-tr__fact:first-child {
+      border-left: 1px solid var(--tr-line);
+      padding-left: 12px;
+    }
+  }
+
+  /* ── Reduced motion ─────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #shopify-section-{{ section.id }} * {
+      transition-duration: .001ms !important;
+      animation-duration:  .001ms !important;
+    }
+  }
+{%- endstyle -%}
+
+<div class="n90-tr-wrap" id="n90-tr-{{ section.id }}">
+  <div class="page-width">
+    <section
+      class="n90-tr"
+      data-section="TrustRow"
+      aria-label="{{ section.settings.aria_label | default: 'Why clubs choose us' | escape }}"
+    >
+
+      {%- comment -%} ── Crests ── {%- endcomment -%}
+      {%- if crest_blocks.size > 0 -%}
+        <div class="n90-tr__crests" aria-label="{{ 'n90.ui.club_crests' | t }}">
+          {%- for block in crest_blocks -%}
+            <span
+              class="n90-tr__crest"
+              aria-hidden="true"
+              {{ block.shopify_attributes }}
+            >
+              {%- if block.settings.crest_image != blank -%}
+                <img
+                  src="{{ block.settings.crest_image | image_url: width: 104 }}"
+                  width="52"
+                  height="52"
+                  alt="{{ block.settings.crest_alt | default: block.settings.crest_image.alt | escape }}"
+                  decoding="async" loading="lazy"
+                >
+              {%- else -%}
+                {{ 'n90.ui.crest' | t }}
+              {%- endif -%}
+            </span>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} ── Star rating ── {%- endcomment -%}
+      <div class="n90-tr__rating">
+        <span
+          class="n90-tr__stars"
+          aria-label="{{ section.settings.rating_score | escape }} {{ section.settings.rating_aria_suffix | default: 'out of 5' | escape }}"
+        >
+          {%- for i in (1..5) -%}
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/>
+            </svg>
+          {%- endfor -%}
+        </span>
+        <span class="n90-tr__rating-text">
+          <strong>{{ section.settings.rating_score | escape }}</strong>
+          {{ section.settings.rating_label | escape }}
+        </span>
+      </div>
+
+      {%- comment -%} ── Facts ── {%- endcomment -%}
+      {%- if fact_blocks.size > 0 -%}
+        <ul class="n90-tr__facts" role="list">
+          {%- for block in fact_blocks -%}
+            <li class="n90-tr__fact" {{ block.shopify_attributes }}>
+              <span class="n90-tr__fact-k">{{ block.settings.fact_key | escape }}</span>
+              {%- if block.settings.fact_value != blank -%}
+                <span class="n90-tr__fact-v">{{ block.settings.fact_value | escape }}</span>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+    </section>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Trust Row",
+  "tag": "div",
+  "class": "section-trust-row",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    { "type": "header", "content": "Colour scheme" },
+    {
+      "type": "color", "id": "color_background", "label": "Section background",
+      "default": "#FFFFFF"
+    },
+    { "type": "color", "id": "color_text",    "label": "Text / ink",       "default": "#0E1B33" },
+    { "type": "color", "id": "color_muted",   "label": "Muted text",       "default": "#4A5568" },
+    { "type": "color", "id": "color_line",    "label": "Border / divider", "default": "#E2E6ED" },
+    {
+      "type": "color", "id": "color_surface", "label": "Crest background",
+      "default": "#F3F5F8",
+      "info": "Background fill for crests with no image uploaded."
+    },
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 0,
+      "info": "Reference layout: 0 (trust-top class removes top padding)."
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 0,
+      "info": "Reference layout: 0 (trust-wrap removes bottom padding)."
+    },
+    { "type": "header", "content": "Star rating" },
+    {
+      "type": "text", "id": "rating_score", "label": "Rating score",
+      "default": "4.9",
+      "info": "Displayed as bold text next to the stars (e.g. 4.9)."
+    },
+    {
+      "type": "text", "id": "rating_label", "label": "Rating sub-label",
+      "default": "from 2,400+ reviews",
+      "info": "Text after the score (e.g. 'from 2,400+ reviews')."
+    },
+    {
+      "type": "text", "id": "rating_aria_suffix",
+      "label": "Star rating ARIA suffix",
+      "default": "out of 5",
+      "info": "Appended to the score for screen readers (e.g. '4.9 out of 5')."
+    },
+    { "type": "header", "content": "Accessibility" },
+    {
+      "type": "text", "id": "aria_label",
+      "label": "Section ARIA label",
+      "default": "Why clubs choose us",
+      "info": "Read aloud by screen readers as the region name."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "crest",
+      "name": "Club crest",
+      "limit": 10,
+      "settings": [
+        {
+          "type": "image_picker", "id": "crest_image", "label": "Crest image",
+          "info": "Square logo. Displayed in a 52 x 52 px circle. Leave blank to show a placeholder circle."
+        },
+        {
+          "type": "text", "id": "crest_alt", "label": "Image alt text",
+          "placeholder": "FC Example crest",
+          "info": "Used if the image has no alt text set in Files."
+        }
+      ]
+    },
+    {
+      "type": "fact",
+      "name": "Fact",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text", "id": "fact_key", "label": "Key / number",
+          "default": "From 10",
+          "info": "Large Barlow Condensed number or short phrase (e.g. 'From 10', '48hrs', 'Free')."
+        },
+        {
+          "type": "text", "id": "fact_value", "label": "Value / label",
+          "default": "pieces",
+          "info": "Smaller descriptor beneath the key (e.g. 'pieces', 'turnaround', 'design tool')."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust Row",
+      "blocks": [
+        { "type": "crest" },
+        { "type": "crest" },
+        { "type": "crest" },
+        { "type": "crest" },
+        { "type": "crest" },
+        { "type": "crest" },
+        {
+          "type": "fact",
+          "settings": { "fact_key": "From 10", "fact_value": "pieces" }
+        },
+        {
+          "type": "fact",
+          "settings": { "fact_key": "Free", "fact_value": "design tool" }
+        },
+        {
+          "type": "fact",
+          "settings": { "fact_key": "48hrs", "fact_value": "turnaround" }
+        },
+        {
+          "type": "fact",
+          "settings": { "fact_key": "100%", "fact_value": "sublimated" }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

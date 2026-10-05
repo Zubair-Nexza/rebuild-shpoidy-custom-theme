@@ -1,0 +1,102 @@
+{%- comment -%}
+  snippets/header-shop-groups.liquid
+  "Shop" groups for the header (reference SHOP table and MegaMenu · Shop).
+
+  Accepts:
+  - menu: {Object} optional link_list — top-level links become groups, their child links the items
+  - mode: {String} 'panel' → desktop mega panel · 'drawer' → mobile accordions
+  - panel_id: {String} id for the panel element
+  - feature_image, feature_title, feature_label, feature_url: Shop-the-look card in the panel
+
+  Without a menu, starter groups are shown (replaced as soon as a Shop menu is chosen in
+  the header settings). Product links open search results; page links only appear when
+  that page exists, so nothing points at a missing page.
+{%- endcomment -%}
+
+{%- liquid
+  assign use_menu = false
+  if menu != blank and menu.links.size > 0
+    assign use_menu = true
+  endif
+  assign group_titles = 'Training & Outerwear|Equipment|Accessories|Bundles|Collections|Help' | split: '|'
+  assign group_links = 'Training Wear;Track Jackets;Rain Jackets;ROSTER Performance|Footballs;Goalkeeper Gloves;Bags & Backpacks|Headbands;Wristbands;Towels;Custom Accessories|ROSTER Bundles;ROSTER Elite Bundles|Urban Camo (Shop the Look);New In;Ready to Ship|Size Guide;How It Works;Delivery & Returns' | split: '|'
+  assign delivery_policy = shop.shipping_policy | default: shop.refund_policy
+  assign delivery_url = delivery_policy.url
+-%}
+
+{%- liquid
+  if mode == 'drawer'
+    assign group_open = '<details class="n90-hdr__macc"><summary class="n90-hdr__macc-sum"><span>'
+    assign title_close = '</span></summary><div class="n90-hdr__macc-body">'
+    assign group_close = '</div></details>'
+    assign link_class = 'n90-hdr__msub'
+  else
+    assign group_open = '<div class="n90-hdr__group"><span class="n90-hdr__group-t">'
+    assign title_close = '</span><div class="n90-hdr__group-links">'
+    assign group_close = '</div></div>'
+    assign link_class = 'n90-hdr__mg-link'
+  endif
+-%}
+
+{%- capture groups -%}
+  {%- if use_menu -%}
+    {%- for group in menu.links -%}
+      {{ group_open }}{{ group.title | escape }}{{ title_close }}
+      {%- if group.links.size > 0 -%}
+        {%- for link in group.links -%}
+          <a class="{{ link_class }}" href="{{ link.url }}">{{ link.title | escape }}</a>
+        {%- endfor -%}
+      {%- else -%}
+        <a class="{{ link_class }}" href="{{ group.url }}">{{ group.title | escape }}</a>
+      {%- endif -%}
+      {{ group_close }}
+    {%- endfor -%}
+  {%- else -%}
+    {%- for title in group_titles -%}
+      {%- assign items = group_links[forloop.index0] | split: ';' -%}
+      {{ group_open }}{{ title | escape }}{{ title_close }}
+      {%- for item in items -%}
+        {%- liquid
+          case item
+            when 'Size Guide'
+              assign href = pages['size-guide'].url
+            when 'How It Works'
+              assign href = pages['how-it-works'].url
+            when 'Delivery & Returns'
+              assign href = delivery_url
+            when 'Urban Camo (Shop the Look)'
+              assign href = routes.search_url | append: '?q=Urban+Camo'
+            else
+              assign href = routes.search_url | append: '?q=' | append: item | replace: ' ', '+' | replace: '&', '%26'
+          endcase
+        -%}
+        {%- if href != blank -%}<a class="{{ link_class }}" href="{{ href }}">{{ item | escape }}</a>{%- endif -%}
+      {%- endfor -%}
+      {{ group_close }}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- if mode == 'drawer' -%}
+  {{ groups }}
+{%- else -%}
+  <div class="n90-hdr__mega" id="{{ panel_id }}" data-hdr-panel="shop" hidden>
+    <div class="n90-hdr__mega-in page-width">
+      <div class="n90-hdr__mega-groups">{{ groups }}</div>
+      <div class="n90-hdr__mega-feat-s">
+        <a class="n90-hdr__slot" href="{{ feature_url }}" tabindex="-1" aria-hidden="true">
+          {%- if feature_image != blank -%}
+            {{ feature_image | image_url: width: 900 | image_tag: widths: '450, 600, 900', sizes: '30vw', loading: 'lazy', decoding: 'async', alt: '' }}
+          {%- else -%}
+            <span class="n90-hdr__slot-label">
+              {%- render 'header-camera' -%}
+              <span>{{ feature_title | escape }}</span>
+            </span>
+          {%- endif -%}
+        </a>
+        <p class="n90-hdr__feat-title">{{ feature_title | escape }}</p>
+        <a class="n90-hdr__tlink" href="{{ feature_url }}">{{ feature_label | escape }}</a>
+      </div>
+    </div>
+  </div>
+{%- endif -%}

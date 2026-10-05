@@ -1,0 +1,169 @@
+{%- comment -%}
+  sections/utility-bar.liquid
+  ROSTER — Utility strip above the header
+  Reference: data-section="UtilityBar" (.util — dir-c: condensed uppercase, 14px, .1em)
+
+  Desktop: all messages in a row separated by "·". Below 1024px one message at a
+  time, rotating every few seconds with the reference fade (nnfade .5s). Rotation
+  pauses on hover/focus and is off for reduced motion.
+  Desktop: Markets country/currency + language selectors on the right
+  (snippets/n90-localization.liquid); below 1024px they live in the mobile menu.
+{%- endcomment -%}
+
+{%- liquid
+  assign show_loc = false
+  if section.settings.show_localization
+    if localization.available_countries.size > 1 and section.settings.show_country
+      assign show_loc = true
+    endif
+    if localization.available_languages.size > 1 and section.settings.show_language
+      assign show_loc = true
+    endif
+  endif
+-%}
+
+{%- if section.blocks.size > 0 or show_loc -%}
+  <style>
+    @keyframes n90-util-fade { from { opacity: 0; } to { opacity: 1; } }
+    .n90-util {
+      background: var(--n90-carbon);
+      color: var(--n90-canvas);
+    }
+    .n90-util__in {
+      max-width: var(--n90-page-width);
+      min-height: 36px;
+      margin: 0 auto;
+      padding: 0 var(--n90-gutter);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      text-align: center;
+      font-family: var(--n90-font-display);
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .n90-util__msg { margin: 0; }
+    .n90-util__msg a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+    .n90-util__msg strong { font-weight: 700; color: var(--n90-volt); }
+    .n90-util__sep { opacity: .55; }
+    .n90-util__msgs { display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
+    .n90-util--loc .n90-util__in { display: grid; grid-template-columns: 1fr auto 1fr; }
+    .n90-util__loc { grid-column: 3; justify-self: end; display: flex; }
+    .n90-util__loc .n90-loc__btn { min-height: 30px; font-size: 13px; }
+
+    @media screen and (max-width: 1023px) {
+      .n90-util__sep { display: none; }
+      .n90-util__msg { display: none; }
+      .n90-util__msg.is-on { display: block; animation: n90-util-fade .5s ease; }
+      .n90-util__in { font-size: 13px; letter-spacing: .08em; }
+      .n90-util--loc .n90-util__in { display: flex; }
+      .n90-util__loc { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .n90-util__msg.is-on { animation: none; }
+    }
+  </style>
+
+  <div class="n90-util{% if show_loc %} n90-util--loc{% endif %}" id="n90-util-{{ section.id }}" role="region" aria-label="{{ 'n90.a11y.announcements' | t }}">
+    <div class="n90-util__in page-width">
+      <div class="n90-util__msgs"{% if show_loc %} style="grid-column: 2;"{% endif %}>
+        {%- for block in section.blocks -%}
+          {%- unless forloop.first -%}<span class="n90-util__sep" aria-hidden="true">·</span>{%- endunless -%}
+          <p class="n90-util__msg{% if forloop.first %} is-on{% endif %}" {{ block.shopify_attributes }}>
+            {%- if block.settings.link != blank -%}
+              <a href="{{ block.settings.link }}">{{ block.settings.text }}</a>
+            {%- else -%}
+              {{ block.settings.text }}
+            {%- endif -%}
+          </p>
+        {%- endfor -%}
+      </div>
+      {%- if show_loc -%}
+        <div class="n90-util__loc">
+          {%- assign util_loc_id = 'n90-loc-util-' | append: section.id -%}
+          {%- render 'n90-localization',
+            id: util_loc_id,
+            tone: 'dark',
+            align: 'right',
+            show_country: section.settings.show_country,
+            show_language: section.settings.show_language
+          -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- if section.blocks.size > 1 -%}
+    <script>
+      (function () {
+        var root = document.getElementById('n90-util-' + {{ section.id | json }});
+        if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var msgs = Array.prototype.slice.call(root.querySelectorAll('.n90-util__msg'));
+        var narrow = window.matchMedia('(max-width: 1023px)');
+        var i = 0;
+        var paused = false;
+        root.addEventListener('mouseenter', function () { paused = true; });
+        root.addEventListener('mouseleave', function () { paused = false; });
+        root.addEventListener('focusin', function () { paused = true; });
+        root.addEventListener('focusout', function () { paused = false; });
+        setInterval(function () {
+          if (paused || !narrow.matches || document.hidden) return;
+          msgs[i].classList.remove('is-on');
+          i = (i + 1) % msgs.length;
+          msgs[i].classList.add('is-on');
+        }, {{ section.settings.rotate_seconds | times: 1000 | json }});
+      })();
+    </script>
+  {%- endif -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Utility bar",
+  "tag": "div",
+  "class": "section-utility-bar",
+  "enabled_on": { "groups": ["header"] },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "range", "id": "rotate_seconds", "label": "Seconds per message (mobile)",
+      "min": 3, "max": 8, "step": 1, "unit": "s", "default": 4
+    },
+    { "type": "header", "content": "Country and language" },
+    {
+      "type": "paragraph",
+      "content": "Shows when your store sells to more than one country or language (Settings → Markets / Languages). On mobile the selectors appear in the menu."
+    },
+    { "type": "checkbox", "id": "show_localization", "label": "Show selectors on desktop", "default": true },
+    { "type": "checkbox", "id": "show_country", "label": "Country / currency", "default": true },
+    { "type": "checkbox", "id": "show_language", "label": "Language", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "message",
+      "name": "Message",
+      "settings": [
+        {
+          "type": "inline_richtext", "id": "text", "label": "Text",
+          "default": "Free UK shipping over £50",
+          "info": "Bold text is shown in Volt."
+        },
+        { "type": "url", "id": "link", "label": "Link" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Utility bar",
+      "blocks": [
+        { "type": "message", "settings": { "text": "Free UK shipping over £50" } },
+        { "type": "message", "settings": { "text": "10% off your first order: <strong>ROSTER10<\/strong>" } },
+        { "type": "message", "settings": { "text": "Order by [date] for pre-season" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

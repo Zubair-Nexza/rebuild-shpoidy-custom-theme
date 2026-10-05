@@ -1,0 +1,172 @@
+{%- comment -%}
+  sections/pillar-grid.liquid
+  Athletic 3-pillar brand grid — add to any template. Heading row + up to 3 Surface
+  cards with a Volt number tag, title and text; optional link per card.
+{%- endcomment -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} .n90-pg3 {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  .n90-pg3 { --pg-bg: var(--n90-canvas); --pg-card: var(--n90-surface); background: var(--pg-bg); color: var(--n90-carbon); font-family: var(--n90-font-body); }
+  .n90-pg3--surface { --pg-bg: var(--n90-surface); --pg-card: var(--n90-canvas); }
+  .n90-pg3__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 40px; }
+  .n90-pg3__eyebrow { margin: 0 0 12px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-pg3__heading { margin: 0; max-width: 820px; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(36px, 4.2vw, 60px); line-height: .95; text-transform: uppercase; }
+  .n90-pg3__sub { margin: 0; max-width: 420px; font-size: 16px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-pg3__grid { display: grid; grid-template-columns: repeat(var(--pg-cols, 3), minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+  .n90-pg3__card {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 32px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--pg-card);
+    transition: transform .45s var(--n90-spring), border-color .25s;
+  }
+  .n90-pg3__card:hover { transform: translateY(-4px); border-color: var(--n90-carbon); }
+  .n90-pg3__n {
+    align-self: flex-start;
+    padding: 4px 10px 3px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .12em;
+  }
+  .n90-pg3__t { margin: 8px 0 0; font-family: var(--n90-font-display); font-weight: 700; font-size: 28px; line-height: 1.05; text-transform: uppercase; }
+  .n90-pg3__p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--n90-muted); }
+  .n90-pg3__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .n90-pg3__link::after { content: ''; position: absolute; inset: 0; border-radius: 12px; }
+  .n90-pg3__link svg { width: 14px; height: 14px; transition: transform .35s var(--n90-spring); }
+  .n90-pg3__card:hover .n90-pg3__link svg { transform: translateX(4px); }
+  .n90-pg3__card:has(.n90-pg3__link:focus-visible) { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-pg3__link:focus-visible { outline: none; }
+
+  @media screen and (max-width: 1023px) {
+    .n90-pg3__grid { grid-template-columns: 1fr; gap: 16px; }
+    .n90-pg3__head { flex-direction: column; align-items: flex-start; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-pg3__card { padding: 24px; }
+    .n90-pg3__head { margin-bottom: 28px; }
+  }
+  @media (hover: none) {
+    .n90-pg3__card:hover { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-pg3__card,
+    .n90-pg3__link svg { transition: none; }
+  }
+</style>
+
+<div class="n90-pg3 n90-pg3--{{ section.settings.scheme }}">
+  <div class="page-width">
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.subtitle != blank -%}
+      <div class="n90-pg3__head" data-n90-reveal>
+        <div>
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-pg3__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="n90-pg3__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.subtitle != blank -%}
+          <p class="n90-pg3__sub">{{ section.settings.subtitle | escape }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <ul class="n90-pg3__grid" role="list" style="--pg-cols: {{ section.blocks.size }};" data-n90-stagger>
+        {%- for block in section.blocks -%}
+          <li {{ block.shopify_attributes }}>
+            <div class="n90-pg3__card">
+              <span class="n90-pg3__n">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <h3 class="n90-pg3__t">{{ block.settings.title | escape }}</h3>
+              {%- if block.settings.text != blank -%}
+                <p class="n90-pg3__p">{{ block.settings.text | escape }}</p>
+              {%- endif -%}
+              {%- if block.settings.link != blank and block.settings.link_label != blank -%}
+                <a class="n90-pg3__link" href="{{ block.settings.link }}">
+                  {{- block.settings.link_label | escape -}}
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+                </a>
+              {%- endif -%}
+            </div>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Brand pillars",
+  "tag": "section",
+  "class": "section-n90-pillar-grid",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 3,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "What we stand for" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Three things we won’t compromise on" },
+    { "type": "text", "id": "subtitle", "label": "Subtitle" },
+    {
+      "type": "select", "id": "scheme", "label": "Background",
+      "options": [
+        { "value": "canvas", "label": "Canvas (Surface cards)" },
+        { "value": "surface", "label": "Surface (Canvas cards)" }
+      ],
+      "default": "canvas"
+    },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 }
+  ],
+  "blocks": [
+    {
+      "type": "pillar",
+      "name": "Pillar",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Athletic innovation" },
+        { "type": "textarea", "id": "text", "label": "Text", "default": "Lightweight, breathable match fabrics built to last a season." },
+        { "type": "text", "id": "link_label", "label": "Link label" },
+        { "type": "url", "id": "link", "label": "Link" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Brand pillars",
+      "blocks": [
+        { "type": "pillar", "settings": { "title": "Athletic innovation", "text": "Lightweight, breathable match fabrics built to last a season." } },
+        { "type": "pillar", "settings": { "title": "Transparent grassroots support", "text": "Honest club pricing without retail markups." } },
+        { "type": "pillar", "settings": { "title": "Bespoke identity", "text": "Free in-house design mockups tailored to your club’s tradition." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

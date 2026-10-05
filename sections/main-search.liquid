@@ -1,0 +1,588 @@
+{%- comment -%}
+  sections/main-search.liquid
+  Clean Sport storefront search: header with query + count, full-width search bar,
+  All / Products / Stories & pages tabs (Shopify ?type=), 1:1 product cards
+  (snippets/n90-product-card.liquid, same as the collection grid), editorial cards
+  for articles and pages, and an empty state with quick collection links.
+{%- endcomment -%}
+
+{{ 'n90-product-card.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign per_page = section.settings.results_per_page
+  assign q = search.terms
+  assign has_query = false
+  if search.performed and q != blank
+    assign has_query = true
+  endif
+
+  assign tab = 'all'
+  if search.types.size == 1 and search.types contains 'product'
+    assign tab = 'products'
+  elsif search.types.size > 0
+    unless search.types contains 'product'
+      assign tab = 'content'
+    endunless
+  endif
+
+  assign q_param = q | url_encode
+  assign base_url = routes.search_url | append: '?q=' | append: q_param | append: '&options%5Bprefix%5D=last'
+  assign url_all = base_url
+  assign url_products = base_url | append: '&type=product'
+  assign url_content = base_url | append: '&type=article%2Cpage'
+  assign types_value = search.types | join: ','
+-%}
+
+{%- style -%}
+  @keyframes n90-srch-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  .n90-srch {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  .n90-srch__wrap { max-width: 1440px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px); }
+
+  /* Header */
+  .n90-srch__head { padding-bottom: 32px; animation: n90-srch-up .6s var(--n90-ease) both; }
+  .n90-srch__eyebrow { margin: 0 0 14px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-srch__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(38px, 5vw, 76px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .n90-srch__q { box-shadow: inset 0 -.28em 0 var(--n90-volt); }
+  .n90-srch__count { color: var(--n90-muted); white-space: nowrap; }
+
+  /* Search bar */
+  .n90-srch__form { position: relative; display: flex; margin: 28px 0 0; }
+  .n90-srch__input {
+    flex: 1;
+    min-width: 0;
+    height: 64px;
+    padding: 0 76px 0 56px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font: 500 18px/1.2 var(--n90-font-body);
+    transition: border-color .2s, box-shadow .25s var(--n90-ease), background .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .n90-srch__input::placeholder { color: var(--n90-muted); }
+  .n90-srch__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .n90-srch__input:focus { outline: none; border-color: var(--n90-carbon); background: var(--n90-canvas); box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); }
+  .n90-srch__lens { position: absolute; top: 50%; left: 20px; width: 20px; height: 20px; transform: translateY(-50%); color: var(--n90-muted); pointer-events: none; }
+  .n90-srch__go {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: var(--n90-carbon);
+    color: var(--n90-canvas);
+    cursor: pointer;
+    transition: background .25s, color .25s, transform .35s var(--n90-spring);
+  }
+  .n90-srch__go svg { width: 18px; height: 18px; transition: transform .35s var(--n90-spring); }
+  .n90-srch__input:not(:placeholder-shown) ~ .n90-srch__go { background: var(--n90-volt); color: var(--n90-carbon); }
+  .n90-srch__go:hover svg { transform: translateX(3px); }
+  .n90-srch__go:active { transform: scale(.94); }
+
+  /* Toolbar: tabs + sort */
+  .n90-srch__bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 32px; }
+  .n90-srch__tabs { display: flex; gap: 4px; margin: 0; padding: 4px; max-width: 100%; overflow-x: auto; list-style: none; border-radius: 999px; background: var(--n90-surface); scrollbar-width: none; }
+  .n90-srch__tabs::-webkit-scrollbar { display: none; }
+  .n90-srch__tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    color: var(--n90-muted);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .3s var(--n90-ease), color .3s;
+  }
+  .n90-srch__tab:hover { color: var(--n90-carbon); }
+  .n90-srch__tab[aria-current="page"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-srch__sort { display: flex; align-items: center; gap: 10px; margin: 0; }
+  .n90-srch__sort label { font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-srch__sort select {
+    min-height: 44px;
+    padding: 0 40px 0 14px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23181818' stroke-width='2'%3E%3Cpath d='m1 1 5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
+    color: var(--n90-carbon);
+    font: 500 15px var(--n90-font-body);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .n90-srch__sort select:focus-visible { outline: none; border-color: var(--n90-carbon); box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); }
+
+  /* Product grid */
+  .n90-srch__label { margin: 0 0 18px; font-family: var(--n90-font-display); font-weight: 700; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; }
+  .n90-srch__grid { --srch-cols: {{ section.settings.columns_desktop }}; display: grid; grid-template-columns: repeat(var(--srch-cols), minmax(0, 1fr)); gap: 40px 20px; margin: 0; padding: 0; list-style: none; }
+  .n90-srch__grid > li { min-width: 0; animation: n90-srch-up .6s var(--n90-ease) both; }
+  {%- for i in (1..8) -%}
+    .n90-srch__grid > li:nth-child({{ i }}) { animation-delay: {{ i | times: 50 }}ms; }
+  {%- endfor -%}
+
+  .n90-srch__streams { display: flex; flex-wrap: wrap; gap: 4px; width: fit-content; max-width: 100%; margin: 0 0 24px; padding: 4px; border-radius: 999px; background: var(--n90-surface); }
+  .n90-srch__stream { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none; color: var(--n90-muted); font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+  .n90-srch__stream span { font-size: 12px; opacity: .7; }
+  .n90-srch__stream[aria-pressed="true"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-srch__grid > li[hidden] { display: none; }
+  /* Stories & pages */
+  .n90-srch__content { margin-top: 64px; }
+  .n90-srch__content:first-child { margin-top: 0; }
+  .n90-srch__posts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
+  .n90-srch__post {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-canvas);
+    transition: border-color .25s, transform .4s var(--n90-ease);
+  }
+  .n90-srch__post:hover { border-color: var(--n90-carbon); transform: translateY(-3px); }
+  .n90-srch__post-media { aspect-ratio: 16 / 9; overflow: hidden; background: var(--n90-surface); }
+  .n90-srch__post-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .8s var(--n90-ease); }
+  .n90-srch__post:hover .n90-srch__post-media img { transform: scale(1.04); }
+  .n90-srch__post-body { display: flex; flex: 1; flex-direction: column; gap: 10px; padding: 20px; }
+  .n90-srch__badge { align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: var(--n90-volt); color: var(--n90-carbon); font-family: var(--n90-font-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .n90-srch__post-title { margin: 0; font-family: var(--n90-font-display); font-weight: 700; font-size: 24px; line-height: 1.05; text-transform: uppercase; }
+  .n90-srch__post-title a { color: inherit; text-decoration: none; }
+  .n90-srch__post-title a::after { content: ''; position: absolute; inset: 0; }
+  .n90-srch__post-title a:focus-visible { outline: none; }
+  .n90-srch__post:has(a:focus-visible) { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-srch__post-meta { margin: 0; font-size: 13px; color: var(--n90-muted); }
+  .n90-srch__post-text { margin: 0; font-size: 15px; line-height: 1.6; color: var(--n90-muted); }
+
+  /* Pagination */
+  .n90-srch__pager { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 64px 0 0; padding: 0; list-style: none; }
+  .n90-srch__pager a,
+  .n90-srch__pager span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    border-radius: 12px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+  }
+  .n90-srch__pager a { border: 1px solid rgba(0, 0, 0, .08); transition: border-color .2s; }
+  .n90-srch__pager a:hover { border-color: var(--n90-carbon); }
+  .n90-srch__pager [aria-current="page"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+
+  /* Empty + idle states */
+  .n90-srch__empty { padding: 56px clamp(20px, 5vw, 64px); border-radius: 12px; background: var(--n90-surface); text-align: center; animation: n90-srch-up .6s var(--n90-ease) both; }
+  .n90-srch__empty-title { margin: 0 0 12px; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(30px, 4vw, 52px); line-height: 1; text-transform: uppercase; }
+  .n90-srch__empty-text { margin: 0 auto 28px; max-width: 520px; font-size: 16px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-srch__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .n90-srch__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 20px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .25s, border-color .25s, transform .35s var(--n90-spring);
+  }
+  .n90-srch__link svg { width: 14px; height: 14px; transition: transform .35s var(--n90-spring); }
+  .n90-srch__link:hover { background: var(--n90-volt); border-color: var(--n90-volt); transform: translateY(-2px); }
+  .n90-srch__link:hover svg { transform: translateX(3px); }
+  .n90-srch__link--all { background: var(--n90-carbon); border-color: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-srch__link--all:hover { color: var(--n90-carbon); }
+
+  .n90-srch :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  @media (max-width: 1279px) {
+    .n90-srch__grid { --srch-cols: {{ section.settings.columns_desktop | at_most: 3 }}; }
+  }
+  @media (max-width: 1023px) {
+    .n90-srch__grid { --srch-cols: 3; gap: 32px 16px; }
+    .n90-srch__posts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 767px) {
+    .n90-srch__grid { --srch-cols: 2; gap: 24px 12px; }
+    .n90-srch__posts { grid-template-columns: 1fr; }
+    .n90-srch__input { height: 56px; padding-left: 48px; font-size: 16px; }
+    .n90-srch__lens { left: 16px; }
+    .n90-srch__bar { flex-direction: column; align-items: stretch; }
+    .n90-srch__sort select { flex: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-srch__head,
+    .n90-srch__grid > li,
+    .n90-srch__empty { animation: none; }
+    .n90-srch__post,
+    .n90-srch__post-media img,
+    .n90-srch__go,
+    .n90-srch__go svg,
+    .n90-srch__link,
+    .n90-srch__link svg { transition: none; }
+  }
+{%- endstyle -%}
+
+{%- capture arrow_svg -%}
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+{%- endcapture -%}
+
+{%- capture quick_links -%}
+  {%- liquid
+    assign fallback_handles = 'footballs,accessories,matchwear' | split: ','
+  -%}
+  <ul class="n90-srch__links" role="list">
+    {%- for n in (1..3) -%}
+      {%- liquid
+        assign setting_key = 'quick_collection_' | append: n
+        assign qc = section.settings[setting_key]
+        if qc == blank
+          assign i = forloop.index0
+          assign qc = collections[fallback_handles[i]]
+        endif
+      -%}
+      {%- if qc != blank and qc.url != blank -%}
+        <li><a class="n90-srch__link" href="{{ qc.url }}">{{ qc.title | escape }}{{ arrow_svg }}</a></li>
+      {%- endif -%}
+    {%- endfor -%}
+    <li><a class="n90-srch__link n90-srch__link--all" href="{{ routes.all_products_collection_url }}">{{ section.settings.all_link_label | escape }}{{ arrow_svg }}</a></li>
+  </ul>
+{%- endcapture -%}
+
+<div class="n90-srch">
+  <div class="n90-srch__wrap">
+    <header class="n90-srch__head">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="n90-srch__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="n90-srch__title">
+        {%- if has_query -%}
+          {{ 'n90.search.results_for' | t }} “<span class="n90-srch__q">{{ q | escape }}</span>”
+          <span class="n90-srch__count">— {{ search.results_count }} {% if search.results_count == 1 %}{{ 'n90.search.item' | t }}{% else %}{{ 'n90.search.items' | t }}{% endif %}</span>
+        {%- else -%}
+          {{ section.settings.idle_heading | escape }}
+        {%- endif -%}
+      </h1>
+
+      <form action="{{ routes.search_url }}" method="get" role="search" class="n90-srch__form">
+        <label class="ref-sr" for="n90-srch-q-{{ section.id }}">{{ 'n90.search.label' | t }}</label>
+        <svg class="n90-srch__lens" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="8.5" cy="8.5" r="6"/><path d="m13 13 5 5"/></svg>
+        <input
+          class="n90-srch__input"
+          id="n90-srch-q-{{ section.id }}"
+          type="search"
+          name="q"
+          value="{{ q | escape }}"
+          placeholder="{{ section.settings.placeholder | escape }}"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          {% unless has_query %}
+            autofocus
+          {% endunless %}
+        >
+        <input type="hidden" name="options[prefix]" value="last">
+        {%- if tab != 'all' -%}
+          <input type="hidden" name="type" value="{{ types_value | escape }}">
+        {%- endif -%}
+        <button type="submit" class="n90-srch__go" aria-label="{{ 'n90.search.submit' | t }}">{{ arrow_svg }}</button>
+      </form>
+    </header>
+
+    {%- if has_query -%}
+      {%- paginate search.results by per_page -%}
+        {%- liquid
+          assign product_hits = 0
+          assign content_hits = 0
+          for item in search.results
+            if item.object_type == 'product'
+              assign product_hits = product_hits | plus: 1
+            else
+              assign content_hits = content_hits | plus: 1
+            endif
+          endfor
+          assign show_tabs = false
+          if tab != 'all'
+            assign show_tabs = true
+          elsif product_hits > 0 and content_hits > 0
+            assign show_tabs = true
+          endif
+        -%}
+
+        {%- if show_tabs or product_hits > 0 -%}
+          <div class="n90-srch__bar">
+            {%- if show_tabs -%}
+              <nav aria-label="{{ 'n90.a11y.result_type' | t }}">
+                <ul class="n90-srch__tabs" role="list">
+                  <li><a class="n90-srch__tab" href="{{ url_all }}"{% if tab == 'all' %} aria-current="page"{% endif %}>{{ 'n90.search.all' | t }}</a></li>
+                  <li><a class="n90-srch__tab" href="{{ url_products }}"{% if tab == 'products' %} aria-current="page"{% endif %}>{{ 'n90.search.products' | t }}</a></li>
+                  <li><a class="n90-srch__tab" href="{{ url_content }}"{% if tab == 'content' %} aria-current="page"{% endif %}>{{ 'n90.search.stories_pages' | t }}</a></li>
+                </ul>
+              </nav>
+            {%- else -%}
+              <span></span>
+            {%- endif -%}
+
+            {%- if section.settings.enable_sorting and search.results_count > 1 -%}
+              <form class="n90-srch__sort" action="{{ routes.search_url }}" method="get">
+                <input type="hidden" name="q" value="{{ q | escape }}">
+                <input type="hidden" name="options[prefix]" value="last">
+                {%- if tab != 'all' -%}
+                  <input type="hidden" name="type" value="{{ types_value | escape }}">
+                {%- endif -%}
+                <label for="n90-srch-sort-{{ section.id }}">{{ 'n90.search.sort' | t }}</label>
+                <select id="n90-srch-sort-{{ section.id }}" name="sort_by" data-n90-autosubmit>
+                  {%- for option in search.sort_options -%}
+                    <option value="{{ option.value | escape }}"{% if option.value == search.sort_by %} selected{% endif %}>{{ option.name | escape }}</option>
+                  {%- endfor -%}
+                </select>
+                <noscript><button type="submit" class="n90-srch__link">{{ 'n90.search.sort' | t }}</button></noscript>
+              </form>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- if search.results_count == 0 or search.results.size == 0 -%}
+          <div class="n90-srch__empty">
+            <h2 class="n90-srch__empty-title">{{ section.settings.empty_heading | escape }}</h2>
+            <p class="n90-srch__empty-text">{{ section.settings.empty_text | escape }}</p>
+            {{ quick_links }}
+          </div>
+        {%- else -%}
+          {%- if product_hits > 0 -%}
+            <div class="n90-srch__products">
+              {%- if content_hits > 0 -%}
+                <h2 class="n90-srch__label">{{ 'n90.search.products' | t }}</h2>
+              {%- else -%}
+                <h2 class="ref-sr">{{ 'n90.search.products' | t }}</h2>
+              {%- endif -%}
+              {%- liquid
+                assign retail_hits = 0
+                assign custom_hits = 0
+                for item in search.results
+                  if item.object_type == 'product'
+                    capture stream
+                      render 'n90-product-stream', product: item
+                    endcapture
+                    if stream == 'custom'
+                      assign custom_hits = custom_hits | plus: 1
+                    else
+                      assign retail_hits = retail_hits | plus: 1
+                    endif
+                  endif
+                endfor
+              -%}
+              {%- if retail_hits > 0 and custom_hits > 0 -%}
+                <div class="n90-srch__streams" role="group" aria-label="{{ 'n90.catalog.filter_label' | t }}" data-srch-streams>
+                  <button type="button" class="n90-srch__stream" data-srch-stream-btn="all" aria-pressed="true">{{ 'n90.catalog.all' | t }} <span>{{ product_hits }}</span></button>
+                  <button type="button" class="n90-srch__stream" data-srch-stream-btn="retail" aria-pressed="false">{{ 'n90.catalog.retail_tab' | t }} <span>{{ retail_hits }}</span></button>
+                  <button type="button" class="n90-srch__stream" data-srch-stream-btn="custom" aria-pressed="false">{{ 'n90.catalog.custom_tab' | t }} <span>{{ custom_hits }}</span></button>
+                </div>
+              {%- endif -%}
+              <ul class="n90-srch__grid" role="list">
+                {%- assign product_index = 0 -%}
+                {%- for item in search.results -%}
+                  {%- if item.object_type == 'product' -%}
+                    {%- liquid
+                      assign product_index = product_index | plus: 1
+                      assign first_row = false
+                      if paginate.current_page == 1 and product_index <= 4
+                        assign first_row = true
+                      endif
+                      assign lcp = false
+                      if paginate.current_page == 1 and product_index == 1
+                        assign lcp = true
+                      endif
+                    -%}
+                    {%- capture stream -%}{%- render 'n90-product-stream', product: item -%}{%- endcapture -%}
+                    <li data-srch-stream="{{ stream }}">
+                      {%- render 'n90-product-card',
+                        product: item,
+                        eager: first_row,
+                        priority: lcp,
+                        sizes: '(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw',
+                        show_secondary_image: section.settings.show_secondary_image,
+                        show_quick_add: section.settings.show_quick_add,
+                        show_quick_view: section.settings.show_quick_view,
+                        show_swatches: true
+                      -%}
+                    </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+
+          {%- if content_hits > 0 -%}
+            <div class="n90-srch__content">
+              <h2 class="n90-srch__label">{{ 'n90.search.stories_pages' | t }}</h2>
+              <ul class="n90-srch__posts" role="list">
+                {%- for item in search.results -%}
+                  {%- unless item.object_type == 'product' -%}
+                    <li>
+                      <article class="n90-srch__post">
+                        {%- if item.object_type == 'article' and item.image -%}
+                          <div class="n90-srch__post-media">
+                            {%- assign post_alt = item.image.alt | default: item.title -%}
+                            {{
+                              item.image
+                              | image_url: width: 800
+                              | image_tag:
+                                widths: '400, 600, 800',
+                                sizes: '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw',
+                                loading: 'lazy',
+                                decoding: 'async',
+                                alt: post_alt,
+                                width: 800,
+                                height: 450
+                            }}
+                          </div>
+                        {%- endif -%}
+                        <div class="n90-srch__post-body">
+                          <span class="n90-srch__badge">{% if item.object_type == 'article' %}{{ 'n90.search.story' | t }}{% else %}{{ 'n90.search.page' | t }}{% endif %}</span>
+                          <h3 class="n90-srch__post-title"><a href="{{ item.url }}">{{ item.title | escape }}</a></h3>
+                          {%- if item.object_type == 'article' -%}
+                            <p class="n90-srch__post-meta">{{ item.published_at | time_tag: format: 'date' }}</p>
+                            {%- assign post_text = item.excerpt_or_content | strip_html | truncatewords: 22 -%}
+                          {%- else -%}
+                            {%- assign post_text = item.content | strip_html | truncatewords: 22 -%}
+                          {%- endif -%}
+                          {%- if post_text != blank -%}
+                            <p class="n90-srch__post-text">{{ post_text }}</p>
+                          {%- endif -%}
+                        </div>
+                      </article>
+                    </li>
+                  {%- endunless -%}
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if paginate.pages > 1 -%}
+          <nav aria-label="{{ 'general.pagination.label' | t }}">
+            <ul class="n90-srch__pager" role="list">
+              {%- if paginate.previous -%}
+                <li><a href="{{ paginate.previous.url }}" aria-label="{{ 'general.pagination.previous' | t }}">←</a></li>
+              {%- endif -%}
+              {%- for part in paginate.parts -%}
+                <li>
+                  {%- if part.is_link -%}
+                    <a href="{{ part.url }}">{{ part.title }}</a>
+                  {%- elsif part.title == paginate.current_page -%}
+                    <span aria-current="page">{{ part.title }}</span>
+                  {%- else -%}
+                    <span>{{ part.title }}</span>
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+              {%- if paginate.next -%}
+                <li><a href="{{ paginate.next.url }}" aria-label="{{ 'general.pagination.next' | t }}">→</a></li>
+              {%- endif -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      {%- endpaginate -%}
+      {%- if section.settings.show_quick_view -%}{%- render 'quick-view-modal' -%}{%- endif -%}
+    {%- else -%}
+      <div class="n90-srch__empty">
+        <h2 class="n90-srch__empty-title">{{ section.settings.idle_subheading | escape }}</h2>
+        <p class="n90-srch__empty-text">{{ section.settings.idle_text | escape }}</p>
+        {{ quick_links }}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-srch-stream-btn]');
+    if (!btn) return;
+    var group = btn.closest('[data-srch-streams]');
+    var grid = group.parentElement.querySelector('.n90-srch__grid');
+    var want = btn.dataset.srchStreamBtn;
+    group.querySelectorAll('[data-srch-stream-btn]').forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    grid.querySelectorAll('[data-srch-stream]').forEach(function (li) { li.hidden = want !== 'all' && li.dataset.srchStream !== want; });
+  });
+  document.addEventListener('change', function (e) {
+    if (e.target.matches && e.target.matches('[data-n90-autosubmit]') && e.target.form) e.target.form.submit();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Search results",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    { "type": "header", "content": "Header" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Storefront search" },
+    { "type": "text", "id": "idle_heading", "label": "Heading before a search", "default": "Search the store" },
+    { "type": "text", "id": "placeholder", "label": "Search placeholder", "default": "Search kits, footballs, training gear…" },
+    { "type": "header", "content": "Results" },
+    { "type": "range", "id": "results_per_page", "label": "Results per page", "min": 8, "max": 48, "step": 4, "default": 24 },
+    { "type": "select", "id": "columns_desktop", "label": "Product columns on desktop", "options": [
+      { "value": "3", "label": "3" },
+      { "value": "4", "label": "4" }
+    ], "default": "4" },
+    { "type": "checkbox", "id": "show_secondary_image", "label": "Show second image on hover", "default": true },
+    { "type": "checkbox", "id": "show_quick_add", "label": "Show quick add", "default": true },
+    { "type": "checkbox", "id": "show_quick_view", "label": "Show quick view", "info": "Quick view button on hover; the + on products with options opens it too.", "default": true },
+    { "type": "checkbox", "id": "enable_sorting", "label": "Enable sorting", "default": true },
+    { "type": "header", "content": "Empty state" },
+    { "type": "text", "id": "empty_heading", "label": "No results heading", "default": "No gear found matching your search" },
+    { "type": "text", "id": "empty_text", "label": "No results text", "default": "Check the spelling, try a broader term like “shirt” or “ball”, or jump straight into one of our most popular ranges." },
+    { "type": "text", "id": "idle_subheading", "label": "Prompt heading before a search", "default": "Find your gear" },
+    { "type": "text", "id": "idle_text", "label": "Text before a search", "default": "Search by product, sport or club — or start with our most popular ranges." },
+    { "type": "paragraph", "content": "Quick links. Empty pickers fall back to the collections with handles footballs, accessories and matchwear when they exist." },
+    { "type": "text", "id": "all_link_label", "label": "All products link label", "default": "All gear" },
+    { "type": "collection", "id": "quick_collection_1", "label": "Quick link 1" },
+    { "type": "collection", "id": "quick_collection_2", "label": "Quick link 2" },
+    { "type": "collection", "id": "quick_collection_3", "label": "Quick link 3" },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 96 }
+  ]
+}
+{% endschema %}

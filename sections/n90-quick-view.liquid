@@ -1,0 +1,197 @@
+{%- comment -%}
+  sections/n90-quick-view.liquid
+  Quick view content, fetched by assets/quick-view.js with the Section Rendering API:
+    /products/<handle>?section_id=n90-quick-view
+  and injected into the dialog from snippets/quick-view-modal.liquid.
+  1:1 media + thumbnails, badges, title, price, colour / size picker, stock status,
+  quantity and an AJAX add to cart (handled by quick-view.js → cart drawer).
+  Not added to templates directly.
+{%- endcomment -%}
+
+{%- liquid
+  assign qv_variant = product.selected_or_first_available_variant
+  assign qv_media = qv_variant.featured_media.preview_image | default: product.featured_media.preview_image
+  assign qv_form_id = 'n90-qv-form-' | append: product.id
+  assign low_stock = 5
+-%}
+
+<div class="n90-qv__grid" data-n90-qv-product data-url="{{ product.url }}">
+  <div class="n90-qv__media">
+    <div class="n90-qv__main">
+      {%- if qv_media != blank -%}
+        {%- assign qv_alt = qv_media.alt | default: product.title -%}
+        {{
+          qv_media
+          | image_url: width: 1000
+          | image_tag:
+            widths: '400, 600, 800, 1000',
+            sizes: '(min-width: 900px) 440px, 100vw',
+            loading: 'eager',
+            decoding: 'async',
+            alt: qv_alt,
+            class: 'n90-qv__img'
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'n90-qv__ph' }}
+      {%- endif -%}
+      {%- render 'product-badge', product: product, variant: qv_variant, context: 'pdp' -%}
+    </div>
+
+    {%- assign images = product.media | where: 'media_type', 'image' -%}
+    {%- assign qv_img_count = images.size | at_most: 6 -%}
+    {%- if images.size > 1 -%}
+      <ul class="n90-qv__thumbs" role="list">
+        {%- for m in images limit: 6 -%}
+          {%- assign m_alt = m.alt | default: product.title -%}
+          <li>
+            <button
+              type="button"
+              class="n90-qv__thumb"
+              aria-label="{{ 'n90.a11y.show_image' | t: index: forloop.index, count: qv_img_count }}"
+              aria-current="{% if m.id == qv_media.id %}true{% else %}false{% endif %}"
+              data-n90-qv-thumb
+              data-media-id="{{ m.id }}"
+              data-alt="{{ m_alt | escape }}"
+              data-src="{{ m.preview_image | image_url: width: 1000 }}"
+              data-srcset="{{ m.preview_image | image_url: width: 400 }} 400w, {{ m.preview_image | image_url: width: 600 }} 600w, {{ m.preview_image | image_url: width: 800 }} 800w, {{ m.preview_image | image_url: width: 1000 }} 1000w"
+            >
+              {{ m.preview_image | image_url: width: 160 | image_tag: loading: 'lazy', decoding: 'async', alt: '' }}
+            </button>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+
+  <div class="n90-qv__info">
+    {%- if product.type != blank -%}
+      <p class="n90-qv__eyebrow">{{ product.type | escape }}</p>
+    {%- endif -%}
+    <h2 class="n90-qv__title" id="n90-qv-title" tabindex="-1">{{ product.title | escape }}</h2>
+
+    <div class="n90-qv__price" data-n90-qv-price>
+      <span class="n90-qv__now">{{ qv_variant.price | money }}</span>
+      {%- if qv_variant.compare_at_price > qv_variant.price -%}
+        <s class="n90-qv__was"><span class="ref-sr">{{ 'products.product.price.regular_price' | t }}</span>{{ qv_variant.compare_at_price | money }}</s>
+      {%- endif -%}
+    </div>
+
+    <p class="n90-qv__stock" data-n90-qv-stock aria-live="polite"></p>
+
+    {%- capture qv_stream -%}{%- render 'n90-product-stream', product: product -%}{%- endcapture -%}
+    {%- if qv_stream == 'custom' -%}
+      <p class="n90-qv__stock">{%- render 'n90-custom-price', product: product -%}</p>
+      <a class="n90-qv__atc" href="{{ product.url }}" style="text-decoration: none;">{{ settings.n90_custom_cta | default: 'Get a free mockup & quote' | escape }}</a>
+    {%- else -%}
+    {%- unless product.has_only_default_variant -%}
+      {%- for option in product.options_with_values -%}
+        {%- liquid
+          assign option_name = option.name | downcase
+          assign is_colour = false
+          if option_name == 'color' or option_name == 'colour'
+            assign is_colour = true
+          endif
+        -%}
+        <fieldset class="n90-qv__opt" data-n90-qv-option>
+          <legend class="n90-qv__opt-label">{{ option.name | escape }}: <strong data-n90-qv-selected>{{ option.selected_value | escape }}</strong></legend>
+          <div class="n90-qv__values">
+            {%- for value in option.values -%}
+              {%- assign input_id = 'n90-qv-' | append: product.id | append: '-' | append: forloop.parentloop.index0 | append: '-' | append: forloop.index0 -%}
+              <div class="n90-qv__value">
+                <input
+                  type="radio"
+                  id="{{ input_id }}"
+                  name="n90-qv-{{ product.id }}-{{ forloop.parentloop.index0 }}"
+                  value="{{ value | escape }}"
+                  {% if value.selected %}
+                    checked
+                  {% endif %}
+                >
+                {%- if is_colour -%}
+                  {%- liquid
+                    if value.swatch.image
+                      assign sw_bg = value.swatch.image | image_url: width: 72 | prepend: 'url(' | append: ') center / cover'
+                    elsif value.swatch.color
+                      assign sw_bg = value.swatch.color
+                    else
+                      assign sw_bg = value.name | downcase | remove: ' '
+                    endif
+                  -%}
+                  <label for="{{ input_id }}" class="n90-qv__swatch" style="--sw: {{ sw_bg }};" title="{{ value | escape }}"><span class="ref-sr">{{ value | escape }}</span></label>
+                {%- else -%}
+                  <label for="{{ input_id }}" class="n90-qv__pill">{{ value | escape }}</label>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </fieldset>
+      {%- endfor -%}
+    {%- endunless -%}
+
+    {%- form 'product', product, id: qv_form_id, class: 'n90-qv__form', novalidate: 'novalidate', data-n90-qv-form: '' -%}
+      <input type="hidden" name="id" value="{{ qv_variant.id }}" data-n90-qv-id>
+      <div class="n90-qv__buy">
+        <div class="n90-qv__qty">
+          <button type="button" data-n90-qv-qty="-1" aria-label="{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}">−</button>
+          <input type="number" name="quantity" value="1" min="1" aria-label="{{ 'products.product.quantity.label' | t }}" data-n90-qv-qty-input>
+          <button type="button" data-n90-qv-qty="1" aria-label="{{ 'products.product.quantity.increase' | t: product: product.title | escape }}">+</button>
+        </div>
+        <button type="submit" class="n90-qv__atc" data-n90-qv-atc{% unless qv_variant.available %} disabled{% endunless %}>
+          <span data-n90-qv-atc-label>
+            {%- if qv_variant.available -%}{{ 'products.product.add_to_cart' | t }}{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+          </span>
+          <span class="n90-qv__spin" aria-hidden="true"></span>
+        </button>
+      </div>
+      <p class="n90-qv__error" role="alert" data-n90-qv-error></p>
+    {%- endform -%}
+    {%- endif -%}
+
+    {%- if product.description != blank -%}
+      <p class="n90-qv__desc">{{ product.description | strip_html | truncatewords: 32 }}</p>
+    {%- endif -%}
+
+    <a class="n90-qv__more" href="{{ product.url }}" data-n90-qv-more>
+      {{ 'n90.quick_view.view_details' | t }}
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+    </a>
+  </div>
+
+  <script type="application/json" data-n90-qv-variants>
+    [
+      {%- for variant in product.variants -%}
+        {%- liquid
+          assign stock = 'in'
+          if variant.available == false
+            assign stock = 'out'
+          elsif variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny' and variant.inventory_quantity <= low_stock
+            assign stock = 'low'
+          endif
+        -%}
+        {
+          "id": {{ variant.id | json }},
+          "options": {{ variant.options | json }},
+          "available": {{ variant.available | json }},
+          "price": {{ variant.price | money | json }},
+          "compare": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | json }}{% else %}null{% endif %},
+          "price_cents": {{ variant.price | json }},
+          "compare_cents": {{ variant.compare_at_price | default: 0 | json }},
+          "stock": {{ stock | json }},
+          "qty": {% if stock == 'low' %}{{ variant.inventory_quantity | json }}{% else %}null{% endif %},
+          "media": {% if variant.featured_media %}{{ variant.featured_media.id | json }}{% else %}null{% endif %},
+          "url": {{ variant.url | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  </script>
+</div>
+
+{% schema %}
+{
+  "name": "Quick view",
+  "tag": "div",
+  "class": "section-n90-quick-view",
+  "enabled_on": { "templates": ["product"] },
+  "settings": []
+}
+{% endschema %}

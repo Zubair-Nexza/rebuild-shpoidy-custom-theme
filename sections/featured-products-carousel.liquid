@@ -1,0 +1,656 @@
+{%- comment -%}
+  sections/featured-products-carousel.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+{%- endcomment -%}
+
+{%- liquid
+  assign bg       = section.settings.color_background
+  assign ink      = section.settings.color_text
+  assign muted    = section.settings.color_muted
+  assign accent   = section.settings.color_accent
+  assign line_col = section.settings.color_line
+  assign surface  = section.settings.color_surface
+  assign pt       = section.settings.padding_top
+  assign pb       = section.settings.padding_bottom
+  assign ppv_d    = section.settings.ppv_desktop | default: 4
+  assign ppv_m    = section.settings.ppv_mobile | default: '1.2'
+  if ppv_m == blank
+    assign ppv_m = '1.2'
+  endif
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture accent -%}{%- render 'n90-color-token', value: accent -%}{%- endcapture -%}
+{%- capture line_col -%}{%- render 'n90-color-token', value: line_col -%}{%- endcapture -%}
+{%- capture surface -%}{%- render 'n90-color-token', value: surface -%}{%- endcapture -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --fpc-bg:      {{ bg }};
+    --fpc-ink:     {{ ink }};
+    --fpc-muted:   {{ muted }};
+    --fpc-accent:  {{ accent }};
+    --fpc-line:    {{ line_col }};
+    --fpc-surface: {{ surface }};
+    --fpc-ease:    cubic-bezier(.2,.7,.2,1);
+    --fpc-spring:  cubic-bezier(.2,1.25,.35,1);
+    --fpc-gap:     24px;
+    
+    /* Calculate card width based on items per view and gap */
+    --fpc-card-w: calc((100% - ((var(--fpc-ppv) - 1) * var(--fpc-gap))) / var(--fpc-ppv));
+    --fpc-ppv: {{ ppv_d }};
+  }
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      --fpc-gap: 16px;
+      --fpc-ppv: {{ ppv_m }};
+    }
+  }
+
+  .n90-fpc {
+    padding-top: {{ pt }}px;
+    padding-bottom: {{ pb }}px;
+    background: var(--fpc-bg);
+    color: var(--fpc-ink);
+    overflow: hidden; /* Hide arrows overflowing on edges */
+    position: relative;
+  }
+
+  /* ── Header ── */
+  .n90-fpc__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    gap: 24px;
+  }
+  .n90-fpc__eyebrow {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    color: var(--fpc-ink);
+    margin-bottom: 12px;
+  }
+  .n90-fpc__heading {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: clamp(32px, 3.6vw, 54px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .01em;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--fpc-ink);
+  }
+  .n90-fpc__subtext {
+    font-size: 16px;
+    color: var(--fpc-muted);
+    margin-top: 8px;
+  }
+
+  /* ── Carousel Controls ── */
+  .n90-fpc__controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .n90-fpc__arrow {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--fpc-line);
+    background: transparent;
+    color: var(--fpc-ink);
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+  .n90-fpc__arrow:hover {
+    background: var(--fpc-surface);
+    border-color: var(--fpc-ink);
+  }
+  .n90-fpc__arrow[disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .n90-fpc__arrow svg { width: 20px; height: 20px; }
+  
+  .n90-fpc__fraction {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* ── Track ── */
+  .n90-fpc__track {
+    display: flex;
+    gap: var(--fpc-gap);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 24px; /* Room for shadow/lift */
+    margin: 0 calc(-1 * var(--fpc-gap));
+    padding-left: var(--fpc-gap);
+    padding-right: var(--fpc-gap);
+  }
+  .n90-fpc__track::-webkit-scrollbar { display: none; }
+
+  /* ── Product Card (Ref: .pc) ── */
+  .n90-fpc__card {
+    flex: 0 0 var(--fpc-card-w);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    text-decoration: none;
+    color: var(--fpc-ink);
+    position: relative;
+    background: var(--fpc-bg);
+  }
+
+  .n90-fpc__media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    background: var(--fpc-surface);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  
+  .n90-fpc__img, .n90-fpc__img-hover {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity .35s var(--fpc-ease), transform .5s var(--fpc-ease);
+  }
+  .n90-fpc__img-hover {
+    opacity: 0;
+  }
+  .n90-fpc__card:hover .n90-fpc__img {
+    opacity: 0;
+  }
+  .n90-fpc__card:hover .n90-fpc__img-hover {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  
+  /* If no hover image, just dim the main one */
+  .n90-fpc__card.no-hover:hover .n90-fpc__img {
+    opacity: .9;
+  }
+
+  /* Status Badges */
+  .n90-fpc__badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 2;
+  }
+  .n90-fpc__badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    background: var(--fpc-bg);
+    color: var(--fpc-ink);
+    border: 1px solid var(--fpc-line);
+    border-radius: 99px;
+  }
+  .n90-fpc__badge--sale { background: var(--fpc-accent); border-color: transparent; }
+
+  /* Info */
+  .n90-fpc__title {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    line-height: 1.2;
+    margin: 0 0 4px;
+    color: var(--fpc-ink);
+  }
+  
+  .n90-fpc__vendor {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--fpc-muted);
+    margin-bottom: 4px;
+  }
+
+  .n90-fpc__price-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+  }
+  .n90-fpc__price { color: var(--fpc-ink); font-weight: 500; }
+  .n90-fpc__compare { color: var(--fpc-muted); text-decoration: line-through; font-size: 14px; }
+
+  /* Quick Add */
+  .n90-fpc__add-btn {
+    margin-top: 16px;
+    width: 100%;
+    min-height: 44px;
+    background: transparent;
+    color: var(--fpc-ink);
+    border: 1px solid var(--fpc-line);
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .n90-fpc__add-btn:hover {
+    background: var(--fpc-surface);
+    border-color: var(--fpc-ink);
+  }
+  .n90-fpc__add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ── Mobile Responsive ── */
+  @media screen and (max-width: 749px) {
+    .n90-fpc { padding-top: {{ pt | at_most: 64 }}px; padding-bottom: {{ pb | at_most: 64 }}px; }
+    .n90-fpc__head { flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 24px; }
+    .n90-fpc__controls { align-self: flex-end; }
+    .n90-fpc__title { font-size: 17px; }
+  }
+{%- endstyle -%}
+
+<section class="n90-fpc" id="n90-fpc-{{ section.id }}" data-section="FeaturedProductsCarousel">
+  <div class="page-width">
+    
+    <div class="n90-fpc__head">
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-fpc__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="n90-fpc__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.subtitle != blank -%}
+          <div class="n90-fpc__subtext">{{ section.settings.subtitle | escape }}</div>
+        {%- endif -%}
+      </div>
+      <div class="n90-fpc__controls">
+        <button class="n90-fpc__arrow" id="fpc-prev-{{ section.id }}" aria-label="{{ 'n90.ui.previous' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="n90-fpc__fraction" id="fpc-frac-{{ section.id }}">01 / 01</span>
+        <button class="n90-fpc__arrow" id="fpc-next-{{ section.id }}" aria-label="{{ 'n90.ui.next' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="n90-fpc__track" id="fpc-track-{{ section.id }}">
+      
+      {%- liquid
+        assign items_count = 0
+        assign collection = section.settings.collection
+      -%}
+
+      {%- if section.blocks.size > 0 -%}
+        {%- comment -%} Manual Product Picker Blocks {%- endcomment -%}
+        {%- for block in section.blocks -%}
+          {%- assign prod = block.settings.product -%}
+          {%- if prod != blank -%}
+            {%- capture stream -%}{%- render 'n90-product-stream', product: prod -%}{%- endcapture -%}{%- if section.settings.product_stream != 'all' and stream != section.settings.product_stream -%}{%- continue -%}{%- endif -%}
+            {%- assign items_count = items_count | plus: 1 -%}
+            {%- render 'n90-fpc-card', prod: prod, section: section -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- elsif collection != blank -%}
+        {%- comment -%} Collection Auto-Populate {%- endcomment -%}
+        {%- for prod in collection.products limit: 30 -%}
+          {%- capture stream -%}{%- render 'n90-product-stream', product: prod -%}{%- endcapture -%}{%- if section.settings.product_stream != 'all' and stream != section.settings.product_stream -%}{%- continue -%}{%- endif -%}
+          {%- if items_count >= 12 -%}{%- break -%}{%- endif -%}
+          {%- assign items_count = items_count | plus: 1 -%}
+          {%- render 'n90-fpc-card', prod: prod, section: section -%}
+        {%- endfor -%}
+      {%- else -%}
+        {%- comment -%} Placeholders {%- endcomment -%}
+        {%- for i in (1..6) -%}
+          {%- assign items_count = items_count | plus: 1 -%}
+          <div class="n90-fpc__card no-hover">
+            <div class="n90-fpc__media">
+              {{ 'product-' | append: i | placeholder_svg_tag: 'n90-fpc__img' }}
+            </div>
+            <p class="n90-fpc__title">{{ 'n90.onboarding.product_title' | t }}</p>
+            <p class="n90-fpc__price">£49.99</p>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sectionId = {{ section.id | json }};
+  const track = document.getElementById('fpc-track-' + sectionId);
+  if (!track) return;
+
+  const btnPrev = document.getElementById('fpc-prev-' + sectionId);
+  const btnNext = document.getElementById('fpc-next-' + sectionId);
+  const frac = document.getElementById('fpc-frac-' + sectionId);
+  const cards = Array.from(track.querySelectorAll('.n90-fpc__card'));
+  const totalItems = cards.length;
+
+  if (totalItems === 0) {
+    if (btnPrev) btnPrev.style.display = 'none';
+    if (btnNext) btnNext.style.display = 'none';
+    if (frac) frac.style.display = 'none';
+    return;
+  }
+
+  const updatePagination = () => {
+    // Find the most visible card
+    let activeIndex = 0;
+    let maxVisibleArea = 0;
+    const trackRect = track.getBoundingClientRect();
+    
+    cards.forEach((card, index) => {
+      const rect = card.getBoundingClientRect();
+      const leftIntersect = Math.max(rect.left, trackRect.left);
+      const rightIntersect = Math.min(rect.right, trackRect.right);
+      const visibleWidth = rightIntersect - leftIntersect;
+      if (visibleWidth > maxVisibleArea) {
+        maxVisibleArea = visibleWidth;
+        activeIndex = index;
+      }
+    });
+
+    const current = (activeIndex + 1).toString().padStart(2, '0');
+    const total = totalItems.toString().padStart(2, '0');
+    if (frac) frac.textContent = current + ' / ' + total;
+    
+    // Update button states
+    if (btnPrev) btnPrev.disabled = activeIndex === 0;
+    if (btnNext) btnNext.disabled = activeIndex === totalItems - 1;
+  };
+
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      const cardWidth = cards[0].offsetWidth;
+      const gap = parseInt(window.getComputedStyle(track).gap) || 24;
+      track.scrollBy({ left: -(cardWidth + gap), behavior: 'smooth' });
+    });
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      const cardWidth = cards[0].offsetWidth;
+      const gap = parseInt(window.getComputedStyle(track).gap) || 24;
+      track.scrollBy({ left: cardWidth + gap, behavior: 'smooth' });
+    });
+  }
+
+  track.addEventListener('scroll', () => {
+    // throttle slightly for performance if needed, but modern browsers handle this well
+    updatePagination();
+  });
+
+  // Init
+  updatePagination();
+
+  // Ajax Quick Add
+  const addBtns = track.querySelectorAll('.n90-fpc__add-btn');
+  addBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const variantId = this.getAttribute('data-variant-id');
+      if (!variantId) return;
+
+      const originalText = this.innerHTML;
+      this.textContent = {{ 'n90.ui.adding' | t | json }};
+      this.disabled = true;
+
+      fetch(window.Shopify.routes.root + 'cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ id: parseInt(variantId, 10), quantity: 1 }] })
+      })
+      .then(res => res.json())
+      .then(() => {
+        this.textContent = {{ 'n90.ui.added' | t | json }};
+        setTimeout(() => {
+          this.innerHTML = originalText;
+          this.disabled = false;
+        }, 2000);
+
+        const cartDrawer = document.querySelector('cart-drawer');
+        if (cartDrawer) {
+          cartDrawer.open();
+        } else {
+          window.location.href = '/cart';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        this.innerHTML = originalText;
+        this.disabled = false;
+      });
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Featured Carousel",
+  "tag": "section",
+  "class": "section-featured-carousel",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Colour scheme"
+    },
+    {
+      "type": "color",
+      "id": "color_background",
+      "label": "Section background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "color_text",
+      "label": "Text / ink",
+      "default": "#0E1B33"
+    },
+    {
+      "type": "color",
+      "id": "color_muted",
+      "label": "Muted text",
+      "default": "#4A5568"
+    },
+    {
+      "type": "color",
+      "id": "color_accent",
+      "label": "Accent / Badges",
+      "default": "#D4FF3A"
+    },
+    {
+      "type": "color",
+      "id": "color_line",
+      "label": "Border / divider",
+      "default": "#E2E6ED"
+    },
+    {
+      "type": "color",
+      "id": "color_surface",
+      "label": "Surface fill",
+      "default": "#F3F5F8"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 200,
+      "step": 8,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 200,
+      "step": 8,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "ppv_desktop",
+      "label": "Products per view (Desktop)",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "text",
+      "id": "ppv_mobile",
+      "label": "Products per view (Mobile)",
+      "default": "1.2",
+      "info": "Use decimals to show part of the next card (e.g., 1.2 or 2.5)"
+    },
+    {
+      "type": "header",
+      "content": "Info"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Shop the Look"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured Collection"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle"
+    },
+    {
+      "type": "header",
+      "content": "Content source"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Leave blank to use manual product blocks."
+    },
+    {
+      "type": "select",
+      "id": "product_stream",
+      "label": "Products",
+      "options": [
+        {
+          "value": "retail",
+          "label": "Retail only"
+        },
+        {
+          "value": "custom",
+          "label": "Custom kits only"
+        },
+        {
+          "value": "all",
+          "label": "All"
+        }
+      ],
+      "default": "retail",
+      "info": "Custom kits = custom-kit template or custom tags (Theme settings → ROSTER catalog)."
+    },
+    {
+      "type": "header",
+      "content": "Product Cards"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "Show second image on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "Show 'Quick Add' button",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Products Carousel"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,70 @@
+{%- comment -%}
+  snippets/n90-kit-item.liquid
+  Compact cross-sell card for the PDP "Complete the look" strip
+  (sections/n90-main-product.liquid block + sections/product-recommendations.liquid).
+  1:1 thumbnail, title, price and a Volt "+" quick add (assets/n90-cart.js).
+  Products with options link to their page to pick a size.
+  Styles: assets/n90-complete-kit.css
+
+  Accepts:
+  - product: {Object}
+{%- endcomment -%}
+
+{%- liquid
+  assign ck_variant = product.selected_or_first_available_variant
+  assign ck_img = product.featured_media.preview_image
+  assign ck_alt = ck_img.alt | default: product.title
+  assign ck_price = product.price | money
+-%}
+
+<li class="n90-ck__item">
+  <div class="n90-ck__frame">
+    <a class="n90-ck__media" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+      {%- if ck_img != blank -%}
+        {{
+          ck_img
+          | image_url: width: 400
+          | image_tag:
+            widths: '160, 240, 320, 400',
+            sizes: '(min-width: 1024px) 140px, 40vw',
+            loading: 'lazy',
+            decoding: 'async',
+            alt: ck_alt,
+            width: 400,
+            height: 400
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'n90-ck__ph' }}
+      {%- endif -%}
+    </a>
+    {%- if product.available -%}
+      {%- if product.has_only_default_variant -%}
+        <button
+          type="button"
+          class="n90-ck__add"
+          data-n90-qadd="{{ ck_variant.id }}"
+          aria-label="{{ 'products.product.add_to_cart' | t }}: {{ product.title | escape }}"
+        >
+          <svg class="n90-ck__plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+          <svg class="n90-ck__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          <span class="n90-ck__spin" aria-hidden="true"></span>
+        </button>
+      {%- else -%}
+        <a class="n90-ck__add" href="{{ product.url }}" aria-label="{{ 'products.product.choose_options' | t }}: {{ product.title | escape }}">
+          <svg class="n90-ck__plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+        </a>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+  <a class="n90-ck__name" href="{{ product.url }}">{{ product.title | escape }}</a>
+  <span class="n90-ck__price">
+    {%- if product.price_varies -%}
+      {{ 'products.product.price.from_price_html' | t: price: ck_price }}
+    {%- else -%}
+      {{ ck_price }}
+    {%- endif -%}
+    {%- if product.compare_at_price > product.price -%}
+      <s class="n90-ck__was"><span class="ref-sr">{{ 'products.product.price.regular_price' | t }}</span>{{ product.compare_at_price | money }}</s>
+    {%- endif -%}
+  </span>
+</li>

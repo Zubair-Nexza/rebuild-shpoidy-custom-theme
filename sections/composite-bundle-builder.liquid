@@ -1,0 +1,540 @@
+{%- comment -%}
+  sections/composite-bundle-builder.liquid
+  ROSTER — Add-on bundle builder ("Match bundles / One bundle. Whole kit.")
+  Same look as the bundle spotlight (pitch media left, copy + Volt CTA right, add-on rows below)
+  with a real kit configurator:
+
+  - 3 core products per bundle (section settings; extra bundles via "Alternate bundle" blocks,
+    shown as pills). Price = the core products + ticked add-ons, in the store's money format.
+  - "Shop the bundle": when all 3 core products are in stock with no options to choose, adds them
+    (grouped by _bundle / _bundle_id) plus ticked add-ons in one /cart/add.js request and opens
+    the cart; otherwise it links to the Button link, where sizes are chosen.
+  - Add-ons come only from "Add-on" blocks with a product picked; nothing renders otherwise.
+  Panel markup: snippets/n90-bundle-panel.liquid · Behaviour: assets/n90-bundle-builder.js
+{%- endcomment -%}
+
+{%- liquid
+  assign alternates = section.blocks | where: 'type', 'bundle_option'
+  assign addons = section.blocks | where: 'type', 'addon_item'
+  assign tabbed = false
+  if alternates.size > 0
+    assign tabbed = true
+  endif
+  assign s = section.settings
+  assign quote_url = s.quote_url
+  if quote_url == blank and pages['contact'] != blank
+    assign quote_url = pages['contact'].url
+  endif
+  assign quote_url = quote_url | default: routes.all_products_collection_url
+  assign button_url = s.button_url | default: routes.all_products_collection_url
+  assign addon_count = 0
+  for block in addons
+    if block.settings.addon_product != blank
+      assign addon_count = addon_count | plus: 1
+    endif
+  endfor
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --cb-pt: {{ section.settings.padding_top }}px;
+    --cb-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-cb-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-cb-slide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-cb-shine { from { transform: translateX(-140%) skewX(-20deg); } to { transform: translateX(260%) skewX(-20deg); } }
+  @keyframes n90-cb-spin { to { transform: rotate(360deg); } }
+
+  .n90-cb { padding: var(--cb-pt) 0 var(--cb-pb); background: var(--n90-canvas); color: var(--n90-carbon); font-family: var(--n90-font-body); }
+  .n90-cb__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+  .n90-cb__media-col { grid-column: 1 / span 6; min-width: 0; position: sticky; top: 96px; }
+  .n90-cb__info { grid-column: 8 / span 5; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+  /* Media — 1:1, capped to the viewport on desktop */
+  .n90-cb__media { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: var(--n90-radius); background: var(--n90-surface); color: var(--n90-carbon); }
+  @media screen and (min-width: 1024px) { .n90-cb__media { max-height: max(480px, calc(100svh - 160px)); } }
+  .n90-cb__media[hidden] { display: none; }
+  .n90-cb__media img, .n90-cb__pitch { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .n90-cb__media img { object-fit: cover; animation: n90-cb-up .6s var(--n90-ease) both; }
+  .n90-cb__pitch { opacity: .07; pointer-events: none; }
+
+  .n90-cb__eyebrow { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; }
+  .n90-cb__heading { margin: 0; font-family: var(--n90-font-display); font-weight: var(--n90-display-weight); font-size: clamp(42px, 4.2vw, 60px); line-height: .95; letter-spacing: .005em; text-transform: uppercase; }
+
+  /* Pills */
+  .n90-cb__pills { align-self: flex-start; display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--n90-surface); }
+  .n90-cb__tab { min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: none; color: var(--n90-muted); font-family: var(--n90-font-display); font-weight: 600; font-size: 15px; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; transition: background .3s var(--n90-ease), color .3s; }
+  .n90-cb__tab:hover { color: var(--n90-carbon); }
+  .n90-cb__tab[aria-selected="true"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+
+  /* Panel copy */
+  .n90-cb__panel { display: flex; flex-direction: column; gap: 20px; }
+  .n90-cb__panel[hidden] { display: none; }
+  .n90-cb__copy { display: flex; flex-direction: column; gap: 6px; animation: n90-cb-slide .5s var(--n90-ease) both; }
+  .n90-cb__name { margin: 0; font-family: var(--n90-font-display); font-weight: var(--n90-display-weight); font-size: 32px; line-height: 1.08; text-transform: uppercase; }
+  .n90-cb__price { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-family: var(--n90-font-display); font-weight: 600; font-size: 32px; line-height: 1.1; }
+  .n90-cb__price-note { font-family: var(--n90-font-body); font-weight: 500; font-size: 13px; color: var(--n90-muted); }
+  .n90-cb__price-note[hidden] { display: none; }
+  .n90-cb__team { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+  .n90-cb__team span { color: var(--n90-muted); }
+  .n90-cb__included { margin: 0; font-size: 14px; color: var(--n90-muted); }
+
+
+  /* CTA */
+  .n90-cb__cta { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; margin-top: 4px; }
+  .n90-cb__btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border: 0; background: var(--n90-volt); color: var(--n90-carbon); font-family: var(--n90-font-display); font-weight: 600; font-size: 17px; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; border-radius: var(--n90-radius); cursor: pointer; transition: transform .35s var(--n90-ease); }
+  .n90-cb__btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: rgba(255, 255, 255, .5); transform: translateX(-140%) skewX(-20deg); pointer-events: none; }
+  .n90-cb__btn:hover::after { animation: n90-cb-shine .9s var(--n90-ease); }
+  .n90-cb__btn:active { transform: scale(.97); }
+  .n90-cb__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-cb__btn:hover svg { transform: translateX(4px); }
+  .n90-cb__btn { z-index: 1; text-decoration: none; }
+  .n90-cb__spin { display: none; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: n90-cb-spin .8s linear infinite; }
+  .n90-cb__btn.is-loading .n90-cb__spin { display: block; }
+  .n90-cb__btn.is-loading svg { display: none; }
+  .n90-cb__tlink { display: inline-flex; align-items: center; min-height: 44px; color: var(--n90-carbon); font-family: var(--n90-font-display); font-weight: 600; font-size: 16px; letter-spacing: .07em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 7px; text-decoration-thickness: 1px; transition: text-underline-offset .25s var(--n90-ease); }
+  .n90-cb__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+  .n90-cb__error { margin: 0; font-size: 14px; color: #B42318; }
+  .n90-cb__error:empty { display: none; }
+
+  /* Add-ons */
+  .n90-cb__addons-wrap { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--n90-line); }
+  .n90-cb__addons-title { margin: 0; font-size: 14px; font-weight: 600; }
+  .n90-cb__addons { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .n90-cb__addon { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; border: 1px solid var(--n90-line); border-radius: var(--n90-radius); transition: border-color .2s, transform .3s var(--n90-ease), background .2s; }
+  .n90-cb__addon:hover { border-color: var(--n90-carbon); transform: translateX(4px); }
+  .n90-cb__addon:has(input:checked) { border-color: var(--n90-carbon); background: var(--n90-surface); }
+  .n90-cb__addon-label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .n90-cb__addon-label input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .n90-cb__box { width: 22px; height: 22px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--n90-line-strong); border-radius: 6px; background: var(--n90-canvas); transition: background .2s, border-color .2s; }
+  .n90-cb__box svg { width: 14px; height: 14px; opacity: 0; transition: opacity .2s; }
+  .n90-cb__addon-label input:checked + .n90-cb__box { background: var(--n90-volt); border-color: var(--n90-carbon); }
+  .n90-cb__addon-label input:checked + .n90-cb__box svg { opacity: 1; }
+  .n90-cb__addon-label input:focus-visible + .n90-cb__box { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-cb__addon-label input:disabled ~ * { opacity: .55; }
+  .n90-cb__addon-art { width: 48px; height: 48px; flex: none; overflow: hidden; border-radius: var(--n90-radius); background: var(--n90-surface); }
+  .n90-cb__addon-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .n90-cb__addon-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .n90-cb__addon-name { font-size: 14px; font-weight: 600; }
+  .n90-cb__addon-price { font-size: 12px; color: var(--n90-muted); }
+  .n90-cb__addon-select { flex: none; max-width: 40%; min-height: 36px; padding: 0 28px 0 10px; border: 1px solid var(--n90-line-strong); border-radius: var(--n90-radius); background: var(--n90-canvas) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23181818' stroke-width='1.6'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 10px center; color: var(--n90-carbon); font: 500 13px var(--n90-font-body); -webkit-appearance: none; appearance: none; }
+
+  .n90-cb :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  @media screen and (max-width: 1023px) {
+    .n90-cb__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+    .n90-cb__media-col, .n90-cb__info { grid-column: auto; }
+    .n90-cb__name, .n90-cb__price { font-size: 28px; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-cb { padding: min(var(--cb-pt), 64px) 0 min(var(--cb-pb), 64px); }
+    .n90-cb__grid { display: flex; flex-direction: column; align-items: stretch; gap: 28px; }
+    .n90-cb__media-col { position: static; }
+    .n90-cb__cta { flex-direction: column; align-items: stretch; gap: 4px; }
+    .n90-cb__btn { width: 100%; }
+    .n90-cb__tlink { justify-content: center; }
+    .n90-cb__pills { align-self: stretch; }
+    .n90-cb__tab { flex: 1; }
+  }
+  @media (hover: none) { .n90-cb__addon:hover { transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-cb__media img, .n90-cb__copy, .n90-cb__spin { animation: none; }
+    .n90-cb__addon, .n90-cb__tab, .n90-cb__btn { transition: none; }
+    .n90-cb__btn:hover::after { animation: none; }
+  }
+</style>
+
+<section
+  class="n90-cb"
+  id="n90-cb-{{ section.id }}"
+  aria-labelledby="n90-cb-title-{{ section.id }}"
+  data-n90-cb
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-msg-error="{{ 'sections.cart.cart_error' | t | escape }}"
+>
+  <div class="page-width">
+    <div class="n90-cb__grid">
+      {%- comment -%} ── Media: one per bundle ── {%- endcomment -%}
+      <div class="n90-cb__media-col" data-n90-reveal>
+        {%- render 'n90-bundle-media', media_id: section.id, image: s.pitch_image, alt: s.bundle_title, first: true -%}
+        {%- for block in alternates -%}
+          {%- assign alt_img = block.settings.pitch_image | default: s.pitch_image -%}
+          {%- render 'n90-bundle-media', media_id: block.id, image: alt_img, alt: block.settings.bundle_title, first: false -%}
+        {%- endfor -%}
+      </div>
+
+      {%- comment -%} ── Info ── {%- endcomment -%}
+      <div class="n90-cb__info">
+        {%- if s.subheading != blank -%}
+          <p class="n90-cb__eyebrow">{{ s.subheading | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-cb__heading" id="n90-cb-title-{{ section.id }}">{{ s.heading | escape }}</h2>
+
+        {%- if tabbed -%}
+          <div class="n90-cb__pills" role="tablist" aria-label="{{ s.heading | escape }}">
+            <button type="button" class="n90-cb__tab" role="tab" id="n90-cb-tab-{{ section.id }}" aria-selected="true" aria-controls="n90-cb-panel-{{ section.id }}" data-cb-tab="{{ section.id }}">
+              {{- s.tab_label | default: s.bundle_title | escape -}}
+            </button>
+            {%- for block in alternates -%}
+              <button type="button" class="n90-cb__tab" role="tab" id="n90-cb-tab-{{ block.id }}" aria-selected="false" aria-controls="n90-cb-panel-{{ block.id }}" tabindex="-1" data-cb-tab="{{ block.id }}" {{ block.shopify_attributes }}>
+                {{- block.settings.tab_label | default: block.settings.bundle_title | escape -}}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- render 'n90-bundle-panel',
+          pid: section.id,
+          first: true,
+          tabbed: tabbed,
+          title: s.bundle_title,
+          team_label: s.team_label,
+          team_note: s.team_note,
+          contents: s.bundle_contents_label,
+          price_text: s.price_text,
+          p1: s.core_product_1,
+          p2: s.core_product_2,
+          p3: s.core_product_3,
+          button_label: s.button_label,
+          button_url: button_url,
+          quote_label: s.quote_label,
+          quote_url: quote_url,
+          attrs: ''
+        -%}
+        {%- for block in alternates -%}
+          {%- assign b = block.settings -%}
+          {%- assign alt_button_url = b.button_url | default: button_url -%}
+          {%- render 'n90-bundle-panel',
+            pid: block.id,
+            first: false,
+            tabbed: tabbed,
+            title: b.bundle_title,
+            team_label: b.team_label,
+            team_note: b.team_note,
+            contents: b.bundle_contents_label,
+            price_text: b.price_text,
+            p1: b.core_product_1,
+            p2: b.core_product_2,
+            p3: b.core_product_3,
+            button_label: s.button_label,
+            button_url: alt_button_url,
+            quote_label: s.quote_label,
+            quote_url: quote_url,
+            attrs: block.shopify_attributes
+          -%}
+        {%- endfor -%}
+
+        {%- if addon_count > 0 -%}
+          <div class="n90-cb__addons-wrap">
+            {%- if s.addons_heading != blank -%}
+              <p class="n90-cb__addons-title" id="n90-cb-addons-{{ section.id }}">{{ s.addons_heading | escape }}</p>
+            {%- endif -%}
+            <ul class="n90-cb__addons" role="list" aria-labelledby="n90-cb-addons-{{ section.id }}">
+              {%- for block in addons -%}
+                {%- assign addon = block.settings.addon_product -%}
+                {%- capture addon_stream -%}{%- if addon != blank -%}{%- render 'n90-product-stream', product: addon -%}{%- endif -%}{%- endcapture -%}
+                {%- if addon != blank and addon_stream != 'custom' -%}
+                  {%- liquid
+                    assign av = addon.selected_or_first_available_variant
+                    assign a_id = 'n90-cb-addon-' | append: block.id
+                  -%}
+                  <li class="n90-cb__addon addon-row" {{ block.shopify_attributes }}>
+                    <label class="n90-cb__addon-label addon-label" for="{{ a_id }}">
+                      <input
+                        type="checkbox"
+                        class="addon-checkbox"
+                        id="{{ a_id }}"
+                        value="{{ av.id }}"
+                        data-cb-addon
+                        data-variant-id="{{ av.id }}"
+                        data-price="{{ av.price }}"
+                        {% unless addon.available %}
+                          disabled
+                        {% endunless %}
+                      >
+                      <span class="n90-cb__box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                      <span class="n90-cb__addon-art">
+                        {%- if addon.featured_image -%}
+                          {%- assign addon_alt = addon.featured_image.alt | default: addon.title -%}
+                          {{ addon.featured_image | image_url: width: 96 | image_tag: width: 48, height: 48, loading: 'lazy', decoding: 'async', alt: addon_alt }}
+                        {%- endif -%}
+                      </span>
+                      <span class="n90-cb__addon-text addon-info">
+                        <span class="n90-cb__addon-name addon-title">{{ addon.title | escape }}</span>
+                        <span class="n90-cb__addon-price addon-price" data-cb-addon-price>
+                          {%- if addon.available -%}{{ av.price | money }}{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+                        </span>
+                      </span>
+                    </label>
+                    {%- if addon.has_only_default_variant == false and addon.available -%}
+                      <select class="n90-cb__addon-select" data-cb-addon-variant data-for="{{ a_id }}" aria-label="{{ 'n90.bundle.choose_option' | t: title: addon.title | escape }}">
+                        {%- for v in addon.variants -%}
+                          <option value="{{ v.id }}" data-price="{{ v.price }}"{% if v.id == av.id %} selected{% endif %}{% unless v.available %} disabled{% endunless %}>{{ v.title | escape }}</option>
+                        {%- endfor -%}
+                      </select>
+                    {%- endif -%}
+                  </li>
+                {%- endif -%}
+              {%- endfor -%}
+            </ul>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="{{ 'n90-bundle-builder.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Bundle builder",
+  "tag": "div",
+  "class": "section-composite-bundle-builder",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "max_blocks": 10,
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "pitch_image",
+      "label": "Image",
+      "info": "Cropped to a 1:1 square. Without one, the pitch graphic shows."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "MATCH BUNDLES"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "ONE BUNDLE. WHOLE KIT."
+    },
+    {
+      "type": "header",
+      "content": "Bundle"
+    },
+    {
+      "type": "text",
+      "id": "tab_label",
+      "label": "Pill label",
+      "default": "Pulse",
+      "info": "Shown when you add alternate bundles."
+    },
+    {
+      "type": "text",
+      "id": "bundle_title",
+      "label": "Bundle title",
+      "default": "PULSE MATCH BUNDLE"
+    },
+    {
+      "type": "text",
+      "id": "team_label",
+      "label": "Team note label",
+      "default": "Team price"
+    },
+    {
+      "type": "text",
+      "id": "team_note",
+      "label": "Team note",
+      "info": "Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "bundle_contents_label",
+      "label": "Contents line",
+      "info": "Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "price_text",
+      "label": "Price text",
+      "info": "Shown until all 3 core products are chosen, e.g. £149.99."
+    },
+    {
+      "type": "paragraph",
+      "content": "Shop the bundle adds these 3 products straight to the cart when none of them has sizes or other options. Otherwise it opens the Button link, where buyers choose sizes."
+    },
+    {
+      "type": "product",
+      "id": "core_product_1",
+      "label": "Core product 1",
+      "info": "e.g. Match shirt"
+    },
+    {
+      "type": "product",
+      "id": "core_product_2",
+      "label": "Core product 2",
+      "info": "e.g. Match shorts"
+    },
+    {
+      "type": "product",
+      "id": "core_product_3",
+      "label": "Core product 3",
+      "info": "e.g. Match socks"
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Shop the bundle"
+    },
+    {
+      "type": "url",
+      "id": "button_url",
+      "label": "Button link",
+      "info": "Where buyers choose sizes, e.g. the bundle product page. Used when a core product has options or is out of stock. Defaults to all products."
+    },
+    {
+      "type": "text",
+      "id": "quote_label",
+      "label": "Quote link label",
+      "default": "Get a team quote"
+    },
+    {
+      "type": "url",
+      "id": "quote_url",
+      "label": "Quote link",
+      "info": "Defaults to your contact page (handle: contact), then all products."
+    },
+    {
+      "type": "header",
+      "content": "Add-ons"
+    },
+    {
+      "type": "text",
+      "id": "addons_heading",
+      "label": "Add-ons heading",
+      "default": "Add to your order"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 8,
+      "unit": "px",
+      "default": 112
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 8,
+      "unit": "px",
+      "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "addon_item",
+      "name": "Add-on",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "product",
+          "id": "addon_product",
+          "label": "Product",
+          "info": "Shown under the add-ons heading with a checkbox. Products with options get a small variant picker."
+        }
+      ]
+    },
+    {
+      "type": "bundle_option",
+      "name": "Alternate bundle",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_label",
+          "label": "Pill label",
+          "default": "APEX"
+        },
+        {
+          "type": "image_picker",
+          "id": "pitch_image",
+          "label": "Image",
+          "info": "Defaults to the section image."
+        },
+        {
+          "type": "text",
+          "id": "bundle_title",
+          "label": "Bundle title",
+          "default": "APEX MATCH BUNDLE"
+        },
+        {
+          "type": "text",
+          "id": "team_label",
+          "label": "Team note label",
+          "default": "Team price"
+        },
+        {
+          "type": "text",
+          "id": "team_note",
+          "label": "Team note",
+          "info": "Leave blank to hide."
+        },
+        {
+          "type": "text",
+          "id": "bundle_contents_label",
+          "label": "Contents line",
+          "info": "Leave blank to hide."
+        },
+        {
+          "type": "text",
+          "id": "price_text",
+          "label": "Price text",
+          "info": "Shown until all 3 core products are chosen, e.g. £149.99."
+        },
+        {
+          "type": "product",
+          "id": "core_product_1",
+          "label": "Core product 1"
+        },
+        {
+          "type": "product",
+          "id": "core_product_2",
+          "label": "Core product 2"
+        },
+        {
+          "type": "product",
+          "id": "core_product_3",
+          "label": "Core product 3"
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": "Button link",
+          "info": "Defaults to the section's button link."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bundle builder"
+    }
+  ]
+}
+{% endschema %}

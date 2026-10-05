@@ -1,0 +1,486 @@
+{%- comment -%}
+  sections/faq-accordion.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+  Technical FAQ & Gear Queries
+{%- endcomment -%}
+
+{%- liquid
+  assign bg_style  = section.settings.bg_style
+  if bg_style == 'contrast'
+    assign bg      = section.settings.color_surface | default: '#F3F5F8'
+  else
+    assign bg      = section.settings.color_background | default: '#FFFFFF'
+  endif
+  
+  assign ink     = section.settings.color_text | default: '#0E1B33'
+  assign muted   = section.settings.color_muted | default: '#4A5568'
+  assign line    = section.settings.color_line | default: '#E2E6ED'
+  assign accent  = section.settings.color_accent | default: '#D4FF3A'
+  assign pt      = section.settings.padding_top
+  assign pb      = section.settings.padding_bottom
+  
+  assign categories = ''
+  for block in section.blocks
+    if block.settings.category != blank
+      assign cat = block.settings.category | strip
+      assign categories = categories | append: cat | append: '|||'
+    endif
+  endfor
+  assign uniq_cats = categories | split: '|||' | uniq | compact
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture line -%}{%- render 'n90-color-token', value: line -%}{%- endcapture -%}
+{%- capture accent -%}{%- render 'n90-color-token', value: accent -%}{%- endcapture -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --nn-bg:      {{ bg }};
+    --nn-ink:     {{ ink }};
+    --nn-muted:   {{ muted }};
+    --nn-accent:  {{ accent }};
+    --nn-line:    {{ line }};
+  }
+  
+  .n90-faq {
+    padding-top: {{ pt }}px;
+    padding-bottom: {{ pb }}px;
+    background: var(--nn-bg);
+    color: var(--nn-ink);
+  }
+  @media screen and (max-width:749px) {
+    .n90-faq { padding-top: {{ pt | at_most: 64 }}px; padding-bottom: {{ pb | at_most: 64 }}px; }
+  }
+
+  .n90-faq__container {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  @media screen and (max-width:1023px) {
+    .n90-faq__container {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+  }
+
+  /* ── Sidebar ── */
+  .n90-faq__sidebar {
+    position: sticky;
+    top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .n90-faq__eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--nn-accent);
+    margin: 0;
+  }
+  .n90-faq__heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--nn-ink);
+    margin: 0;
+    line-height: 1.05;
+  }
+  .n90-faq__subheading {
+    font-size: 16px;
+    color: var(--nn-muted);
+    line-height: 1.5;
+    margin: 0 0 8px 0;
+  }
+  .n90-faq__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--nn-ink);
+    border: 1.5px solid var(--nn-line);
+    border-radius: 99px;
+    padding: 12px 24px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    width: fit-content;
+  }
+  .n90-faq__cta:hover {
+    background: var(--nn-ink);
+    color: #fff;
+    border-color: var(--nn-ink);
+  }
+
+  /* ── Filters ── */
+  .n90-faq__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .n90-faq__filter {
+    background: transparent;
+    border: 1px solid var(--nn-line);
+    border-radius: 99px;
+    padding: 8px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--nn-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .n90-faq__filter:hover {
+    color: var(--nn-ink);
+    border-color: var(--nn-muted);
+  }
+  .n90-faq__filter.is-active {
+    background: var(--nn-ink);
+    color: #FFFFFF;
+    border-color: var(--nn-ink);
+  }
+
+  /* ── Accordion Stack ── */
+  .n90-faq__stack {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--nn-line);
+  }
+  
+  .n90-faq__item {
+    border-bottom: 1px solid var(--nn-line);
+  }
+  .n90-faq__item.is-hidden {
+    display: none;
+  }
+  
+  .n90-faq__summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    cursor: pointer;
+    list-style: none;
+  }
+  .n90-faq__summary::-webkit-details-marker {
+    display: none;
+  }
+  .n90-faq__summary:focus-visible {
+    outline: 2px solid var(--nn-accent);
+    outline-offset: 2px;
+  }
+  
+  .n90-faq__question {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--nn-ink);
+    margin: 0;
+    padding-right: 24px;
+  }
+  
+  .n90-faq__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: var(--nn-ink);
+    transition: transform 0.3s ease;
+  }
+  .n90-faq__icon::before,
+  .n90-faq__icon::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform 0.3s ease;
+  }
+  .n90-faq__icon::before {
+    width: 16px;
+    height: 2px;
+  }
+  .n90-faq__icon::after {
+    width: 2px;
+    height: 16px;
+  }
+  
+  details[open] > .n90-faq__summary .n90-faq__icon::after {
+    transform: scaleY(0);
+  }
+  details[open] > .n90-faq__summary .n90-faq__icon::before {
+    transform: rotate(180deg);
+  }
+  
+  .n90-faq__body {
+    padding-bottom: 24px;
+    font-size: 16px;
+    color: var(--nn-muted);
+    line-height: 1.6;
+  }
+  .n90-faq__body p {
+    margin: 0 0 16px 0;
+  }
+  .n90-faq__body p:last-child {
+    margin-bottom: 0;
+  }
+  .n90-faq__body a {
+    color: var(--nn-ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+  .n90-faq__body a:hover {
+    color: var(--nn-accent);
+    text-decoration-color: var(--nn-accent);
+  }
+  
+  /* Smooth expanding */
+  details > .n90-faq__body {
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: details-show 0.3s ease forwards;
+  }
+  @keyframes details-show {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{%- endstyle -%}
+
+<section class="n90-faq" id="n90-faq-{{ section.id }}">
+  <div class="page-width">
+    <div class="n90-faq__container">
+      
+      {%- comment -%}── Left Sidebar ──{%- endcomment -%}
+      <div class="n90-faq__sidebar">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-faq__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        
+        {%- if section.settings.heading != blank -%}
+          <h2 class="n90-faq__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+        
+        {%- if section.settings.subheading != blank -%}
+          <p class="n90-faq__subheading">{{ section.settings.subheading | escape }}</p>
+        {%- endif -%}
+        
+        {%- if section.settings.cta_label != blank and section.settings.cta_link != blank -%}
+          <a href="{{ section.settings.cta_link }}" class="n90-faq__cta">
+            {{ section.settings.cta_label | escape }}
+          </a>
+        {%- endif -%}
+      </div>
+      
+      {%- comment -%}── Right Accordion ──{%- endcomment -%}
+      <div class="n90-faq__main">
+        
+        {%- if uniq_cats.size > 1 -%}
+          <div class="n90-faq__filters" role="tablist">
+            <button class="n90-faq__filter is-active" data-filter="all" role="tab" aria-selected="true">{{ 'n90.ui.all' | t }}</button>
+            {%- for cat in uniq_cats -%}
+              <button class="n90-faq__filter" data-filter="{{ cat | handleize }}" role="tab" aria-selected="false">{{ cat | escape }}</button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+        
+        <div class="n90-faq__stack">
+          {%- for block in section.blocks -%}
+            {%- assign b = block.settings -%}
+            <details 
+              class="n90-faq__item" 
+              data-category="all {{ b.category | handleize }}"
+              {{ block.shopify_attributes }}
+            >
+              <summary class="n90-faq__summary">
+                <h3 class="n90-faq__question">{{ b.question | escape }}</h3>
+                <span class="n90-faq__icon" aria-hidden="true"></span>
+              </summary>
+              <div class="n90-faq__body">
+                {{ b.answer }}
+              </div>
+            </details>
+          {%- endfor -%}
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  'use strict';
+  var sid = {{ section.id | json }};
+  var section = document.getElementById('n90-faq-' + sid);
+  if (!section) return;
+
+  /* Filter Logic */
+  var filters = section.querySelectorAll('.n90-faq__filter');
+  var items = section.querySelectorAll('.n90-faq__item');
+  
+  if (filters.length) {
+    filters.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var targetCat = btn.dataset.filter;
+        
+        filters.forEach(function(b) { 
+          b.classList.remove('is-active'); 
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+        
+        items.forEach(function(item) {
+          var cats = item.dataset.category.split(' ');
+          if (cats.indexOf(targetCat) > -1) {
+            item.classList.remove('is-hidden');
+          } else {
+            item.classList.add('is-hidden');
+            item.removeAttribute('open'); // close when hidden
+          }
+        });
+      });
+    });
+  }
+  
+  /* Exclusive Accordion Toggle (Optional: closes others when opening one) */
+  items.forEach(function(item) {
+    item.addEventListener('toggle', function() {
+      if (item.open) {
+        items.forEach(function(other) {
+          if (other !== item && other.open) {
+            other.removeAttribute('open');
+          }
+        });
+      }
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "FAQ Accordion",
+  "tag": "section",
+  "class": "section-faq-accordion",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    {
+      "type": "select",
+      "id": "bg_style",
+      "label": "Background style",
+      "options": [
+        { "value": "default", "label": "Light Surface (Default)" },
+        { "value": "contrast", "label": "Subtle Contrast Fill" }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "Theme Colors (Overrides)"
+    },
+    { "type": "color", "id": "color_background", "label": "Background (Default)", "default": "#FFFFFF" },
+    { "type": "color", "id": "color_surface", "label": "Background (Contrast)", "default": "#F3F5F8" },
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#0E1B33" },
+    { "type": "color", "id": "color_accent", "label": "Accent", "default": "#D4FF3A" },
+    { "type": "color", "id": "color_muted", "label": "Muted Text", "default": "#4A5568" },
+    { "type": "color", "id": "color_line", "label": "Lines", "default": "#E2E6ED" },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "GEAR INTELLIGENCE" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Frequently Asked Questions" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Everything you need to know about our custom teamwear process, fabrics, and care instructions." },
+    { "type": "text", "id": "cta_label", "label": "Contact button label", "default": "Have another question? Contact Us" },
+    { "type": "url", "id": "cta_link", "label": "Contact button link" }
+  ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question title" },
+        { "type": "richtext", "id": "answer", "label": "Answer body" },
+        { "type": "text", "id": "category", "label": "Category badge", "default": "Gear Care", "info": "Used for filtering." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FAQ Accordion",
+      "blocks": [
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do I care for my latex goalkeeper gloves?",
+            "answer": "<p>To ensure maximum grip and longevity, lightly dampen the latex with lukewarm water before every session. After use, hand wash with mild soap and let them air dry naturally away from direct heat or sunlight.</p>",
+            "category": "Gear Care"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is the turnaround time for custom kits?",
+            "answer": "<p>From the moment you approve your digital mockup and confirm sizes, production takes approximately 3-4 weeks. All garments are fully sublimated and cut-and-sew from scratch.</p>",
+            "category": "Shipping & Delivery"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is the optimal PSI for match footballs?",
+            "answer": "<p>For our pro match balls, we recommend inflating between 10.0 and 11.5 PSI. Always use a moistened needle to avoid damaging the valve mechanism.</p>",
+            "category": "Gear Care"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do your rugby jerseys fit compared to high street brands?",
+            "answer": "<p>Our rugby jerseys are engineered with an athletic, tapered fit to reduce grab areas during match play. If you prefer a looser, traditional fit, we recommend sizing up. Please consult our <a href=\"#\">sizing guide</a> for exact chest measurements.</p>",
+            "category": "Sizing & Fit"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I order replacements for new squad members later?",
+            "answer": "<p>Yes! Once your club design is finalized, it's stored permanently in our archives. You can order top-ups for new players at any time, starting from just 1 piece.</p>",
+            "category": "Orders & Returns"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

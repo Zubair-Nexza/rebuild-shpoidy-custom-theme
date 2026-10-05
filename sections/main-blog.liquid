@@ -1,0 +1,334 @@
+{%- comment -%}
+  sections/main-blog.liquid
+  ROSTER — Journal index ("The Changing Room")
+
+  Header + tag pills (native Shopify blog tags → /blogs/<blog>/tagged/<tag>), then a
+  3 / 2 / 1 column card grid: 16:9 media, category badge (first tag), headline, date,
+  "Read story →". Paginated with numbered links.
+{%- endcomment -%}
+
+{%- liquid
+  assign per_page = section.settings.articles_per_page
+  if section.settings.tags != blank
+    assign pill_tags = section.settings.tags | split: ','
+  else
+    assign pill_tags = blog.all_tags
+  endif
+-%}
+
+<style>
+  @keyframes n90-bl-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  .n90-bl {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  .n90-bl__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 32px; animation: n90-bl-up .6s var(--n90-ease) both; }
+  .n90-bl__eyebrow { margin: 0 0 14px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-bl__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(44px, 6vw, 96px);
+    line-height: .92;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-bl__sub { margin: 16px 0 0; max-width: 560px; font-size: 17px; line-height: 1.6; color: var(--n90-muted); }
+
+  /* Tag pills */
+  .n90-bl__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 40px;
+    padding: 4px;
+    width: fit-content;
+    max-width: 100%;
+    list-style: none;
+    border-radius: 999px;
+    background: var(--n90-surface);
+  }
+  .n90-bl__tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    color: var(--n90-muted);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .3s var(--n90-ease), color .3s;
+  }
+  .n90-bl__tag:hover { color: var(--n90-carbon); }
+  .n90-bl__tag[aria-current="page"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+
+  /* Grid */
+  .n90-bl__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px 24px; margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 40px; }
+  .n90-bl__card { display: flex; flex-direction: column; gap: 12px; height: 100%; color: var(--n90-carbon); text-decoration: none; }
+  .n90-bl__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+  }
+  .n90-bl__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--n90-ease); }
+  .n90-bl__card:hover .n90-bl__media img { transform: scale(1.03); }
+  .n90-bl__pitch { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .08; }
+  .n90-bl__badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    padding: 5px 10px 4px;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .n90-bl__meta { margin: 6px 0 0; font-size: 13px; color: var(--n90-muted); }
+  .n90-bl__h {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .n90-bl__h span {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 2px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size .45s var(--n90-ease);
+  }
+  .n90-bl__card:hover .n90-bl__h span { background-size: 100% 2px; }
+  .n90-bl__excerpt { margin: 0; font-size: 15px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-bl__read {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 4px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+  .n90-bl__read::after {
+    content: '\2192';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--n90-volt);
+    font-family: var(--n90-font-body);
+    font-size: 15px;
+    transition: transform .35s var(--n90-spring);
+  }
+  .n90-bl__card:hover .n90-bl__read::after { transform: translateX(4px); }
+  .n90-bl__card:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 4px; border-radius: 12px; }
+
+  .n90-bl__empty { padding: 72px 24px; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px; text-align: center; color: var(--n90-muted); }
+
+  /* Pagination */
+  .n90-bl__pager { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 64px 0 0; padding: 0; list-style: none; }
+  .n90-bl__pager a,
+  .n90-bl__pager span {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--n90-radius);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+  }
+  .n90-bl__pager a { border: 1px solid rgba(0, 0, 0, .08); }
+  .n90-bl__pager a:hover { border-color: var(--n90-carbon); }
+  .n90-bl__pager [aria-current="page"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-bl a:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 3px; }
+
+  @media screen and (max-width: 1023px) {
+    .n90-bl__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 16px; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-bl { padding: min({{ section.settings.padding_top }}px, 24px) 0 min({{ section.settings.padding_bottom }}px, 64px); }
+    .n90-bl__head { flex-direction: column; align-items: flex-start; }
+    .n90-bl__tags { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .n90-bl__tags::-webkit-scrollbar { display: none; }
+    .n90-bl__grid { grid-template-columns: 1fr; gap: 36px; padding-top: 28px; }
+    .n90-bl__h { font-size: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-bl__head { animation: none; }
+    .n90-bl__media img,
+    .n90-bl__h span,
+    .n90-bl__read::after { transition: none; }
+  }
+</style>
+
+<div class="n90-bl">
+  <div class="page-width">
+    <header class="n90-bl__head">
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-bl__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="n90-bl__title">{{ section.settings.heading | default: blog.title | escape }}</h1>
+        {%- if section.settings.subheading != blank -%}
+          <p class="n90-bl__sub">{{ section.settings.subheading | escape }}</p>
+        {%- endif -%}
+      </div>
+    </header>
+
+    {%- if section.settings.show_tags and pill_tags.size > 0 -%}
+      <nav aria-label="{{ 'n90.a11y.filter_stories' | t }}">
+        <ul class="n90-bl__tags" role="list">
+          <li><a class="n90-bl__tag" href="{{ blog.url }}"{% if current_tags == blank %} aria-current="page"{% endif %}>{{ 'n90.blog.all' | t }}</a></li>
+          {%- for tag in pill_tags -%}
+            {%- assign t = tag | strip -%}
+            {%- if t != blank -%}
+              <li>
+                <a class="n90-bl__tag" href="{{ blog.url }}/tagged/{{ t | handleize }}"{% if current_tags contains t %} aria-current="page"{% endif %}>{{ t | escape }}</a>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
+    {%- paginate blog.articles by per_page -%}
+      {%- if blog.articles.size > 0 -%}
+        <ul class="n90-bl__grid" role="list" data-n90-stagger>
+          {%- for article in blog.articles -%}
+            <li>
+              <a class="n90-bl__card" href="{{ article.url }}">
+                <span class="n90-bl__media">
+                  {%- if article.image -%}
+                    {%- liquid
+                      if forloop.index <= 3 and paginate.current_page == 1
+                        assign a_loading = 'eager'
+                      else
+                        assign a_loading = 'lazy'
+                      endif
+                      assign a_alt = article.image.alt | default: article.title
+                      if forloop.first and paginate.current_page == 1
+                        assign a_priority = 'high'
+                      else
+                        assign a_priority = 'auto'
+                      endif
+                    -%}
+                    {{
+                      article.image
+                      | image_url: width: 1200
+                      | image_tag:
+                        widths: '400, 600, 800, 1000, 1200',
+                        sizes: '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw',
+                        loading: a_loading,
+                        fetchpriority: a_priority,
+                        decoding: 'async',
+                        alt: a_alt
+                    }}
+                  {%- else -%}
+                    <svg class="n90-bl__pitch" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="4" aria-hidden="true" focusable="false">
+                      <rect x="60" y="60" width="1480" height="780"/><line x1="800" y1="60" x2="800" y2="840"/><circle cx="800" cy="450" r="120"/><rect x="60" y="250" width="200" height="400"/><rect x="1340" y="250" width="200" height="400"/>
+                    </svg>
+                  {%- endif -%}
+                  {%- if article.tags.size > 0 -%}
+                    <span class="n90-bl__badge">{{ article.tags.first | escape }}</span>
+                  {%- endif -%}
+                </span>
+                <p class="n90-bl__meta">
+                  {%- if section.settings.show_date -%}{{ article.published_at | time_tag: format: 'date' }}{%- endif -%}
+                  {%- if section.settings.show_author and article.author != blank -%} · {{ article.author | escape }}{%- endif -%}
+                </p>
+                <h2 class="n90-bl__h"><span>{{ article.title | escape }}</span></h2>
+                {%- if section.settings.show_excerpt -%}
+                  <p class="n90-bl__excerpt">
+                    {%- if article.excerpt != blank -%}{{ article.excerpt | strip_html | truncatewords: 26 }}{%- else -%}{{ article.content | strip_html | truncatewords: 26 }}{%- endif -%}
+                  </p>
+                {%- endif -%}
+                <span class="n90-bl__read">{{ section.settings.read_label | escape }}</span>
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        {%- if paginate.pages > 1 -%}
+          <nav aria-label="{{ 'general.pagination.label' | t }}">
+            <ul class="n90-bl__pager" role="list">
+              {%- if paginate.previous -%}
+                <li><a href="{{ paginate.previous.url }}" aria-label="{{ 'general.pagination.previous' | t }}">←</a></li>
+              {%- endif -%}
+              {%- for part in paginate.parts -%}
+                <li>
+                  {%- if part.is_link -%}
+                    <a href="{{ part.url }}">{{ part.title }}</a>
+                  {%- elsif part.title == paginate.current_page -%}
+                    <span aria-current="page">{{ part.title }}</span>
+                  {%- else -%}
+                    <span>{{ part.title }}</span>
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+              {%- if paginate.next -%}
+                <li><a href="{{ paginate.next.url }}" aria-label="{{ 'general.pagination.next' | t }}">→</a></li>
+              {%- endif -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      {%- else -%}
+        <p class="n90-bl__empty">{{ section.settings.empty_text | escape }}</p>
+      {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Journal",
+  "tag": "section",
+  "class": "section-main-blog",
+  "enabled_on": { "templates": ["blog"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Changing Room" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Club stories & gear guides", "info": "Defaults to the blog title." },
+    { "type": "textarea", "id": "subheading", "label": "Subtitle" },
+    { "type": "checkbox", "id": "show_tags", "label": "Show tag filter", "default": true },
+    {
+      "type": "text", "id": "tags", "label": "Tags to show",
+      "default": "Club Stories, Gear & Tech, Pre-season Tips",
+      "info": "Comma separated, matching your article tags. Leave empty to show every tag."
+    },
+    { "type": "range", "id": "articles_per_page", "label": "Stories per page", "min": 3, "max": 24, "step": 3, "default": 9 },
+    { "type": "checkbox", "id": "show_date", "label": "Show date", "default": true },
+    { "type": "checkbox", "id": "show_author", "label": "Show author", "default": false },
+    { "type": "checkbox", "id": "show_excerpt", "label": "Show excerpt", "default": true },
+    { "type": "text", "id": "read_label", "label": "Card link label", "default": "Read story" },
+    { "type": "text", "id": "empty_text", "label": "No stories message", "default": "No stories here yet — check back soon." },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112 }
+  ]
+}
+{% endschema %}

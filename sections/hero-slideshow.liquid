@@ -1,0 +1,915 @@
+{%- comment -%}
+  sections/hero-slideshow.liquid
+  ROSTER · Section 1 — Hero slideshow (split showcase)
+  Reference: data-section="HeroSlideshow" (.slider / .sl / .sl-media / .sl-text / .sl-ctrl)
+
+  Matches the reference slider: clip-path media wipe, staggered text entrance,
+  counter + progress bars + round arrows under the text column, club card badge.
+  Brand spec overrides: 50/50 desktop split and 1:1 square media.
+  Colour, type and motion tokens come from assets/n90-tokens.css.
+
+  Media per slide: image, native HTML5 <video> (direct URL or Shopify-uploaded
+  file source), or YouTube / Vimeo embed.
+{%- endcomment -%}
+
+{%- liquid
+  assign slide_count = section.blocks.size
+  assign speed_s = section.settings.autoplay_speed
+  assign speed_ms = speed_s | times: 1000
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --hs-pt: {{ section.settings.padding_top }}px;
+    --hs-pb: {{ section.settings.padding_bottom }}px;
+    --hs-speed: {{ speed_s }}s;
+    --hs-focal: {{ section.settings.image_position }};
+    --hs-overlay: {{ section.settings.overlay_color }};
+    --hs-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+  }
+{%- endstyle -%}
+
+{%- comment -%} LCP: when slide 1 is a video, its poster frame paints first — fetch it early {%- endcomment -%}
+{%- liquid
+  assign first_slide = section.blocks.first
+  assign first_poster = blank
+  if first_slide.settings.media_type == 'video'
+    assign first_poster = first_slide.settings.image
+    if first_poster == blank and first_slide.settings.video != blank
+      assign first_poster = first_slide.settings.video.preview_image
+    endif
+  endif
+-%}
+{%- if first_poster != blank -%}
+  {%- comment -%}theme-check-disable AssetPreload{%- endcomment -%}
+  <link rel="preload" as="image" href="{{ first_poster | image_url: width: 1200 }}" fetchpriority="high">
+  {%- comment -%}theme-check-enable AssetPreload{%- endcomment -%}
+{%- endif -%}
+
+<style>
+  @keyframes n90-hs-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes n90-hs-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  /* ref .slider */
+  .n90-hs {
+    position: relative;
+    padding: var(--hs-pt) 0 var(--hs-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+  .n90-hs__wrap {
+    max-width: var(--n90-page-width);
+    margin: 0 auto;
+    padding: 0 var(--n90-gutter);
+  }
+  .n90-hs__stage { position: relative; }
+
+  /* ref .sl — 12-col grid; media and text take 6 columns each */
+  .n90-hs__slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: center;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .n90-hs__slide.is-on {
+    position: relative;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* ref .sl-media — clip-path wipe in from the left, out to the right */
+  .n90-hs__media {
+    grid-column: 1 / span 6;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.1s var(--n90-ease), visibility 0s 1.1s;
+  }
+  .n90-hs__slide.is-on .n90-hs__media {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 1.1s var(--n90-ease);
+  }
+  .n90-hs__slide:not(.is-on) .n90-hs__media { clip-path: inset(0 0 0 100%); }
+  @media screen and (min-width: 1024px) {
+    .n90-hs__media { max-height: max(480px, calc(100svh - 160px)); }
+  }
+
+  .n90-hs__media img,
+  .n90-hs__media video,
+  .n90-hs__media iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--hs-focal);
+    display: block;
+    border: 0;
+  }
+  .n90-hs__media iframe { pointer-events: none; }
+
+  /* ref .pitch — empty-slot placeholder */
+  .n90-hs__pitch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .07;
+    pointer-events: none;
+  }
+  .n90-hs__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--hs-overlay);
+    opacity: var(--hs-overlay-opacity);
+    pointer-events: none;
+  }
+
+  /* ref .sl-card */
+  .n90-hs__card {
+    position: absolute;
+    left: 24px;
+    bottom: 56px;
+    z-index: 3;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--n90-canvas);
+    border: 1px solid var(--n90-line);
+    border-radius: var(--n90-radius);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity .6s .8s var(--n90-ease), transform .6s .8s var(--n90-ease);
+  }
+  .n90-hs__slide.is-on .n90-hs__card { opacity: 1; transform: none; }
+  .n90-hs__crest {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid var(--n90-line-strong);
+    background: var(--n90-surface);
+    color: var(--n90-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 10px;
+    letter-spacing: .04em;
+  }
+  .n90-hs__crest img { width: 100%; height: 100%; object-fit: contain; }
+  .n90-hs__card-name { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .n90-hs__card-sub { margin: 0; font-size: 12px; color: var(--n90-muted); }
+
+  /* ref .sl-text — staggered entrance (sl-a .. sl-d) */
+  .n90-hs__text {
+    grid-column: 7 / span 6;
+    min-width: 0;
+    padding: 0 0 96px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .n90-hs__text > * {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .6s var(--n90-ease), transform .7s var(--n90-ease);
+  }
+  .n90-hs__slide.is-on .n90-hs__text > * { opacity: 1; transform: none; }
+  .n90-hs__slide.is-on .n90-hs__eyebrow { transition-delay: .25s; }
+  .n90-hs__slide.is-on .n90-hs__heading { transition-delay: .35s; }
+  .n90-hs__slide.is-on .n90-hs__sub { transition-delay: .5s; }
+  .n90-hs__slide.is-on .n90-hs__cta { transition-delay: .6s; }
+
+  /* ref .eyebrow (dir-c) */
+  .n90-hs__eyebrow {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  /* ref .d.h1 inside .sl-text */
+  .n90-hs__heading {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: var(--n90-display-weight);
+    font-size: clamp(56px, 6.2vw, 96px);
+    line-height: .95;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    overflow-wrap: break-word;
+  }
+  .n90-hs__heading em { font-style: normal; }
+  /* ref .lead.hero-sub */
+  .n90-hs__sub {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--n90-muted);
+  }
+
+  /* ref .cta */
+  .n90-hs__cta {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  /* ref .btn (dir-c + motion layer) */
+  .n90-hs__btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 28px;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: var(--n90-radius);
+    transition: opacity .2s, transform .35s var(--n90-ease);
+  }
+  .n90-hs__btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-hs__btn:hover::after { animation: n90-hs-shine .9s var(--n90-ease); }
+  .n90-hs__btn:active { transform: scale(.97); }
+  .n90-hs__btn svg { width: 16px; height: 16px; flex: none; transition: transform .35s var(--n90-ease); }
+  .n90-hs__btn:hover svg { transform: translateX(4px); }
+  /* ref .tlink (dir-c) */
+  .n90-hs__tlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 7px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--n90-carbon);
+    transition: text-underline-offset .25s var(--n90-ease), text-decoration-thickness .15s;
+  }
+  .n90-hs__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+  /* ref .sl-ctrl — sits under the text column */
+  .n90-hs__ctrl {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    width: calc(50% - 12px);
+    padding-left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .n90-hs__count {
+    font-family: var(--n90-font-display);
+    font-size: 18px;
+    letter-spacing: .08em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .n90-hs__bars { display: flex; gap: 6px; flex: 1; max-width: 220px; }
+  .n90-hs__bar {
+    position: relative;
+    flex: 1;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .n90-hs__bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    margin-top: -1.5px;
+    background: var(--n90-line);
+    border-radius: 2px;
+  }
+  .n90-hs__bar > span {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 3px;
+    margin-top: -1.5px;
+    background: var(--n90-carbon);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .n90-hs__bar.is-done > span { transform: scaleX(1); }
+  .n90-hs__bar.is-on > span { animation: n90-hs-bar var(--hs-speed) linear forwards; }
+  .n90-hs.is-paused .n90-hs__bar.is-on > span,
+  .n90-hs.is-static .n90-hs__bar.is-on > span { animation-play-state: paused; }
+  .n90-hs.is-static .n90-hs__bar.is-on > span { animation: none; transform: scaleX(1); }
+  .n90-hs__grow { flex: 1; }
+  /* ref .sl-arrow */
+  .n90-hs__arrow {
+    width: 48px;
+    height: 48px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--n90-carbon);
+    border-radius: 50%;
+    background: none;
+    color: var(--n90-carbon);
+    cursor: pointer;
+    transition: background .25s, color .25s, transform .3s var(--n90-spring);
+  }
+  .n90-hs__arrow svg { width: 20px; height: 20px; }
+  .n90-hs__arrow:hover { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-hs__arrow:active { transform: scale(.92); }
+
+  .n90-hs :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Tablet 768–1023: keep the two columns, scale type and spacing down */
+  @media screen and (min-width: 768px) and (max-width: 1023px) {
+    .n90-hs__slide { column-gap: 16px; }
+    .n90-hs__text { padding: 0 0 72px 8px; gap: 16px; }
+    .n90-hs__heading { font-size: clamp(36px, 5.4vw, 52px); }
+    .n90-hs__sub { font-size: 15px; }
+    .n90-hs__card { left: 12px; bottom: 16px; padding: 10px 14px; }
+  }
+
+  /* Mobile < 768: single-column stack, media first with a controlled height */
+  @media screen and (max-width: 767px) {
+    .n90-hs { padding: min(var(--hs-pt), 16px) 0 min(var(--hs-pb), 48px); }
+    .n90-hs__media { max-height: 72svh; }
+    .n90-hs__slide {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+    .n90-hs__text { padding: 0 0 72px; gap: 16px; }
+    .n90-hs__heading { font-size: clamp(40px, 11vw, 46px); }
+    .n90-hs__sub { font-size: 16px; }
+    .n90-hs__cta { flex-direction: column; align-items: stretch; gap: 4px; }
+    .n90-hs__btn { width: 100%; }
+    .n90-hs__tlink { justify-content: center; }
+    .n90-hs__ctrl { width: 100%; padding-left: 0; }
+    .n90-hs__card { left: 12px; bottom: 44px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .n90-hs__media,
+    .n90-hs__text > *,
+    .n90-hs__card,
+    .n90-hs__btn,
+    .n90-hs__arrow { transition: none !important; }
+    .n90-hs__slide .n90-hs__media { clip-path: none !important; }
+    .n90-hs__btn:hover::after { animation: none; }
+  }
+</style>
+
+<section
+  class="n90-hs"
+  id="n90-hs-{{ section.id }}"
+  data-autoplay="{{ section.settings.autoplay }}"
+  data-speed="{{ speed_ms }}"
+  aria-roledescription="carousel"
+  aria-label="{{ section.settings.aria_label | default: 'Featured' | escape }}"
+>
+  {%- liquid
+    case section.settings.container_width
+      when 'wide'
+        assign hs_width = ' page-width--wide'
+      when 'full'
+        assign hs_width = ' page-width--full'
+      else
+        assign hs_width = ''
+    endcase
+  -%}
+  <div class="n90-hs__wrap page-width{{ hs_width }}">
+    <div class="n90-hs__stage">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign b = block.settings
+
+          comment
+            Native HTML5 video source: direct URL first, then the raw file URL
+            of a Shopify-uploaded video (MP4 preferred).
+          endcomment
+          assign video_src = blank
+          if b.media_type == 'video'
+            assign video_src = b.direct_video_url
+            if video_src == blank and b.video != blank
+              for source in b.video.sources
+                if source.format == 'mp4'
+                  assign video_src = source.url
+                endif
+              endfor
+              if video_src == blank and b.video.sources.size > 0
+                assign video_src = b.video.sources[0].url
+              endif
+            endif
+          endif
+
+          assign poster = b.image
+          if poster == blank and b.video != blank
+            assign poster = b.video.preview_image
+          endif
+        -%}
+
+        <div
+          class="n90-hs__slide{% if forloop.first %} is-on{% endif %}"
+          id="n90-hs-slide-{{ section.id }}-{{ forloop.index }}"
+          role="group"
+          aria-roledescription="slide"
+          aria-label="{{ forloop.index }} of {{ slide_count }}"
+          {% unless forloop.first %}aria-hidden="true" inert{% endunless %}
+          {{ block.shopify_attributes }}
+        >
+          <div class="n90-hs__media">
+            {%- if video_src != blank -%}
+              <video
+                src="{{ video_src }}"
+                {% if poster != blank %}poster="{{ poster | image_url: width: 1200 }}"{% endif %}
+                autoplay
+                loop
+                muted
+                playsinline
+                webkit-playsinline
+                preload="metadata"
+                class="hero-media-video"
+                style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                aria-hidden="true"
+              ></video>
+            {%- elsif b.media_type == 'external_video' and b.video_url != blank -%}
+              {%- if b.video_url.type == 'youtube' -%}
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/{{ b.video_url.id }}?autoplay=1&mute=1&loop=1&playlist={{ b.video_url.id }}&controls=0&playsinline=1&rel=0"
+                  title="{{ b.eyebrow | default: 'Slide video' | escape }}"
+                  allow="autoplay; encrypted-media"
+                  loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                  tabindex="-1"
+                ></iframe>
+              {%- elsif b.video_url.type == 'vimeo' -%}
+                <iframe
+                  src="https://player.vimeo.com/video/{{ b.video_url.id }}?autoplay=1&muted=1&loop=1&background=1"
+                  title="{{ b.eyebrow | default: 'Slide video' | escape }}"
+                  allow="autoplay; fullscreen"
+                  loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                  tabindex="-1"
+                ></iframe>
+              {%- endif -%}
+            {%- elsif b.image != blank -%}
+              {%- liquid
+                if forloop.first
+                  assign img_loading = 'eager'
+                  assign img_priority = 'high'
+                else
+                  assign img_loading = 'lazy'
+                  assign img_priority = 'auto'
+                endif
+              -%}
+              {{
+                b.image
+                | image_url: width: 1440
+                | image_tag:
+                  widths: '400, 600, 800, 1000, 1200, 1440',
+                  sizes: '(max-width: 767px) calc(100vw - 32px), (max-width: 1599px) 50vw, 800px',
+                  loading: img_loading,
+                  fetchpriority: img_priority,
+                  alt: b.image.alt
+              }}
+            {%- else -%}
+              <svg class="n90-hs__pitch" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <rect x="40" y="40" width="720" height="520"/><line x1="400" y1="40" x2="400" y2="560"/><circle cx="400" cy="300" r="80"/><circle cx="400" cy="300" r="4" fill="currentColor"/><rect x="40" y="160" width="120" height="280"/><rect x="640" y="160" width="120" height="280"/><rect x="40" y="240" width="44" height="120"/><rect x="716" y="240" width="44" height="120"/><path d="M160 250a60 60 0 0 1 0 100M640 250a60 60 0 0 0 0 100"/>
+              </svg>
+            {%- endif -%}
+
+            {%- if section.settings.overlay_opacity > 0 -%}
+              <div class="n90-hs__overlay" aria-hidden="true"></div>
+            {%- endif -%}
+
+            {%- if b.show_club_card and b.club_name != blank -%}
+              <div class="n90-hs__card">
+                <span class="n90-hs__crest" aria-hidden="true">
+                  {%- if b.club_crest != blank -%}
+                    {{ b.club_crest | image_url: width: 88 | image_tag: width: 44, height: 44, loading: 'lazy', decoding: 'async', alt: '' }}
+                  {%- else -%}
+                    Crest
+                  {%- endif -%}
+                </span>
+                <div>
+                  <p class="n90-hs__card-name">{{ b.club_name | escape }}</p>
+                  {%- if b.club_subtitle != blank -%}
+                    <p class="n90-hs__card-sub">{{ b.club_subtitle | escape }}</p>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+
+          <div class="n90-hs__text">
+            {%- if b.eyebrow != blank -%}
+              <p class="n90-hs__eyebrow">{{ b.eyebrow | escape }}</p>
+            {%- endif -%}
+            {%- if b.heading != blank -%}
+              {%- if forloop.first -%}
+                <h1 class="n90-hs__heading">{{ b.heading }}</h1>
+              {%- else -%}
+                <h2 class="n90-hs__heading">{{ b.heading }}</h2>
+              {%- endif -%}
+            {%- endif -%}
+            {%- if b.subheading != blank -%}
+              <p class="n90-hs__sub">{{ b.subheading | escape }}</p>
+            {%- endif -%}
+            {%- if b.cta_primary_label != blank or b.cta_secondary_label != blank -%}
+              <div class="n90-hs__cta">
+                {%- if b.cta_primary_label != blank -%}
+                  <a href="{{ b.cta_primary_url | default: '#' }}" class="n90-hs__btn">
+                    {{- b.cta_primary_label | escape -}}
+                    {%- render 'icon', name: 'arrow' -%}
+                  </a>
+                {%- endif -%}
+                {%- if b.cta_secondary_label != blank -%}
+                  <a href="{{ b.cta_secondary_url | default: '#' }}" class="n90-hs__tlink">
+                    {{- b.cta_secondary_label | escape -}}
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endfor -%}
+
+      {%- if slide_count > 1 -%}
+        <div class="n90-hs__ctrl">
+          <span class="n90-hs__count" data-hs-count>
+            <strong>01</strong> / {{ slide_count | prepend: '0' | slice: -2, 2 }}
+          </span>
+          <div class="n90-hs__bars">
+            {%- for block in section.blocks -%}
+              <button
+                type="button"
+                class="n90-hs__bar{% if forloop.first %} is-on{% endif %}"
+                aria-label="{{ 'sections.slideshow.load_slide' | t }} {{ forloop.index }}"
+                aria-controls="n90-hs-slide-{{ section.id }}-{{ forloop.index }}"
+                {% if forloop.first %}aria-current="true"{% endif %}
+              >
+                <span></span>
+              </button>
+            {%- endfor -%}
+          </div>
+          <span class="n90-hs__grow"></span>
+          <button type="button" class="n90-hs__arrow" data-hs-prev aria-label="{{ 'sections.slideshow.previous_slideshow' | t }}">
+            {%- render 'icon', name: 'chevron-left' -%}
+          </button>
+          <button type="button" class="n90-hs__arrow" data-hs-next aria-label="{{ 'sections.slideshow.next_slideshow' | t }}">
+            {%- render 'icon', name: 'chevron-right' -%}
+          </button>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-hs-' + {{ section.id | json }});
+    if (!root) return;
+
+    var slides = Array.prototype.slice.call(root.querySelectorAll('.n90-hs__slide'));
+    var bars = Array.prototype.slice.call(root.querySelectorAll('.n90-hs__bar'));
+    var countEl = root.querySelector('[data-hs-count]');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var autoplay = root.dataset.autoplay === 'true' && !reduceMotion;
+    var speed = parseInt(root.dataset.speed, 10) || 6500;
+    var total = slides.length;
+    var current = 0;
+    var timer = null;
+
+    /* Only the visible slide's video plays; reduced motion keeps all paused on the poster */
+    function syncVideos() {
+      slides.forEach(function (slide, i) {
+        var video = slide.querySelector('video');
+        if (!video) return;
+        if (i === current && !reduceMotion) {
+          var p = video.play();
+          if (p && p.catch) p.catch(function () {});
+        } else {
+          video.pause();
+        }
+      });
+    }
+
+    function pad(n) {
+      return n < 10 ? '0' + n : String(n);
+    }
+
+    function goTo(next) {
+      next = ((next % total) + total) % total;
+      if (next === current) return;
+      current = next;
+
+      slides.forEach(function (slide, i) {
+        var on = i === current;
+        slide.classList.toggle('is-on', on);
+        if (on) {
+          slide.removeAttribute('aria-hidden');
+          slide.removeAttribute('inert');
+        } else {
+          slide.setAttribute('aria-hidden', 'true');
+          slide.setAttribute('inert', '');
+        }
+      });
+
+      bars.forEach(function (bar, i) {
+        bar.classList.toggle('is-on', i === current);
+        bar.classList.toggle('is-done', i < current);
+        if (i === current) bar.setAttribute('aria-current', 'true');
+        else bar.removeAttribute('aria-current');
+      });
+      /* Restart the progress animation on the active bar */
+      var fill = bars[current] && bars[current].querySelector('span');
+      if (fill) fill.parentNode.replaceChild(fill.cloneNode(false), fill);
+
+      if (countEl) countEl.innerHTML = '<strong>' + pad(current + 1) + '</strong> / ' + pad(total);
+      syncVideos();
+    }
+
+    function start() {
+      stop();
+      if (!autoplay || total < 2 || root.classList.contains('is-paused')) return;
+      timer = setInterval(function () { goTo(current + 1); }, speed);
+    }
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+    function step(n) {
+      stop();
+      goTo(n);
+      start();
+    }
+    function pause() {
+      root.classList.add('is-paused');
+      stop();
+    }
+    function resume() {
+      root.classList.remove('is-paused');
+      start();
+    }
+
+    if (!autoplay) root.classList.add('is-static');
+    syncVideos();
+    if (total < 2) return;
+
+    root.querySelector('[data-hs-prev]').addEventListener('click', function () { step(current - 1); });
+    root.querySelector('[data-hs-next]').addEventListener('click', function () { step(current + 1); });
+    bars.forEach(function (bar, i) {
+      bar.addEventListener('click', function () { step(i); });
+    });
+
+    /* Pause on hover / keyboard focus, as in the reference (.slider.paused) */
+    root.addEventListener('mouseenter', pause);
+    root.addEventListener('mouseleave', resume);
+    root.addEventListener('focusin', pause);
+    root.addEventListener('focusout', function (e) {
+      if (!root.contains(e.relatedTarget)) resume();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop();
+      else start();
+    });
+
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') step(current + 1);
+      else if (e.key === 'ArrowLeft') step(current - 1);
+    });
+
+    var touchX = 0;
+    root.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+    root.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) step(dx < 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    /* Theme editor: show the selected slide */
+    document.addEventListener('shopify:block:select', function (e) {
+      var i = slides.indexOf(e.target);
+      if (i > -1) { stop(); goTo(i); }
+    });
+    document.addEventListener('shopify:block:deselect', function (e) {
+      if (slides.indexOf(e.target) > -1) start();
+    });
+
+    start();
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Hero Slideshow",
+  "tag": "div",
+  "class": "section-hero-slideshow",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 6,
+  "settings": [
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "range", "id": "padding_top", "label": "Padding top",
+      "min": 0, "max": 120, "step": 4, "unit": "px", "default": 32
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 88
+    },
+    {
+      "type": "select", "id": "image_position", "label": "Media focal point",
+      "info": "Media is always cropped to a 1:1 square.",
+      "options": [
+        { "value": "center center", "label": "Centre" },
+        { "value": "top center", "label": "Top" },
+        { "value": "bottom center", "label": "Bottom" },
+        { "value": "center left", "label": "Left" },
+        { "value": "center right", "label": "Right" }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "select", "id": "container_width", "label": "Width",
+      "options": [
+        { "value": "page", "label": "Page width (aligned with header)" },
+        { "value": "wide", "label": "Wide (1600px)" },
+        { "value": "full", "label": "Full width" }
+      ],
+      "default": "page"
+    },
+    { "type": "header", "content": "Media overlay" },
+    { "type": "color", "id": "overlay_color", "label": "Overlay colour", "default": "#181818" },
+    {
+      "type": "range", "id": "overlay_opacity", "label": "Overlay opacity",
+      "min": 0, "max": 80, "step": 5, "unit": "%", "default": 0
+    },
+    { "type": "header", "content": "Autoplay" },
+    { "type": "checkbox", "id": "autoplay", "label": "Auto-rotate slides", "default": true },
+    {
+      "type": "range", "id": "autoplay_speed", "label": "Seconds per slide",
+      "min": 3, "max": 15, "step": 0.5, "unit": "s", "default": 6.5
+    },
+    { "type": "header", "content": "Accessibility" },
+    {
+      "type": "text", "id": "aria_label", "label": "Carousel label",
+      "default": "Featured",
+      "info": "Read aloud by screen readers as the section name."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        { "type": "header", "content": "Media" },
+        {
+          "type": "select", "id": "media_type", "label": "Media type",
+          "options": [
+            { "value": "image", "label": "Image" },
+            { "value": "video", "label": "Video (MP4 / WebM)" },
+            { "value": "external_video", "label": "YouTube / Vimeo" }
+          ],
+          "default": "image"
+        },
+        {
+          "type": "image_picker", "id": "image", "label": "Image",
+          "info": "Also used as the video poster frame."
+        },
+        {
+          "type": "text",
+          "id": "direct_video_url",
+          "label": "Direct Video URL (MP4 / WebM)",
+          "info": "Paste a direct link to an MP4 video (e.g. from Files, CDN, or external hosting)"
+        },
+        {
+          "type": "video", "id": "video", "label": "Or upload a video",
+          "info": "Used when the direct URL is empty. Plays in a native HTML5 player."
+        },
+        {
+          "type": "video_url", "id": "video_url", "label": "YouTube / Vimeo URL",
+          "accept": ["youtube", "vimeo"]
+        },
+        { "type": "header", "content": "Text" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Custom teamwear" },
+        {
+          "type": "inline_richtext", "id": "heading", "label": "Heading",
+          "default": "Custom teamwear for grassroots clubs",
+          "info": "First slide is the page h1; other slides are h2."
+        },
+        { "type": "text", "id": "subheading", "label": "Sub-copy", "default": "From 10 pieces · 3–4 weeks · Free design" },
+        { "type": "header", "content": "Buttons" },
+        { "type": "text", "id": "cta_primary_label", "label": "Button label", "default": "Get a free kit mockup" },
+        { "type": "url", "id": "cta_primary_url", "label": "Button link" },
+        { "type": "text", "id": "cta_secondary_label", "label": "Text link label", "default": "Shop ready-to-buy" },
+        { "type": "url", "id": "cta_secondary_url", "label": "Text link" },
+        { "type": "header", "content": "Club card" },
+        { "type": "checkbox", "id": "show_club_card", "label": "Show club card", "default": false },
+        { "type": "image_picker", "id": "club_crest", "label": "Club crest" },
+        { "type": "text", "id": "club_name", "label": "Club or shop name", "placeholder": "Your club kit shop" },
+        { "type": "text", "id": "club_subtitle", "label": "Card sub-line", "placeholder": "Orders close 15 Nov" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Slideshow",
+      "blocks": [
+        {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Custom teamwear",
+            "heading": "Custom teamwear for grassroots clubs",
+            "subheading": "From 10 pieces · 3–4 weeks · Free design",
+            "cta_primary_label": "Get a free kit mockup",
+            "cta_secondary_label": "Shop ready-to-buy"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Ready to buy",
+            "heading": "ORBIT Training Football",
+            "subheading": "£10.99 · Sizes 3, 4 and 5 · Express next working day if ordered before 1pm",
+            "cta_primary_label": "Shop ORBIT",
+            "cta_secondary_label": "Shop all equipment"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Match bundles",
+            "heading": "Pulse & APEX Match Bundles",
+            "subheading": "£149.99 each · Team prices from 10+",
+            "cta_primary_label": "Shop bundles",
+            "cta_secondary_label": "Get a team quote"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Club shops",
+            "heading": "A free kit shop for your club",
+            "subheading": "Free setup · Players and parents order direct",
+            "cta_primary_label": "Set up a club shop",
+            "cta_secondary_label": "Find your club",
+            "show_club_card": true,
+            "club_name": "Your club kit shop",
+            "club_subtitle": "Players order direct"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

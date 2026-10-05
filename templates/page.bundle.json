@@ -1,0 +1,108 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "bundle-spotlight",
+      "settings": {
+        "eyebrow": "Match bundles",
+        "heading": "One bundle. Whole kit.",
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    },
+    "trust": {
+      "type": "trust-row",
+      "blocks": {
+        "crest_1": {
+          "type": "crest",
+          "settings": {}
+        },
+        "crest_2": {
+          "type": "crest",
+          "settings": {}
+        },
+        "crest_3": {
+          "type": "crest",
+          "settings": {}
+        },
+        "crest_4": {
+          "type": "crest",
+          "settings": {}
+        },
+        "crest_5": {
+          "type": "crest",
+          "settings": {}
+        },
+        "crest_6": {
+          "type": "crest",
+          "settings": {}
+        },
+        "fact_1": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "From 10",
+            "fact_value": "pieces"
+          }
+        },
+        "fact_2": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "Free",
+            "fact_value": "design tool"
+          }
+        },
+        "fact_3": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "48hrs",
+            "fact_value": "turnaround"
+          }
+        },
+        "fact_4": {
+          "type": "fact",
+          "settings": {
+            "fact_key": "100%",
+            "fact_value": "sublimated"
+          }
+        }
+      },
+      "block_order": [
+        "crest_1",
+        "crest_2",
+        "crest_3",
+        "crest_4",
+        "crest_5",
+        "crest_6",
+        "fact_1",
+        "fact_2",
+        "fact_3",
+        "fact_4"
+      ],
+      "settings": {
+        "color_background": "#F3F5F8",
+        "color_text": "#0E1B33",
+        "color_muted": "#4A5568",
+        "color_line": "#E2E6ED",
+        "color_surface": "#FFFFFF",
+        "padding_top": 64,
+        "padding_bottom": 64,
+        "rating_score": "4.9",
+        "rating_label": "from 2,400+ reviews",
+        "rating_aria_suffix": "out of 5",
+        "aria_label": "Why clubs choose us"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "trust"
+  ]
+}

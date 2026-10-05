@@ -1,0 +1,388 @@
+{%- comment -%}
+  sections/final-cta-club.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+  Final CTA & Athlete Club Banner
+{%- endcomment -%}
+
+{%- liquid
+  assign bg_style  = section.settings.bg_style
+  assign bg_image  = section.settings.background_image
+  
+  if bg_style == 'light'
+    assign bg      = section.settings.color_surface | default: '#F3F5F8'
+    assign ink     = section.settings.color_text | default: '#0E1B33'
+    assign muted   = section.settings.color_muted | default: '#4A5568'
+    assign line    = section.settings.color_line | default: '#E2E6ED'
+    assign accent  = section.settings.color_accent | default: '#D4FF3A'
+  elsif bg_style == 'dark'
+    assign bg      = section.settings.color_text | default: '#0E1B33'
+    assign ink     = section.settings.color_surface | default: '#F3F5F8'
+    assign muted   = section.settings.color_muted | default: '#8E9DB4'
+    assign line    = section.settings.color_line | default: '#1E2E4A'
+    assign accent  = section.settings.color_accent | default: '#D4FF3A'
+  else
+    assign bg      = '#0E1B33'
+    assign ink     = '#FFFFFF'
+    assign muted   = '#8E9DB4'
+    assign line    = 'rgba(255,255,255,0.2)'
+    assign accent  = section.settings.color_accent | default: '#D4FF3A'
+  endif
+  
+  assign pt = section.settings.padding_top
+  assign pb = section.settings.padding_bottom
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture line -%}{%- render 'n90-color-token', value: line -%}{%- endcapture -%}
+{%- capture accent -%}{%- render 'n90-color-token', value: accent -%}{%- endcapture -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --nn-bg:      {{ bg }};
+    --nn-ink:     {{ ink }};
+    --nn-muted:   {{ muted }};
+    --nn-accent:  {{ accent }};
+    --nn-line:    {{ line }};
+    --nn-radius:  16px;
+  }
+  
+  .n90-cta {
+    padding-top: {{ pt }}px;
+    padding-bottom: {{ pb }}px;
+    background: transparent;
+  }
+  @media screen and (max-width:749px) {
+    .n90-cta { padding-top: {{ pt | at_most: 64 }}px; padding-bottom: {{ pb | at_most: 64 }}px; }
+  }
+
+  .n90-cta__card {
+    position: relative;
+    background: var(--nn-bg);
+    border-radius: var(--nn-radius);
+    border: 1px solid var(--nn-line);
+    overflow: hidden;
+    padding: 64px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  
+  @media screen and (max-width:989px) {
+    .n90-cta__card {
+      grid-template-columns: 1fr;
+      padding: 48px 32px;
+      gap: 40px;
+    }
+  }
+  
+  @media screen and (max-width:749px) {
+    .n90-cta__card {
+      padding: 40px 20px;
+    }
+  }
+
+  /* Image Background Overlay */
+  .n90-cta__bg-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  .n90-cta__bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(14, 27, 51, 0.75);
+    z-index: 1;
+  }
+  .n90-cta__content-wrap {
+    position: relative;
+    z-index: 2;
+    display: contents;
+  }
+
+  /* Left Column: Text */
+  .n90-cta__text-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .n90-cta__eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--nn-accent);
+    margin: 0;
+  }
+  
+  .n90-cta__heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--nn-ink);
+    margin: 0;
+    line-height: 1.05;
+  }
+  
+  .n90-cta__subheading {
+    font-size: 16px;
+    color: var(--nn-muted);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 480px;
+  }
+
+  /* Right Column: Form & Perks */
+  .n90-cta__form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .n90-cta__form {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  @media screen and (max-width:500px) {
+    .n90-cta__form { flex-direction: column; }
+  }
+  
+  .n90-cta__input-wrap {
+    flex: 1;
+    position: relative;
+  }
+  
+  .n90-cta__input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--nn-line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 16px;
+    color: var(--nn-ink);
+    transition: border-color 0.2s ease;
+  }
+  .n90-cta__input:focus {
+    outline: none;
+    border-color: var(--nn-accent);
+  }
+  .n90-cta__input::placeholder {
+    color: var(--nn-muted);
+  }
+  
+  .n90-cta__submit {
+    background: var(--nn-accent);
+    color: #0E1B33;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 32px;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+  }
+  .n90-cta__submit:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  .n90-cta__msg {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  .n90-cta__msg--success { color: var(--nn-accent); font-weight: 600; }
+  .n90-cta__msg--error { color: #FF4D4D; }
+
+  /* Perks List */
+  .n90-cta__perks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .n90-cta__perk {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--nn-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--nn-line);
+    padding: 6px 12px;
+    border-radius: 99px;
+  }
+  {% if bg_style == 'light' %}
+  .n90-cta__perk { background: rgba(0,0,0,0.03); }
+  {% endif %}
+  
+  .n90-cta__perk svg {
+    width: 14px;
+    height: 14px;
+    color: var(--nn-accent);
+  }
+{%- endstyle -%}
+
+<section class="n90-cta" id="n90-cta-{{ section.id }}">
+  <div class="page-width">
+    <div class="n90-cta__card">
+      
+      {%- if bg_style == 'image' and bg_image != blank -%}
+        <img class="n90-cta__bg-media" src="{{ bg_image | image_url: width: 1400 }}" width="{{ bg_image.width }}" height="{{ bg_image.height }}" alt="" decoding="async" loading="lazy">
+        <div class="n90-cta__bg-overlay"></div>
+      {%- endif -%}
+      
+      <div class="n90-cta__content-wrap">
+        <div class="n90-cta__text-col">
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-cta__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          
+          {%- if section.settings.heading != blank -%}
+            <h2 class="n90-cta__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+          
+          {%- if section.settings.subheading != blank -%}
+            <p class="n90-cta__subheading">{{ section.settings.subheading | escape }}</p>
+          {%- endif -%}
+        </div>
+        
+        <div class="n90-cta__form-col">
+          {% form 'customer', class: 'n90-cta__form-wrapper' %}
+            <input type="hidden" name="contact[tags]" value="newsletter, athlete_club">
+            <div class="n90-cta__form">
+              <div class="n90-cta__input-wrap">
+                <input 
+                  type="email" 
+                  name="contact[email]" 
+                  class="n90-cta__input" 
+                  placeholder="{{ section.settings.email_placeholder | escape }}" 
+                  required
+                  aria-label="{{ 'n90.ui.email' | t }}"
+                >
+              </div>
+              <button type="submit" class="n90-cta__submit">
+                {{ section.settings.button_label | default: 'Join the club' | escape }}
+              </button>
+            </div>
+            
+            {%- if form.posted_successfully? -%}
+              <div class="n90-cta__msg n90-cta__msg--success">
+                {{ section.settings.success_message | escape }}
+              </div>
+            {%- elsif form.errors -%}
+              <div class="n90-cta__msg n90-cta__msg--error">
+                {{ form.errors | default_errors }}
+              </div>
+            {%- endif -%}
+          {% endform %}
+          
+          {%- if section.blocks.size > 0 -%}
+            <ul class="n90-cta__perks">
+              {%- for block in section.blocks -%}
+                <li class="n90-cta__perk" {{ block.shopify_attributes }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  {{ block.settings.text | escape }}
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Final CTA / Club",
+  "tag": "section",
+  "class": "section-final-cta",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    {
+      "type": "select",
+      "id": "bg_style",
+      "label": "Background style",
+      "options": [
+        { "value": "dark", "label": "Dark Ink (Card)" },
+        { "value": "light", "label": "Light Surface (Card)" },
+        { "value": "image", "label": "Background Image (Dark Overlay)" }
+      ],
+      "default": "dark"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image",
+      "info": "Only visible if Background style is set to Image."
+    },
+    {
+      "type": "header",
+      "content": "Theme Colors (Overrides)"
+    },
+    { "type": "color", "id": "color_surface", "label": "Surface (Light)", "default": "#F3F5F8" },
+    { "type": "color", "id": "color_text", "label": "Text (Dark)", "default": "#0E1B33" },
+    { "type": "color", "id": "color_accent", "label": "Accent", "default": "#D4FF3A" },
+    { "type": "color", "id": "color_muted", "label": "Muted", "default": "#8E9DB4" },
+    { "type": "color", "id": "color_line", "label": "Lines", "default": "#1E2E4A" },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 96 },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Athlete Club" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Join the squad" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Sign up for exclusive kit drops, early access to sales, and pro athlete training tips delivered straight to your inbox." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Join the club" },
+    { "type": "text", "id": "email_placeholder", "label": "Email placeholder", "default": "Enter your email address" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Welcome to the squad. Check your inbox for your welcome perk." }
+  ],
+  "blocks": [
+    {
+      "type": "perk_item",
+      "name": "Perk",
+      "limit": 5,
+      "settings": [
+        { "type": "text", "id": "text", "label": "Perk text", "default": "10% Off First Order" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Final CTA / Athlete Club",
+      "blocks": [
+        { "type": "perk_item", "settings": { "text": "10% Off First Order" } },
+        { "type": "perk_item", "settings": { "text": "VIP Drop Access" } },
+        { "type": "perk_item", "settings": { "text": "Athlete Tested" } },
+        { "type": "perk_item", "settings": { "text": "Zero Spam" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

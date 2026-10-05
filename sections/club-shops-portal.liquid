@@ -1,0 +1,752 @@
+{%- comment -%}
+  sections/club-shops-portal.liquid
+  ROSTER — Club Shops directory + onboarding
+  Reference: ClubShopDirectory (.crumbs / heading + "Find your club" search / .tabs /
+  .g4 of .clubcard / .setup "Run a club? Get a free club shop.")
+
+  Hero with Volt CTA → #club-shop-apply. Live search + sport pills filter the club
+  cards instantly (vanilla JS, no reload). Cards: square crest box, name, sport ·
+  location, status (open / password protected), "Enter club shop" link. Bottom:
+  asymmetric onboarding split with a Shopify contact form (sends to the store email).
+{%- endcomment -%}
+
+{%- liquid
+  assign clubs = section.blocks | where: 'type', 'club'
+  assign main_sports = 'football,rugby,cricket' | split: ','
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --csp-pb: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-csp-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-csp-ring { 0% { transform: scale(1); opacity: .5; } 100% { transform: scale(2.2); opacity: 0; } }
+  @keyframes n90-csp-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  .n90-csp {
+    padding: 0 0 var(--csp-pb);
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* ref .crumbs */
+  .n90-csp__crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 56px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--n90-muted); }
+  .n90-csp__crumbs a { color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  .n90-csp__crumbs a:hover { color: var(--n90-carbon); text-decoration: underline; }
+  .n90-csp__crumbs li + li::before { content: '/'; margin-right: 8px; }
+
+  /* Hero */
+  .n90-csp__hero {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: end;
+    padding: 8px 0 48px;
+    animation: n90-csp-up .6s var(--n90-ease) both;
+  }
+  .n90-csp__hero-copy { grid-column: 1 / span 8; display: flex; flex-direction: column; gap: 20px; }
+  .n90-csp__hero-act { grid-column: 9 / span 4; display: flex; justify-content: flex-end; }
+  .n90-csp__badge {
+    align-self: flex-start;
+    margin: 0;
+    padding: 6px 12px 5px;
+    border: 1px solid var(--n90-carbon);
+    border-radius: 999px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .n90-csp__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(44px, 6vw, 96px);
+    line-height: .92;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-csp__lead { margin: 0; max-width: 620px; font-size: 18px; line-height: 1.55; color: var(--n90-muted); }
+
+  /* ref .btn — Volt */
+  .n90-csp__btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 28px;
+    border: 0;
+    border-radius: var(--n90-radius);
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform .35s var(--n90-ease);
+  }
+  .n90-csp__btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-csp__btn:hover { transform: translateY(-2px); }
+  .n90-csp__btn:hover::after { animation: n90-csp-shine .9s var(--n90-ease); }
+  .n90-csp__btn:active { transform: scale(.97); }
+  .n90-csp__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-csp__btn:hover svg { transform: translateX(4px); }
+
+  /* Search + pills */
+  .n90-csp__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    margin-bottom: 32px;
+    border-top: 1px solid var(--n90-line);
+    border-bottom: 1px solid var(--n90-line);
+  }
+  .n90-csp__search { position: relative; flex: 1 1 360px; max-width: 520px; }
+  .n90-csp__search svg { position: absolute; left: 16px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--n90-muted); pointer-events: none; }
+  .n90-csp__input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px 0 48px;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font: inherit;
+    font-size: 16px;
+  }
+  .n90-csp__input::placeholder { color: var(--n90-muted); }
+  .n90-csp__input:focus { outline: none; border-color: var(--n90-carbon); box-shadow: 0 0 0 1px var(--n90-carbon); }
+  .n90-csp__pills { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--n90-surface); }
+  .n90-csp__pill {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--n90-muted);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .3s var(--n90-ease), color .3s;
+  }
+  .n90-csp__pill:hover { color: var(--n90-carbon); }
+  .n90-csp__pill[aria-pressed="true"] { background: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-csp__status { margin: -16px 0 24px; font-size: 13px; color: var(--n90-muted); }
+
+  /* Club grid — ref .g4 of .clubcard */
+  .n90-csp__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .n90-csp__grid > li { min-width: 0; }
+  .n90-csp__grid > li[hidden] { display: none; }
+  .n90-csp__grid > li.is-shown { animation: n90-csp-up .45s var(--n90-ease) both; animation-delay: var(--csp-d, 0s); }
+  .n90-csp__card {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 16px 20px;
+    border: 1px solid rgba(0, 0, 0, .06);
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    text-decoration: none;
+    transition: transform .45s var(--n90-spring), border-color .25s, box-shadow .3s var(--n90-ease);
+  }
+  a.n90-csp__card:hover,
+  a.n90-csp__card:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--n90-volt);
+    box-shadow: 0 0 0 1px var(--n90-volt), 0 14px 28px -18px rgba(var(--n90-carbon-rgb), .45);
+    outline: none;
+  }
+  .n90-csp__crest {
+    aspect-ratio: 1 / 1;
+    padding: 20px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--n90-canvas);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .n90-csp__crest img { width: 100%; height: 100%; object-fit: contain; transition: transform .6s var(--n90-ease); }
+  a.n90-csp__card:hover .n90-csp__crest img { transform: scale(1.04); }
+  .n90-csp__mono {
+    width: 64%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 2px solid var(--n90-carbon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 3vw, 44px);
+    letter-spacing: .04em;
+  }
+  .n90-csp__name {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 21px;
+    line-height: 1.1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .n90-csp__meta { margin: -8px 0 0; font-size: 13px; color: var(--n90-muted); }
+  .n90-csp__state {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px 4px;
+    border-radius: 999px;
+    background: var(--n90-canvas);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .n90-csp__dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: #3BA55C; }
+  .n90-csp__dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #3BA55C; animation: n90-csp-ring 2s ease-out infinite; }
+  .n90-csp__state svg { width: 12px; height: 12px; }
+  .n90-csp__close { font-size: 12px; color: var(--n90-muted); }
+  .n90-csp__enter {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+  }
+  .n90-csp__enter svg { width: 14px; height: 14px; transition: transform .35s var(--n90-ease); }
+  a.n90-csp__card:hover .n90-csp__enter svg { transform: translateX(4px); }
+  .n90-csp__enter--soon { color: var(--n90-muted); text-decoration: none; }
+
+  /* No results (ref .errbox) */
+  .n90-csp__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 24px;
+    border: 1px solid var(--n90-line);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .n90-csp__empty[hidden] { display: none; }
+  .n90-csp__empty p { margin: 0; }
+  .n90-csp__empty-t { font-family: var(--n90-font-display); font-weight: 600; font-size: 24px; text-transform: uppercase; }
+  .n90-csp__empty-p { font-size: 14px; color: var(--n90-muted); }
+  .n90-csp__empty a { color: var(--n90-carbon); }
+
+  /* Onboarding — asymmetric split (ref .setup) */
+  .n90-csp__apply {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    margin-top: 96px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--n90-carbon);
+    color: var(--n90-canvas);
+    scroll-margin-top: 96px;
+  }
+  .n90-csp__apply-copy { grid-column: 1 / span 7; padding: 56px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+  .n90-csp__apply-eyebrow { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; }
+  .n90-csp__apply-t {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(36px, 4.2vw, 60px);
+    line-height: .95;
+    text-transform: uppercase;
+  }
+  .n90-csp__apply-p { margin: 0; max-width: 520px; font-size: 16px; line-height: 1.55; color: var(--n90-muted-on-dark); }
+  .n90-csp__perks { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .n90-csp__perks li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 7px;
+    border: 1px solid var(--n90-line-on-dark);
+    border-radius: 999px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .n90-csp__perks li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--n90-volt); }
+  .n90-csp__apply-form {
+    grid-column: 8 / span 5;
+    margin: 16px 16px 16px 0;
+    padding: 32px;
+    border-radius: 12px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+  }
+  .n90-csp__form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .n90-csp__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .n90-csp__field--full { grid-column: 1 / -1; }
+  .n90-csp__field label { font-size: 14px; font-weight: 500; }
+  .n90-csp__finput {
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--n90-line-strong);
+    border-radius: var(--n90-radius);
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font: inherit;
+    font-size: 16px;
+  }
+  select.n90-csp__finput { appearance: none; background: var(--n90-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23181818' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 16px; padding-right: 40px; }
+  textarea.n90-csp__finput { min-height: 96px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+  .n90-csp__form .n90-csp__btn { grid-column: 1 / -1; width: 100%; margin-top: 4px; }
+  .n90-csp__msg { grid-column: 1 / -1; margin: 0; padding: 12px 14px; border-radius: var(--n90-radius); font-size: 14px; }
+  .n90-csp__msg--ok { background: var(--n90-volt); }
+  .n90-csp__msg--err { background: #FDECEA; color: #B42318; }
+  .n90-csp__msg ul { margin: 0; padding-left: 18px; }
+  .n90-csp__fine { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--n90-muted); }
+
+  .n90-csp :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .n90-csp__apply-copy :focus-visible { outline-color: var(--n90-volt); }
+
+  /* Laptop / tablet */
+  @media screen and (max-width: 1279px) {
+    .n90-csp__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .n90-csp__apply-copy { padding: 40px; }
+  }
+  @media screen and (max-width: 1023px) {
+    .n90-csp__hero { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+    .n90-csp__hero-act { justify-content: flex-start; }
+    .n90-csp__grid { gap: 16px; }
+    .n90-csp__apply { display: flex; flex-direction: column; }
+    .n90-csp__apply-form { margin: 0 16px 16px; }
+  }
+  /* Mobile */
+  @media screen and (max-width: 767px) {
+    .n90-csp__hero { padding-bottom: 32px; }
+    .n90-csp__lead { font-size: 16px; }
+    .n90-csp__btn { width: 100%; }
+    .n90-csp__hero-act { width: 100%; }
+    .n90-csp__search { flex-basis: 100%; max-width: none; }
+    .n90-csp__pills { display: flex; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+    .n90-csp__pills::-webkit-scrollbar { display: none; }
+    .n90-csp__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .n90-csp__card { padding: 10px 10px 14px; gap: 10px; }
+    .n90-csp__crest { padding: 14px; }
+    .n90-csp__name { font-size: 17px; }
+    .n90-csp__meta { margin-top: -6px; font-size: 12px; }
+    .n90-csp__state { font-size: 10px; padding: 4px 8px 3px; }
+    .n90-csp__apply { margin-top: 64px; }
+    .n90-csp__apply-copy { padding: 28px 20px; }
+    .n90-csp__apply-form { padding: 20px; }
+    .n90-csp__form { grid-template-columns: 1fr; }
+  }
+
+  @media (hover: none) {
+    a.n90-csp__card:hover { transform: none; box-shadow: none; border-color: rgba(0, 0, 0, .06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-csp__hero,
+    .n90-csp__grid > li.is-shown,
+    .n90-csp__dot::after,
+    .n90-csp__btn:hover::after { animation: none; }
+    .n90-csp__card,
+    .n90-csp__crest img,
+    .n90-csp__btn { transition: none; }
+  }
+</style>
+
+<div class="n90-csp" id="n90-csp-{{ section.id }}">
+  <div class="page-width">
+    <nav aria-label="{{ 'n90.breadcrumb.label' | t }}">
+      <ol class="n90-csp__crumbs">
+        <li><a href="{{ routes.root_url }}">{{ 'n90.breadcrumb.home' | t }}</a></li>
+        <li><span aria-current="page">{{ section.settings.heading | escape }}</span></li>
+      </ol>
+    </nav>
+
+    {%- comment -%} ── Hero ── {%- endcomment -%}
+    <div class="n90-csp__hero">
+      <div class="n90-csp__hero-copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-csp__badge">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="n90-csp__title">{{ section.settings.heading | escape }}</h1>
+        {%- if section.settings.subheading != blank -%}
+          <p class="n90-csp__lead">{{ section.settings.subheading | escape }}</p>
+        {%- endif -%}
+      </div>
+      {%- if section.settings.cta_label != blank -%}
+        <div class="n90-csp__hero-act">
+          <a class="n90-csp__btn" href="#club-shop-apply">
+            {{- section.settings.cta_label | escape -}}
+            {%- render 'icon', name: 'arrow' -%}
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} ── Search + sport pills ── {%- endcomment -%}
+    <div class="n90-csp__bar" role="search">
+      <div class="n90-csp__search">
+        {%- render 'icon', name: 'search' -%}
+        <label class="ref-sr" for="n90-csp-q-{{ section.id }}">{{ 'n90.forms.find_club' | t }}</label>
+        <input
+          class="n90-csp__input"
+          id="n90-csp-q-{{ section.id }}"
+          type="search"
+          placeholder="{{ section.settings.search_placeholder | escape }}"
+          autocomplete="off"
+          data-csp-search
+        >
+      </div>
+      <div class="n90-csp__pills" role="group" aria-label="{{ 'n90.a11y.filter_by_sport' | t }}">
+        <button type="button" class="n90-csp__pill" aria-pressed="true" data-csp-sport="all">{{ section.settings.filter_all | escape }}</button>
+        <button type="button" class="n90-csp__pill" aria-pressed="false" data-csp-sport="football">{{ section.settings.filter_football | escape }}</button>
+        <button type="button" class="n90-csp__pill" aria-pressed="false" data-csp-sport="rugby">{{ section.settings.filter_rugby | escape }}</button>
+        <button type="button" class="n90-csp__pill" aria-pressed="false" data-csp-sport="cricket">{{ section.settings.filter_cricket | escape }}</button>
+        <button type="button" class="n90-csp__pill" aria-pressed="false" data-csp-sport="other">{{ section.settings.filter_other | escape }}</button>
+      </div>
+    </div>
+    <p class="n90-csp__status" role="status" aria-live="polite" data-csp-status data-one="{{ 'n90.forms.club_count_one' | t }}" data-other="{{ 'n90.forms.club_count_other' | t }}">
+      {{ clubs.size }} {% if clubs.size == 1 %}{{ 'n90.forms.club_count_one' | t }}{% else %}{{ 'n90.forms.club_count_other' | t }}{% endif %}
+    </p>
+
+    {%- comment -%} ── Club cards ── {%- endcomment -%}
+    <ul class="n90-csp__grid" role="list" data-csp-grid data-n90-stagger>
+      {%- for block in clubs -%}
+        {%- liquid
+          assign b = block.settings
+          assign sport_key = b.sport
+          unless main_sports contains sport_key
+            assign sport_key = 'other'
+          endunless
+          assign sport_name = b.sport | capitalize
+          if b.sport == 'other'
+            assign sport_name = 'Multi-sport'
+          endif
+          assign words = b.name | split: ' '
+          assign initials = ''
+          for w in words limit: 2
+            assign first_letter = w | slice: 0, 1 | upcase
+            assign initials = initials | append: first_letter
+          endfor
+          assign search_text = b.name | append: ' ' | append: b.location | append: ' ' | append: sport_name | downcase | escape
+          if b.url != blank
+            assign tag = 'a'
+          else
+            assign tag = 'div'
+          endif
+        -%}
+        <li data-csp-sport-key="{{ sport_key }}" data-csp-text="{{ search_text | escape }}" {{ block.shopify_attributes }}>
+          <{{ tag }} class="n90-csp__card"{% if b.url != blank %} href="{{ b.url }}"{% endif %}>
+            <span class="n90-csp__crest">
+              {%- if b.crest != blank -%}
+                {{ b.crest | image_url: width: 400 | image_tag: widths: '200, 300, 400', sizes: '(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw', loading: 'lazy', decoding: 'async', alt: '' }}
+              {%- else -%}
+                <span class="n90-csp__mono" aria-hidden="true">{{ initials }}</span>
+              {%- endif -%}
+            </span>
+            <p class="n90-csp__name">{{ b.name | escape }}</p>
+            <p class="n90-csp__meta">{{ sport_name }}{% if b.location != blank %} • {{ b.location | escape }}{% endif %}</p>
+            {%- if b.private -%}
+              <span class="n90-csp__state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                {{ section.settings.label_private | escape }}
+              </span>
+            {%- else -%}
+              <span class="n90-csp__state"><span class="n90-csp__dot" aria-hidden="true"></span>{{ section.settings.label_open | escape }}</span>
+            {%- endif -%}
+            {%- if b.orders_close != blank -%}
+              <span class="n90-csp__close">{{ b.orders_close | escape }}</span>
+            {%- endif -%}
+            {%- if b.url != blank -%}
+              <span class="n90-csp__enter">{{ section.settings.label_enter | escape }}{%- render 'icon', name: 'arrow' -%}</span>
+            {%- else -%}
+              <span class="n90-csp__enter n90-csp__enter--soon">{{ section.settings.label_soon | escape }}</span>
+            {%- endif -%}
+          </{{ tag }}>
+        </li>
+      {%- endfor -%}
+    </ul>
+    <div class="n90-csp__empty" data-csp-empty hidden>
+      <p class="n90-csp__empty-t">{{ section.settings.empty_heading | escape }}</p>
+      <p class="n90-csp__empty-p">{{ section.settings.empty_text | escape }} <a href="#club-shop-apply">{{ section.settings.empty_link | escape }}</a></p>
+    </div>
+
+    {%- comment -%} ── Onboarding: asymmetric split ── {%- endcomment -%}
+    <div class="n90-csp__apply" id="club-shop-apply">
+      <div class="n90-csp__apply-copy">
+        {%- if section.settings.apply_eyebrow != blank -%}
+          <p class="n90-csp__apply-eyebrow">{{ section.settings.apply_eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="n90-csp__apply-t">{{ section.settings.apply_heading | escape }}</h2>
+        {%- if section.settings.apply_text != blank -%}
+          <p class="n90-csp__apply-p">{{ section.settings.apply_text | escape }}</p>
+        {%- endif -%}
+        {%- assign perks = section.settings.apply_perks | split: '•' -%}
+        {%- if section.settings.apply_perks != blank -%}
+          <ul class="n90-csp__perks" role="list">
+            {%- for perk in perks -%}
+              {%- assign p = perk | strip -%}
+              {%- if p != blank -%}<li>{{ p | escape }}</li>{%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      <div class="n90-csp__apply-form">
+        {%- form 'contact', id: 'n90-csp-form', class: 'n90-csp__form' -%}
+          {%- if form.posted_successfully? -%}
+            <p class="n90-csp__msg n90-csp__msg--ok" role="status" tabindex="-1">{{ section.settings.success_message | escape }}</p>
+          {%- elsif form.errors -%}
+            <div class="n90-csp__msg n90-csp__msg--err" role="alert">{{ form.errors | default_errors }}</div>
+          {%- endif -%}
+          <input type="hidden" name="contact[Enquiry]" value="Club shop application">
+          <div class="n90-csp__field">
+            <label for="n90-csp-name">{{ 'n90.forms.your_name' | t }}</label>
+            <input class="n90-csp__finput" id="n90-csp-name" type="text" name="contact[name]" autocomplete="name" required value="{{ form.name | escape }}">
+          </div>
+          <div class="n90-csp__field">
+            <label for="n90-csp-email">{{ 'n90.forms.email' | t }}</label>
+            <input class="n90-csp__finput" id="n90-csp-email" type="email" name="contact[email]" autocomplete="email" required value="{{ form.email | escape }}">
+          </div>
+          <div class="n90-csp__field">
+            <label for="n90-csp-club">{{ 'n90.forms.club_name' | t }}</label>
+            <input class="n90-csp__finput" id="n90-csp-club" type="text" name="contact[Club name]" required>
+          </div>
+          <div class="n90-csp__field">
+            <label for="n90-csp-sport">{{ 'n90.forms.sport' | t }}</label>
+            <select class="n90-csp__finput" id="n90-csp-sport" name="contact[Sport]">
+              {%- assign form_sports = section.settings.form_sports | split: ',' -%}
+              {%- for sport_opt in form_sports -%}
+                {%- assign sport_opt = sport_opt | strip -%}
+                {%- if sport_opt != blank -%}<option>{{ sport_opt | escape }}</option>{%- endif -%}
+              {%- endfor -%}
+            </select>
+          </div>
+          <div class="n90-csp__field">
+            <label for="n90-csp-phone">{{ 'n90.forms.mobile' | t }} <span style="color:var(--n90-muted);font-weight:400">{{ 'n90.forms.optional' | t }}</span></label>
+            <input class="n90-csp__finput" id="n90-csp-phone" type="tel" name="contact[phone]" autocomplete="tel">
+          </div>
+          <div class="n90-csp__field">
+            <label for="n90-csp-size">{{ 'n90.forms.members' | t }}</label>
+            <input class="n90-csp__finput" id="n90-csp-size" type="text" inputmode="numeric" name="contact[Squad size]">
+          </div>
+          <div class="n90-csp__field n90-csp__field--full">
+            <label for="n90-csp-body">{{ 'n90.forms.anything_else' | t }}</label>
+            <textarea class="n90-csp__finput" id="n90-csp-body" name="contact[body]" placeholder="{{ 'n90.forms.anything_else_placeholder' | t }}"></textarea>
+          </div>
+          <button type="submit" class="n90-csp__btn">{{ section.settings.apply_button | escape }}{%- render 'icon', name: 'arrow' -%}</button>
+          {%- if section.settings.fine_print != blank -%}<p class="n90-csp__fine">{{ section.settings.fine_print | escape }}</p>{%- endif -%}
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('n90-csp-' + {{ section.id | json }});
+    if (!root) return;
+    var input = root.querySelector('[data-csp-search]');
+    var pills = Array.prototype.slice.call(root.querySelectorAll('[data-csp-sport]'));
+    var items = Array.prototype.slice.call(root.querySelectorAll('[data-csp-grid] > li'));
+    var empty = root.querySelector('[data-csp-empty]');
+    var status = root.querySelector('[data-csp-status]');
+    var sport = 'all';
+    var timer;
+
+    function apply() {
+      var q = (input.value || '').trim().toLowerCase();
+      var terms = q ? q.split(/\s+/) : [];
+      var shown = 0;
+      items.forEach(function (li) {
+        var text = li.dataset.cspText || '';
+        var okSport = sport === 'all' || li.dataset.cspSportKey === sport;
+        var okText = terms.every(function (t) { return text.indexOf(t) > -1; });
+        var match = okSport && okText;
+        li.hidden = !match;
+        li.classList.remove('is-shown');
+        if (match) {
+          li.style.setProperty('--csp-d', Math.min(shown, 7) * 0.04 + 's');
+          void li.offsetWidth;
+          li.classList.add('is-shown');
+          shown++;
+        }
+      });
+      empty.hidden = shown > 0;
+      status.textContent = shown + ' ' + (shown === 1 ? status.dataset.one : status.dataset.other);
+    }
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(apply, 120);
+    });
+    pills.forEach(function (p) {
+      p.addEventListener('click', function () {
+        sport = p.dataset.cspSport;
+        pills.forEach(function (o) { o.setAttribute('aria-pressed', o === p ? 'true' : 'false'); });
+        apply();
+      });
+    });
+
+    /* After a form post the page reloads at the top — bring the result into view */
+    var msg = root.querySelector('.n90-csp__msg');
+    if (msg) {
+      var form = root.querySelector('#club-shop-apply');
+      form.scrollIntoView({ block: 'start' });
+      msg.focus({ preventScroll: true });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Club shops portal",
+  "tag": "section",
+  "class": "section-club-shops-portal",
+  "enabled_on": { "templates": ["page"] },
+  "max_blocks": 50,
+  "settings": [
+    { "type": "header", "content": "Hero" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Grassroots & semi-pro partners" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Official club shops" },
+    {
+      "type": "textarea", "id": "subheading", "label": "Subheading",
+      "default": "Find your team, order direct-to-door matchwear & training apparel, or register your club for a dedicated storefront."
+    },
+    { "type": "text", "id": "cta_label", "label": "Button label", "default": "Launch your club shop", "info": "Scrolls to the application form." },
+    { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search your club by name, town, or league..." },
+    { "type": "header", "content": "Sport filters" },
+    { "type": "text", "id": "filter_all", "label": "All label", "default": "All clubs" },
+    { "type": "text", "id": "filter_football", "label": "Football label", "default": "Football" },
+    { "type": "text", "id": "filter_rugby", "label": "Rugby label", "default": "Rugby" },
+    { "type": "text", "id": "filter_cricket", "label": "Cricket label", "default": "Cricket" },
+    { "type": "text", "id": "filter_other", "label": "Other sports label", "default": "Other sports" },
+    { "type": "header", "content": "Club card labels" },
+    { "type": "text", "id": "label_private", "label": "Private shop tag", "default": "Password protected" },
+    { "type": "text", "id": "label_open", "label": "Open shop tag", "default": "Open for orders" },
+    { "type": "text", "id": "label_enter", "label": "Enter link", "default": "Enter club shop" },
+    { "type": "text", "id": "label_soon", "label": "No link yet", "default": "Shop link coming soon" },
+    { "type": "text", "id": "empty_heading", "label": "No results heading", "default": "No clubs found" },
+    { "type": "text", "id": "empty_text", "label": "No results text", "default": "Can’t see your club?" },
+    { "type": "text", "id": "empty_link", "label": "No results link", "default": "Set up a free club shop" },
+    { "type": "header", "content": "Start a club shop" },
+    { "type": "text", "id": "apply_eyebrow", "label": "Eyebrow", "default": "For coaches, managers & committees" },
+    { "type": "text", "id": "apply_heading", "label": "Heading", "default": "Run a club? Get a free club shop." },
+    {
+      "type": "textarea", "id": "apply_text", "label": "Text",
+      "default": "We set it up for free. Players and parents order their own kit, and we deliver to the club."
+    },
+    {
+      "type": "text", "id": "apply_perks", "label": "Perks",
+      "default": "No minimum orders • Zero upfront cost • Profit share for your club",
+      "info": "Separate with •"
+    },
+    { "type": "text", "id": "apply_button", "label": "Form button label", "default": "Apply for a club shop" },
+    { "type": "text", "id": "form_sports", "label": "Sport options", "default": "Football, Rugby, Cricket, Golf, Darts, Bowls, Other", "info": "Separate with commas." },
+    { "type": "text", "id": "fine_print", "label": "Small print", "default": "We’ll only use your details to set up your club shop." },
+    {
+      "type": "text", "id": "success_message", "label": "Success message",
+      "default": "Thanks — your application is in. We’ll be in touch within 2 working days."
+    },
+    {
+      "type": "range", "id": "padding_bottom", "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112
+    }
+  ],
+  "blocks": [
+    {
+      "type": "club",
+      "name": "Club",
+      "settings": [
+        { "type": "text", "id": "name", "label": "Club name", "default": "Club name FC" },
+        {
+          "type": "select", "id": "sport", "label": "Sport",
+          "options": [
+            { "value": "football", "label": "Football" },
+            { "value": "rugby", "label": "Rugby" },
+            { "value": "cricket", "label": "Cricket" },
+            { "value": "golf", "label": "Golf" },
+            { "value": "darts", "label": "Darts" },
+            { "value": "bowls", "label": "Bowls" },
+            { "value": "other", "label": "Other / multi-sport" }
+          ],
+          "default": "football"
+        },
+        { "type": "text", "id": "location", "label": "League / location", "info": "e.g. West Yorkshire or Sunday League Div 1. Included in search." },
+        { "type": "image_picker", "id": "crest", "label": "Club crest / logo", "info": "Shown inside a white square. Without a crest, the club initials are shown." },
+        { "type": "url", "id": "url", "label": "Club shop link", "info": "The club's collection or password page. Without a link the card shows “Shop link coming soon”." },
+        { "type": "checkbox", "id": "private", "label": "Password protected / private", "default": false },
+        { "type": "text", "id": "orders_close", "label": "Orders close note", "info": "e.g. Orders close 15 Nov" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Club shops portal",
+      "blocks": [
+        { "type": "club", "settings": { "name": "Kestrel Park FC", "sport": "football", "location": "West Yorkshire" } },
+        { "type": "club", "settings": { "name": "Harbourside RFC", "sport": "rugby", "location": "Bristol" } },
+        { "type": "club", "settings": { "name": "Millbrook CC", "sport": "cricket", "location": "Kent", "private": true } },
+        { "type": "club", "settings": { "name": "Oakhaven Darts League", "sport": "darts", "location": "Lancashire" } },
+        { "type": "club", "settings": { "name": "Northgate Juniors FC", "sport": "football", "location": "Tyne & Wear", "private": true } },
+        { "type": "club", "settings": { "name": "Lindale Bowls Club", "sport": "bowls", "location": "Cumbria" } },
+        { "type": "club", "settings": { "name": "Fairway Golf Society", "sport": "golf", "location": "Surrey" } },
+        { "type": "club", "settings": { "name": "Riverside Ladies FC", "sport": "football", "location": "Greater Manchester" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

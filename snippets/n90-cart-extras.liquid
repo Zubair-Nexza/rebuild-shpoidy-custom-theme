@@ -1,0 +1,138 @@
+{%- comment -%}
+  snippets/n90-cart-extras.liquid
+  Clean Sport additions to Dawn's cart drawer (snippets/cart-drawer.liquid).
+  The drawer re-renders on every add / quantity change, so these stay live.
+  Styles: assets/n90-cart-drawer.css · Settings: Theme settings → ROSTER cart.
+
+  Accepts:
+  - part: {String} 'shipping' | 'upsells' | 'savings' | 'trust'
+{%- endcomment -%}
+
+{%- case part -%}
+  {%- when 'shipping' -%}
+    {%- if settings.n90_shipping_bar and cart != empty -%}
+      {%- liquid
+        assign threshold = settings.n90_free_shipping_threshold | default: 0 | times: 100
+        assign remaining = threshold | minus: cart.total_price
+        if threshold > 0
+          assign pct = cart.total_price | times: 100 | divided_by: threshold | at_most: 100
+        else
+          assign pct = 100
+        endif
+      -%}
+      {%- if threshold > 0 -%}
+        <div class="n90-cx-ship{% if remaining <= 0 %} is-unlocked{% endif %}" role="status">
+          <p class="n90-cx-ship__msg">
+            {%- if remaining > 0 -%}
+              {%- liquid
+                assign remaining_money = remaining | money
+                assign away = settings.n90_shipping_away | escape | replace: '[amount]', '<strong>__AMT__</strong>' | replace: '__AMT__', remaining_money
+              -%}
+              {{ away }}
+            {%- else -%}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              {{ settings.n90_shipping_unlocked | escape }}
+            {%- endif -%}
+          </p>
+          <div class="n90-cx-ship__track" aria-hidden="true">
+            <span class="n90-cx-ship__fill" style="--n90-cx-pct: {{ pct }}%;"></span>
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+
+  {%- when 'upsells' -%}
+    {%- assign up_col = settings.n90_upsell_collection -%}
+    {%- if cart != empty and up_col != blank and up_col.products_count > 0 -%}
+      {%- liquid
+        assign in_cart = cart.items | map: 'product_id' | join: ',' | prepend: ',' | append: ','
+        assign shown = 0
+      -%}
+      {%- capture up_items -%}
+        {%- for product in up_col.products limit: 16 -%}
+          {%- liquid
+            assign key = ',' | append: product.id | append: ','
+            if in_cart contains key or product.available == false
+              continue
+            endif
+            capture stream
+              render 'n90-product-stream', product: product
+            endcapture
+            if stream == 'custom'
+              continue
+            endif
+            if shown >= 8
+              break
+            endif
+            assign shown = shown | plus: 1
+            assign v = product.selected_or_first_available_variant
+          -%}
+          <li class="n90-cx-up__item">
+            <a class="n90-cx-up__thumb" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+              {%- if product.featured_media -%}
+                {{ product.featured_media.preview_image | image_url: width: 160 | image_tag: width: 64, height: 64, loading: 'lazy', decoding: 'async', alt: '' }}
+              {%- endif -%}
+            </a>
+            <div class="n90-cx-up__info">
+              <a class="n90-cx-up__name" href="{{ product.url }}">{{ product.title | escape }}</a>
+              <span class="n90-cx-up__price">{{ v.price | money }}</span>
+            </div>
+            {%- if product.has_only_default_variant -%}
+              <button
+                type="button"
+                class="n90-cx-up__add"
+                data-n90-qadd="{{ v.id }}"
+                aria-label="{{ 'products.product.add_to_cart' | t }}: {{ product.title | escape }}"
+              >
+                <svg class="is-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span class="is-spin" aria-hidden="true"></span>
+              </button>
+            {%- else -%}
+              <a class="n90-cx-up__add" href="{{ product.url }}" aria-label="{{ 'products.product.choose_options' | t }}: {{ product.title | escape }}">
+                <svg class="is-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      {%- endcapture -%}
+      {%- if shown > 0 -%}
+        <div class="n90-cx-up" data-n90-qadd-scope>
+          <p class="n90-cx-up__title">{{ settings.n90_upsell_heading | escape }}</p>
+          <ul class="n90-cx-up__list" role="list">{{ up_items }}</ul>
+          <p class="n90-cx-up__error" role="alert" data-n90-qadd-error></p>
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+
+  {%- when 'savings' -%}
+    {%- liquid
+      assign savings = 0
+      for item in cart.items
+        if item.variant.compare_at_price > item.original_price
+          assign line_saving = item.variant.compare_at_price | minus: item.original_price | times: item.quantity
+          assign savings = savings | plus: line_saving
+        endif
+      endfor
+      assign savings = savings | plus: cart.total_discount
+    -%}
+    {%- if savings > 0 -%}
+      <p class="n90-cx-save">{{ settings.n90_cart_saving_label | escape }} <strong>{{ savings | money }}</strong></p>
+    {%- endif -%}
+
+  {%- when 'trust' -%}
+    {%- if settings.n90_cart_trust -%}
+      <div class="n90-cx-trust">
+        <p class="n90-cx-trust__lock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          {{ settings.n90_cart_secure_label | escape }}
+        </p>
+        {%- if shop.enabled_payment_types.size > 0 -%}
+          <ul class="n90-cx-trust__pay" role="list" aria-label="{{ 'sections.footer.payment' | t }}">
+            {%- for type in shop.enabled_payment_types limit: 6 -%}
+              <li>{{ type | payment_type_svg_tag }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+{%- endcase -%}

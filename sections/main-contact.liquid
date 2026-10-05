@@ -1,0 +1,471 @@
+{%- comment -%}
+  sections/main-contact.liquid
+  ROSTER — Contact & custom kit quote (template: page.contact)
+
+  Header (eyebrow / title / subtitle), then an asymmetric split: quick-channel cards
+  (WhatsApp, production hub, guarantee) at 5 / 12 and a native Shopify contact form
+  at 7 / 12. Submissions arrive in the store's email inbox, tagged as a kit quote.
+  The page's own content (from Shopify admin) shows under the subtitle when present.
+{%- endcomment -%}
+
+<style>
+  @keyframes n90-ct-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes n90-ct-ring { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.4); opacity: 0; } }
+  @keyframes n90-ct-shine {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  .n90-ct {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background: var(--n90-canvas);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-body);
+  }
+
+  /* Header */
+  .n90-ct__head { max-width: 760px; padding-bottom: 48px; animation: n90-ct-up .6s var(--n90-ease) both; }
+  .n90-ct__eyebrow { margin: 0 0 16px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; }
+  .n90-ct__title {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(44px, 6vw, 88px);
+    line-height: .92;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+  }
+  .n90-ct__lead { margin: 20px 0 0; font-size: 18px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-ct__page { margin-top: 16px; font-size: 16px; line-height: 1.7; color: var(--n90-muted); }
+  .n90-ct__page > :first-child { margin-top: 0; }
+  .n90-ct__page > :last-child { margin-bottom: 0; }
+
+  /* Split 5 / 7 */
+  .n90-ct__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: start;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    padding-top: 48px;
+  }
+  .n90-ct__channels { grid-column: 1 / span 5; display: flex; flex-direction: column; gap: 16px; }
+  .n90-ct__formwrap { grid-column: 7 / span 6; }
+
+  /* Channel cards */
+  .n90-ct__card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    text-decoration: none;
+    transition: transform .45s var(--n90-spring), border-color .25s;
+  }
+  a.n90-ct__card:hover { transform: translateY(-3px); border-color: var(--n90-carbon); }
+  .n90-ct__card-k {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--n90-muted);
+  }
+  .n90-ct__live { position: relative; width: 10px; height: 10px; border-radius: 50%; background: var(--n90-volt); box-shadow: 0 0 0 1px rgba(var(--n90-carbon-rgb), .25); }
+  .n90-ct__live::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--n90-volt); animation: n90-ct-ring 2s ease-out infinite; }
+  .n90-ct__card-v {
+    margin: 0;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(24px, 2.2vw, 32px);
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .n90-ct__card-p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--n90-muted); }
+  .n90-ct__card-p p { margin: 0; }
+  .n90-ct__card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+  .n90-ct__card-cta svg { width: 14px; height: 14px; transition: transform .35s var(--n90-ease); }
+  a.n90-ct__card:hover .n90-ct__card-cta svg { transform: translateX(4px); }
+  .n90-ct__pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .n90-ct__pills li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 7px;
+    border-radius: 999px;
+    background: var(--n90-carbon);
+    color: var(--n90-canvas);
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .n90-ct__pills li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--n90-volt); }
+
+  /* Form */
+  .n90-ct__form-t { margin: 0 0 4px; font-family: var(--n90-font-display); font-weight: 700; font-size: 28px; text-transform: uppercase; }
+  .n90-ct__form-p { margin: 0 0 24px; font-size: 14px; color: var(--n90-muted); }
+  .n90-ct__form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .n90-ct__field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .n90-ct__field--full { grid-column: 1 / -1; }
+  .n90-ct__label { font-family: var(--n90-font-display); font-weight: 600; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+  .n90-ct__label span { font-family: var(--n90-font-body); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--n90-muted); }
+  .n90-ct__input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: var(--n90-surface);
+    color: var(--n90-carbon);
+    font: inherit;
+    font-size: 16px;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .n90-ct__input::placeholder { color: var(--n90-muted); }
+  .n90-ct__input:hover { border-color: rgba(0, 0, 0, .2); }
+  .n90-ct__input:focus,
+  .n90-ct__input:focus-visible {
+    outline: none;
+    border-color: var(--n90-carbon);
+    background: var(--n90-canvas);
+    box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7);
+  }
+  .n90-ct__input[aria-invalid="true"] { border-color: #B42318; }
+  select.n90-ct__input {
+    appearance: none;
+    padding-right: 44px;
+    background: var(--n90-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23181818' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center / 16px;
+  }
+  select.n90-ct__input:focus { background-color: var(--n90-canvas); }
+  textarea.n90-ct__input { min-height: 140px; padding: 14px 16px; resize: vertical; line-height: 1.6; }
+
+  /* Squad size — segmented radios */
+  .n90-ct__seg { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
+  .n90-ct__seg legend { padding: 0; margin-bottom: 8px; }
+  .n90-ct__seg label { position: relative; }
+  .n90-ct__seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .n90-ct__seg span {
+    min-height: 44px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(0, 0, 0, .14);
+    border-radius: 999px;
+    font-family: var(--n90-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .05em;
+    cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s, transform .25s var(--n90-spring);
+  }
+  .n90-ct__seg span:hover { border-color: var(--n90-carbon); }
+  .n90-ct__seg input:checked + span { background: var(--n90-carbon); border-color: var(--n90-carbon); color: var(--n90-canvas); }
+  .n90-ct__seg input:focus-visible + span { box-shadow: 0 0 0 4px rgba(var(--n90-volt-rgb), .7); border-color: var(--n90-carbon); }
+  .n90-ct__seg span:active { transform: scale(.95); }
+
+  .n90-ct__btn {
+    position: relative;
+    overflow: hidden;
+    grid-column: 1 / -1;
+    min-height: 56px;
+    padding: 0 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--n90-volt);
+    color: var(--n90-carbon);
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .35s var(--n90-ease), box-shadow .35s var(--n90-ease);
+  }
+  .n90-ct__btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: rgba(255, 255, 255, .5);
+    transform: translateX(-140%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .n90-ct__btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -14px rgba(var(--n90-carbon-rgb), .5); }
+  .n90-ct__btn:hover::after { animation: n90-ct-shine .9s var(--n90-ease); }
+  .n90-ct__btn:active { transform: scale(.98); box-shadow: none; }
+  .n90-ct__btn:focus-visible { outline: 3px solid var(--n90-carbon); outline-offset: 3px; }
+  .n90-ct__btn svg { width: 16px; height: 16px; transition: transform .35s var(--n90-ease); }
+  .n90-ct__btn:hover svg { transform: translateX(4px); }
+  .n90-ct__fine { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--n90-muted); }
+
+  .n90-ct__alert { grid-column: 1 / -1; display: flex; gap: 12px; align-items: flex-start; margin: 0 0 4px; padding: 14px 16px; border-radius: 12px; font-size: 15px; line-height: 1.5; }
+  .n90-ct__alert svg { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+  .n90-ct__alert--ok { background: var(--n90-volt); color: var(--n90-carbon); }
+  .n90-ct__alert--err { background: #FDECEA; color: #B42318; }
+  .n90-ct__alert ul { margin: 4px 0 0; padding-left: 18px; }
+  .n90-ct__alert:focus { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  .n90-ct a:focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 3px; }
+
+  @media screen and (max-width: 1023px) {
+    .n90-ct__grid { display: flex; flex-direction: column-reverse; gap: 40px; }
+    .n90-ct__channels,
+    .n90-ct__formwrap { width: 100%; }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-ct { padding: min({{ section.settings.padding_top }}px, 24px) 0 min({{ section.settings.padding_bottom }}px, 64px); }
+    .n90-ct__head { padding-bottom: 32px; }
+    .n90-ct__lead { font-size: 16px; }
+    .n90-ct__grid { padding-top: 32px; }
+    .n90-ct__form { grid-template-columns: 1fr; }
+    .n90-ct__card { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-ct__head,
+    .n90-ct__live::after,
+    .n90-ct__btn:hover::after { animation: none; }
+    .n90-ct__card,
+    .n90-ct__btn,
+    .n90-ct__input,
+    .n90-ct__seg span { transition: none; }
+  }
+</style>
+
+<div class="n90-ct">
+  <div class="page-width">
+    <header class="n90-ct__head">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="n90-ct__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="n90-ct__title">{{ section.settings.heading | default: page.title | escape }}</h1>
+      {%- if section.settings.subheading != blank -%}
+        <p class="n90-ct__lead">{{ section.settings.subheading | escape }}</p>
+      {%- endif -%}
+      {%- if page.content != blank -%}
+        <div class="n90-ct__page rte">{{ page.content }}</div>
+      {%- endif -%}
+    </header>
+
+    <div class="n90-ct__grid">
+      {%- comment -%} ── Quick channels ── {%- endcomment -%}
+      <div class="n90-ct__channels" data-n90-stagger>
+        {%- if section.settings.whatsapp_url != blank -%}
+          <a class="n90-ct__card" href="{{ section.settings.whatsapp_url }}" target="_blank" rel="noopener">
+            <p class="n90-ct__card-k"><span class="n90-ct__live" aria-hidden="true"></span>{{ section.settings.whatsapp_label | escape }}</p>
+            <p class="n90-ct__card-v">{{ section.settings.whatsapp_display | escape }}</p>
+            {%- if section.settings.whatsapp_hours != blank -%}
+              <p class="n90-ct__card-p">{{ section.settings.whatsapp_hours | escape }}</p>
+            {%- endif -%}
+            <span class="n90-ct__card-cta">{{ section.settings.whatsapp_cta | escape }}{%- render 'icon', name: 'arrow' -%}</span>
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.email != blank -%}
+          <a class="n90-ct__card" href="mailto:{{ section.settings.email }}">
+            <p class="n90-ct__card-k">{{ section.settings.email_label | escape }}</p>
+            <p class="n90-ct__card-v" style="word-break: break-word; text-transform: none;">{{ section.settings.email | escape }}</p>
+            <span class="n90-ct__card-cta">{{ section.settings.email_cta | escape }}{%- render 'icon', name: 'arrow' -%}</span>
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.hub_title != blank -%}
+          <div class="n90-ct__card">
+            <p class="n90-ct__card-k">{{ section.settings.hub_label | escape }}</p>
+            <p class="n90-ct__card-v">{{ section.settings.hub_title | escape }}</p>
+            {%- if section.settings.hub_text != blank -%}
+              <div class="n90-ct__card-p">{{ section.settings.hub_text }}</div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.guarantee != blank -%}
+          {%- assign guarantees = section.settings.guarantee | split: '•' -%}
+          <ul class="n90-ct__pills" role="list" aria-label="{{ 'n90.a11y.guarantee' | t }}">
+            {%- for g in guarantees -%}
+              {%- assign gt = g | strip -%}
+              {%- if gt != blank -%}<li>{{ gt | escape }}</li>{%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ── Kit enquiry form ── {%- endcomment -%}
+      <div class="n90-ct__formwrap" id="kit-quote">
+        {%- if section.settings.form_heading != blank -%}
+          <h2 class="n90-ct__form-t">{{ section.settings.form_heading | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.form_text != blank -%}
+          <p class="n90-ct__form-p">{{ section.settings.form_text | escape }}</p>
+        {%- endif -%}
+
+        {%- form 'contact', id: 'n90-kit-quote', class: 'n90-ct__form', data-form-type: 'kit-quote' -%}
+          {%- if form.posted_successfully? -%}
+            <div class="n90-ct__alert n90-ct__alert--ok" role="status" tabindex="-1" data-ct-alert>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <span>{{ section.settings.success_message | escape }}</span>
+            </div>
+          {%- elsif form.errors -%}
+            <div class="n90-ct__alert n90-ct__alert--err" role="alert" tabindex="-1" id="n90-ct-errors" data-ct-alert>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+              <div>{{ 'n90.forms.check_fields' | t }}{{ form.errors | default_errors }}</div>
+            </div>
+          {%- endif -%}
+
+          <input type="hidden" name="contact[Enquiry]" value="Custom kit quote">
+
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-name">{{ 'n90.forms.name' | t }}</label>
+            <input class="n90-ct__input" id="n90-ct-name" type="text" name="contact[name]" autocomplete="name" required value="{% if form.name %}{{ form.name | escape }}{% elsif customer %}{{ customer.name | escape }}{% endif %}">
+          </div>
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-email">{{ 'n90.forms.email' | t }}</label>
+            <input
+              class="n90-ct__input"
+              id="n90-ct-email"
+              type="email"
+              name="contact[email]"
+              autocomplete="email"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+              value="{% if form.email %}{{ form.email | escape }}{% elsif customer %}{{ customer.email | escape }}{% endif %}"
+              {% if form.errors contains 'email' %}aria-invalid="true" aria-describedby="n90-ct-errors"{% endif %}
+            >
+          </div>
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-club">{{ 'n90.forms.club' | t }}</label>
+            <input class="n90-ct__input" id="n90-ct-club" type="text" name="contact[Club]" autocomplete="organization">
+          </div>
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-sport">{{ 'n90.forms.sport' | t }}</label>
+            <select class="n90-ct__input" id="n90-ct-sport" name="contact[Sport]">
+              {%- assign ct_sports = section.settings.sports | split: ',' -%}
+              {%- for sport_opt in ct_sports -%}
+                {%- assign sport_opt = sport_opt | strip -%}
+                {%- if sport_opt != blank -%}<option>{{ sport_opt | escape }}</option>{%- endif -%}
+              {%- endfor -%}
+            </select>
+          </div>
+          <fieldset class="n90-ct__field n90-ct__field--full n90-ct__seg">
+            <legend class="n90-ct__label">{{ 'n90.forms.squad' | t }}</legend>
+            {%- assign ct_sizes = section.settings.squad_sizes | split: ',' -%}
+              {%- for size_opt in ct_sizes -%}
+                {%- assign size_opt = size_opt | strip -%}
+                {%- if size_opt != blank -%}
+                  <label><input type="radio" name="contact[Squad size]" value="{{ size_opt | escape }}"{% if forloop.first %} checked{% endif %}><span>{{ size_opt | escape }}</span></label>
+                {%- endif -%}
+              {%- endfor -%}
+          </fieldset>
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-phone">{{ 'n90.forms.mobile' | t }} <span>{{ 'n90.forms.optional' | t }}</span></label>
+            <input class="n90-ct__input" id="n90-ct-phone" type="tel" name="contact[phone]" autocomplete="tel">
+          </div>
+          <div class="n90-ct__field">
+            <label class="n90-ct__label" for="n90-ct-date">{{ 'n90.forms.needed_by' | t }} <span>{{ 'n90.forms.optional' | t }}</span></label>
+            <input class="n90-ct__input" id="n90-ct-date" type="date" name="contact[Needed by]">
+          </div>
+          <div class="n90-ct__field n90-ct__field--full">
+            <label class="n90-ct__label" for="n90-ct-body">{{ 'n90.forms.requirements' | t }}</label>
+            <textarea class="n90-ct__input" id="n90-ct-body" name="contact[body]" placeholder="{{ 'n90.forms.requirements_placeholder' | t }}">{{ form.body | escape }}</textarea>
+          </div>
+          <button type="submit" class="n90-ct__btn">{{ section.settings.button_label | escape }}{%- render 'icon', name: 'arrow' -%}</button>
+          {%- if section.settings.fine_print != blank -%}
+            <p class="n90-ct__fine">{{ section.settings.fine_print | escape }}</p>
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    /* After a post the page reloads at the top — bring the result into view and announce it */
+    var alert = document.querySelector('[data-ct-alert]');
+    if (!alert) return;
+    document.getElementById('kit-quote').scrollIntoView({ block: 'start' });
+    alert.focus({ preventScroll: true });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Contact & kit quote",
+  "tag": "section",
+  "class": "section-main-contact",
+  "enabled_on": { "templates": ["page"] },
+  "settings": [
+    { "type": "header", "content": "Header" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Get in touch // Teamwear desk" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Start your kit / Contact us", "info": "Defaults to the page title." },
+    {
+      "type": "textarea", "id": "subheading", "label": "Subtitle",
+      "default": "Tell us about your club and we’ll come back with a free design mockup and quote — no commitment."
+    },
+    { "type": "header", "content": "WhatsApp" },
+    { "type": "url", "id": "whatsapp_url", "label": "WhatsApp link", "info": "e.g. https://wa.me/447700900000. The card is hidden until set." },
+    { "type": "text", "id": "whatsapp_label", "label": "Label", "default": "Direct WhatsApp line" },
+    { "type": "text", "id": "whatsapp_display", "label": "Number shown", "default": "Message the team" },
+    { "type": "text", "id": "whatsapp_hours", "label": "Hours", "default": "Mon–Fri, 9am–5pm. We usually reply within the hour." },
+    { "type": "text", "id": "whatsapp_cta", "label": "WhatsApp link label", "default": "Chat on WhatsApp" },
+    { "type": "header", "content": "Email" },
+    { "type": "text", "id": "email", "label": "Email address", "info": "Card hidden when empty." },
+    { "type": "text", "id": "email_label", "label": "Email card label", "default": "Email the teamwear desk" },
+    { "type": "text", "id": "email_cta", "label": "Email link label", "default": "Send an email" },
+    { "type": "header", "content": "Production hub" },
+    { "type": "text", "id": "hub_label", "label": "Label", "default": "Production & dispatch hub" },
+    { "type": "text", "id": "hub_title", "label": "Title", "default": "Made & shipped in the UK" },
+    { "type": "richtext", "id": "hub_text", "label": "Address / details", "default": "<p>Add your production and dispatch address here.</p>" },
+    { "type": "header", "content": "Guarantee" },
+    {
+      "type": "text", "id": "guarantee", "label": "Guarantee pills",
+      "default": "3–4 week turnaround • Free design mockup • Zero commitment",
+      "info": "Separate with •"
+    },
+    { "type": "header", "content": "Form" },
+    { "type": "text", "id": "form_heading", "label": "Form heading", "default": "Kit enquiry" },
+    { "type": "text", "id": "form_text", "label": "Form intro", "default": "Takes two minutes. We reply within one working day." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Request my free mockup" },
+    { "type": "text", "id": "sports", "label": "Sport options", "default": "Football, Rugby, Cricket, Athletics, Other", "info": "Separate with commas." },
+    { "type": "text", "id": "squad_sizes", "label": "Squad size options", "default": "10–20, 20–50, 50+ kits", "info": "Separate with commas. The first is pre-selected." },
+    { "type": "text", "id": "fine_print", "label": "Small print", "default": "We’ll only use your details for this quote." },
+    {
+      "type": "text", "id": "success_message", "label": "Success message",
+      "default": "Thanks — your enquiry is in. We’ll send your free mockup and quote within one working day."
+    },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112 }
+  ],
+  "presets": [
+    { "name": "Contact & kit quote" }
+  ]
+}
+{% endschema %}

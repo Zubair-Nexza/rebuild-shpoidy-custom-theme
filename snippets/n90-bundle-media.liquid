@@ -1,0 +1,25 @@
+{%- comment -%}
+  snippets/n90-bundle-media.liquid
+  1:1 media square for sections/composite-bundle-builder.liquid (pitch graphic when empty).
+
+  Accepts:
+  - media_id: {String} · image: {Object} image_picker value · alt: {String} · first: {Boolean}
+{%- endcomment -%}
+<div class="n90-cb__media" id="n90-cb-media-{{ media_id }}"{% unless first %} hidden{% endunless %}>
+  {%- if image != blank -%}
+    {{
+      image
+      | image_url: width: 1400
+      | image_tag:
+        widths: '400, 600, 800, 1000, 1400',
+        sizes: '(min-width: 768px) 50vw, 100vw',
+        loading: 'lazy',
+        decoding: 'async',
+        alt: alt
+    }}
+  {%- else -%}
+    <svg class="n90-cb__pitch" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <rect x="40" y="140" width="720" height="520"/><line x1="400" y1="140" x2="400" y2="660"/><circle cx="400" cy="400" r="80"/><circle cx="400" cy="400" r="4" fill="currentColor"/><rect x="40" y="260" width="120" height="280"/><rect x="640" y="260" width="120" height="280"/><rect x="40" y="340" width="44" height="120"/><rect x="716" y="340" width="44" height="120"/><path d="M160 350a60 60 0 0 1 0 100M640 350a60 60 0 0 0 0 100"/>
+              </svg>
+  {%- endif -%}
+</div>

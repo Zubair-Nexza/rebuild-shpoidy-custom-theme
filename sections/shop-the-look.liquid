@@ -1,0 +1,472 @@
+{%- comment -%}
+  sections/shop-the-look.liquid
+  ROSTER · Shop the Look — editorial lookbook (inspired by The North Face White Label catalog)
+
+  Desktop (≥1025px): 5 / 7 split. Left: tall 3:4 lifestyle image with movable hotspot pins
+  ("Hotspot" blocks, X / Y % sliders). Right: curated "Product card" blocks in a 3-column grid,
+  six per page; further pages slide in with the arrow + progress bar, inside the column only.
+  Tablet (768–1024px): 2-column pages. Mobile (<768px): image on top, swipeable card row below.
+
+  Pins: dark centre, white ring, Volt pulse, label tooltip. Clicking a pin highlights its card
+  (matched by product, otherwise by position) and scrolls it into view.
+  Cards (snippets/n90-look-card.liquid): 1:1 media (click = quick view), badge (custom or vendor),
+  linked title, price, colour dots. Quick view: the section's own slide-out drawer, filled from
+  /products/<handle>.js with variant options + Add to cart, and "View Full Product Details →".
+  Behaviour: assets/n90-shop-the-look.js
+{%- endcomment -%}
+
+{%- liquid
+  assign spots = section.blocks | where: 'type', 'hotspot'
+  assign cards = section.blocks | where: 'type', 'product_card'
+  assign s = section.settings
+
+  comment
+    Retail only: custom-made kits (snippets/n90-product-stream.liquid) never appear here
+  endcomment
+  assign card_count = 0
+  for block in cards
+    if block.settings.product != blank
+      capture stream
+        render 'n90-product-stream', product: block.settings.product
+      endcapture
+      if stream != 'custom'
+        assign card_count = card_count | plus: 1
+      endif
+    endif
+  endfor
+  assign source = 'cards'
+  if card_count == 0
+    assign source = 'none'
+    for block in spots
+      if block.settings.product != blank
+        capture stream
+          render 'n90-product-stream', product: block.settings.product
+        endcapture
+        if stream != 'custom'
+          assign source = 'spots'
+          assign card_count = card_count | plus: 1
+        endif
+      endif
+    endfor
+  endif
+  assign has_grid = true
+  if source == 'none' and request.design_mode == false
+    assign has_grid = false
+  endif
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --lk-pt: {{ s.padding_top }}px;
+    --lk-pb: {{ s.padding_bottom }}px;
+    --lk-fit: {{ s.image_fit }};
+    {%- if s.background == 'ash' %}
+    --lk-bg: var(--n90-surface); /* Minimal Ash #F4F4F5 */
+    {%- endif %}
+  }
+{%- endstyle -%}
+
+<style>
+  @keyframes n90-lk-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.4); opacity: 0; } }
+  @keyframes n90-lk-flash { 0% { box-shadow: 0 0 0 0 rgba(var(--n90-volt-rgb), .95); } 100% { box-shadow: 0 0 0 14px rgba(var(--n90-volt-rgb), 0); } }
+  @keyframes n90-lk-in { from { transform: translateX(100%); } to { transform: none; } }
+  @keyframes n90-lk-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes n90-lk-spin { to { transform: rotate(360deg); } }
+
+  .n90-lk { padding: var(--lk-pt) 0 var(--lk-pb); overflow: hidden; background: var(--lk-bg, var(--n90-canvas)); color: var(--n90-carbon); font-family: var(--n90-font-body); }
+  .n90-lk--rule { border-top: 1px solid var(--n90-line); }
+  .n90-lk .page-width { box-sizing: border-box; margin-inline: auto; }
+
+  .n90-lk__head { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 40px; text-align: center; }
+  .n90-lk__eyebrow { margin: 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; }
+  .n90-lk__heading { margin: 0; font-family: var(--n90-font-display); font-weight: var(--n90-display-weight); font-size: clamp(40px, 4.2vw, 60px); line-height: .95; text-transform: uppercase; }
+  .n90-lk__sub { margin: 0; max-width: 620px; font-size: 16px; line-height: 1.6; color: var(--n90-muted); }
+
+  /* 5 / 7 split — both columns bounded by the container */
+  .n90-lk__layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 3vw, 48px); align-items: start; }
+  .n90-lk--solo .n90-lk__layout { grid-template-columns: minmax(0, 1fr); max-width: 640px; margin-inline: auto; }
+
+  /* Editorial image + pins */
+  .n90-lk__media { position: relative; aspect-ratio: 3 / 4; min-width: 0; background: var(--n90-surface); color: var(--n90-carbon); }
+  .n90-lk__frame { position: absolute; inset: 0; overflow: hidden; }
+  .n90-lk__frame > img, .n90-lk__ph { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .n90-lk__frame > img { object-fit: cover; }
+  .n90-lk__ph { opacity: .08; }
+
+  .n90-lk__pin { position: absolute; z-index: 2; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .n90-lk__pin-dot { position: relative; width: 14px; height: 14px; border-radius: 50%; background: var(--n90-carbon); box-shadow: 0 0 0 3px #FFFFFF, 0 2px 8px rgba(0, 0, 0, .35); transition: transform .3s var(--n90-spring), background .25s; }
+  .n90-lk__pin-dot::before { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--n90-volt); animation: n90-lk-pulse 2s ease-out infinite; }
+  .n90-lk__pin:hover .n90-lk__pin-dot, .n90-lk__pin:focus-visible .n90-lk__pin-dot, .n90-lk__pin.is-on .n90-lk__pin-dot { transform: scale(1.25); background: var(--n90-volt); }
+  .n90-lk__pin.is-editing .n90-lk__pin-dot { box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 7px var(--n90-volt); }
+  .n90-lk__pin:focus-visible { outline: none; }
+  .n90-lk__tip { position: absolute; left: 36px; top: 50%; padding: 6px 10px; border-radius: 4px; background: var(--n90-carbon); color: #FFFFFF; font-family: var(--n90-font-display); font-weight: 600; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-6px, -50%); transition: opacity .25s var(--n90-ease), transform .25s var(--n90-ease); }
+  .n90-lk__pin--flip .n90-lk__tip { left: auto; right: 36px; transform: translate(6px, -50%); }
+  .n90-lk__pin:hover .n90-lk__tip, .n90-lk__pin:focus-visible .n90-lk__tip, .n90-lk__pin.is-on .n90-lk__tip { opacity: 1; transform: translate(0, -50%); }
+
+  /* Product pages — the slider scrolls only inside its own column */
+  .n90-lk__products { position: relative; min-width: 0; }
+  .n90-lk__track { display: flex; margin: 0; padding: 0; list-style: none; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .n90-lk__track::-webkit-scrollbar { display: none; }
+  .n90-lk__page-wrap { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
+  .n90-lk__page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 20px; align-content: start; margin: 0; padding: 0; list-style: none; }
+
+  .n90-lk__card { position: relative; min-width: 0; }
+  .n90-lk__card-media { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; padding: 0; overflow: hidden; border: 0; background: var(--n90-surface); box-shadow: inset 0 0 0 1px rgba(var(--n90-carbon-rgb), .06); cursor: pointer; } /* Minimal Ash #F4F4F5 */
+  .n90-lk__card-media img { width: 100%; height: 100%; object-fit: var(--lk-fit, contain); display: block; transition: transform .6s var(--n90-ease); }
+  .n90-lk__card-media:hover img { transform: scale(1.04); }
+  .n90-lk__card-media .n90-pc__ph { width: 100%; height: 100%; }
+  .n90-lk__qv { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border-radius: 4px; background: var(--n90-carbon); color: #FFFFFF; font-family: var(--n90-font-display); font-weight: 600; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; opacity: 0; transform: translateY(8px); transition: opacity .25s var(--n90-ease), transform .3s var(--n90-ease), background .2s, color .2s; }
+  .n90-lk__card-media:hover .n90-lk__qv, .n90-lk__card-media:focus-visible .n90-lk__qv { opacity: 1; transform: none; }
+  .n90-lk__card-media:hover .n90-lk__qv { background: var(--n90-volt); color: var(--n90-carbon); }
+  .n90-lk__card.is-flash .n90-lk__card-media { animation: n90-lk-flash .9s var(--n90-ease); }
+  .n90-lk__card.is-on .n90-lk__card-media { box-shadow: inset 0 0 0 2px var(--n90-carbon); }
+  .n90-lk__badge { margin: 14px 0 0; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--n90-muted); }
+  .n90-lk__title { margin: 4px 0 0; font-family: var(--n90-font-display); font-weight: 700; font-size: 16px; line-height: 1.15; letter-spacing: .02em; text-transform: uppercase; }
+  .n90-lk__title a { color: inherit; text-decoration: none; background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .35s var(--n90-ease); }
+  .n90-lk__title a:hover { background-size: 100% 1px; }
+  .n90-lk__price { margin: 6px 0 0; font-size: 14px; font-weight: 500; }
+  .n90-lk__price s { margin-left: 6px; color: var(--n90-muted); }
+  .n90-lk__dots { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .n90-lk__dots li { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); }
+
+  /* Slider controls — arrow on the grid edge + progress line */
+  .n90-lk__arrow { position: absolute; top: calc(50% - 40px); z-index: 3; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: rgba(var(--n90-carbon-rgb), .6); color: #FFFFFF; cursor: pointer; transition: background .2s, opacity .2s; }
+  .n90-lk__arrow:hover { background: var(--n90-carbon); }
+  .n90-lk__arrow[disabled] { opacity: 0; pointer-events: none; }
+  .n90-lk__arrow svg { width: 16px; height: 16px; }
+  .n90-lk__arrow--prev { left: 0; }
+  .n90-lk__arrow--next { right: 0; }
+  .n90-lk__progress { position: relative; height: 2px; margin-top: 36px; background: var(--n90-line); overflow: hidden; }
+  .n90-lk__progress span { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--n90-carbon); transform: scaleX(1); transform-origin: left; transition: transform .35s var(--n90-ease); }
+  .n90-lk__products:not(.is-scrollable) .n90-lk__arrow, .n90-lk__products:not(.is-scrollable) .n90-lk__progress { display: none; }
+
+  .n90-lk__foot { display: flex; justify-content: center; margin-top: 40px; }
+  .n90-lk__tlink { display: inline-flex; align-items: center; min-height: 44px; color: var(--n90-carbon); font-family: var(--n90-font-display); font-weight: 600; font-size: 16px; letter-spacing: .07em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 7px; text-decoration-thickness: 1px; }
+  .n90-lk__tlink:hover { text-underline-offset: 4px; text-decoration-thickness: 2px; }
+  .n90-lk :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Quick view drawer — slides in from the right edge */
+  .roster-quick-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(10, 10, 10, .5); opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility 0s linear .3s; }
+  .roster-quick-overlay.is-open { opacity: 1; visibility: visible; transition: opacity .3s ease; }
+  .roster-quick-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 1001; display: flex; flex-direction: column; width: 100%; max-width: 460px; background: var(--n90-canvas); color: var(--n90-carbon); box-shadow: -20px 0 60px rgba(0, 0, 0, .18); transform: translateX(100%); visibility: hidden; transition: transform .4s var(--n90-ease), visibility 0s linear .4s; outline: none; font-family: var(--n90-font-body); }
+  .roster-quick-drawer.is-open { transform: translateX(0); visibility: visible; transition: transform .4s var(--n90-ease); }
+  .quick-view-header { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 16px 16px 24px; border-bottom: 1px solid var(--n90-line); }
+  .quick-view-heading { font-family: var(--n90-font-display); font-weight: 700; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--n90-muted); }
+  .quick-view-close-circle { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--n90-line); border-radius: 50%; background: var(--n90-canvas); color: var(--n90-carbon); font-size: 16px; line-height: 1; cursor: pointer; transition: background .2s, border-color .2s, transform .35s var(--n90-spring); }
+  .quick-view-close-circle:hover { background: var(--n90-volt); border-color: var(--n90-volt); transform: rotate(90deg); }
+  .quick-view-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px; }
+  .quick-view-full-details-bar { flex: none; display: flex; justify-content: space-between; align-items: center; min-height: 60px; padding: 0 24px calc(env(safe-area-inset-bottom)); border-top: 1px solid var(--n90-line); background: var(--n90-canvas); color: var(--n90-carbon); font-family: var(--n90-font-display); font-weight: 700; font-size: 15px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; transition: background .2s; }
+  .quick-view-full-details-bar .arrow { font-size: 20px; transition: transform .35s var(--n90-spring); }
+  .quick-view-full-details-bar:hover { background: var(--n90-surface); }
+  .quick-view-full-details-bar:hover .arrow { transform: translateX(4px); }
+  .quick-view-full-details-bar[hidden] { display: none; }
+  .quick-view-loading { display: flex; justify-content: center; padding: 80px 0; }
+  .quick-view-loading span { width: 28px; height: 28px; border: 2px solid var(--n90-carbon); border-right-color: transparent; border-radius: 50%; animation: n90-lk-spin .8s linear infinite; }
+
+  .qv-media { aspect-ratio: 1 / 1; overflow: hidden; background: var(--n90-surface); } /* Minimal Ash #F4F4F5 */
+  .qv-media img { width: 100%; height: 100%; object-fit: var(--lk-fit, contain); display: block; }
+  .qv-badge { margin: 20px 0 0; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--n90-muted); }
+  .qv-title { margin: 6px 0 0; font-family: var(--n90-font-display); font-weight: 700; font-size: 30px; line-height: 1.02; letter-spacing: .01em; text-transform: uppercase; }
+  .qv-price { margin: 10px 0 0; font-family: var(--n90-font-display); font-weight: 600; font-size: 22px; }
+  .qv-price s { margin-left: 8px; font-size: 16px; color: var(--n90-muted); }
+  .stock-badge { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 14px; font-weight: 500; }
+  .stock-badge .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: #22A06B; }
+  .stock-badge.is-out { color: var(--n90-muted); }
+  .stock-badge.is-out .dot { background: var(--n90-line-strong); }
+  .qv-opt { margin: 18px 0 0; padding: 0; border: 0; min-width: 0; }
+  .qv-opt legend { padding: 0; margin-bottom: 8px; font-size: 13px; color: var(--n90-muted); }
+  .qv-opt legend strong { color: var(--n90-carbon); }
+  .qv-vals { display: flex; flex-wrap: wrap; gap: 8px; }
+  .qv-val { position: relative; }
+  .qv-val input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .qv-val label { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 44px; padding: 0 14px; border: 1px solid var(--n90-line-strong); border-radius: 4px; font-family: var(--n90-font-display); font-weight: 600; font-size: 15px; letter-spacing: .04em; cursor: pointer; }
+  .qv-val input:checked + label { border-color: var(--n90-carbon); background: var(--n90-carbon); color: #FFFFFF; }
+  .qv-val input:focus-visible + label { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+  .qv-val.is-out label { color: var(--n90-muted); text-decoration: line-through; border-style: dashed; }
+  .qv-buy { display: flex; gap: 10px; margin-top: 22px; }
+  .qv-qty { flex: none; display: flex; align-items: center; border: 1px solid var(--n90-line-strong); border-radius: 4px; }
+  .qv-qty button { width: 40px; height: 52px; padding: 0; border: 0; background: none; color: var(--n90-carbon); font-size: 18px; cursor: pointer; }
+  .qv-qty input { width: 36px; padding: 0; border: 0; background: none; color: var(--n90-carbon); font: 600 16px var(--n90-font-body); text-align: center; -moz-appearance: textfield; appearance: textfield; }
+  .qv-qty input::-webkit-outer-spin-button, .qv-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .btn-volt-add { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 54px; padding: 0 20px; border: 0; border-radius: 4px; background: var(--n90-volt); color: #181818; font-family: var(--n90-font-display); font-weight: 700; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: transform .35s var(--n90-ease); }
+  .btn-volt-add:hover { transform: translateY(-2px); }
+  .btn-volt-add:active { transform: scale(.98); }
+  .btn-volt-add[disabled] { background: var(--n90-surface); color: var(--n90-muted); cursor: not-allowed; transform: none; }
+  .qv-error { margin: 10px 0 0; font-size: 14px; color: #B42318; }
+  .qv-error:empty { display: none; }
+  .qv-desc { margin: 20px 0 0; font-size: 14px; line-height: 1.65; color: var(--n90-muted); }
+  .roster-quick-drawer :focus-visible { outline: 2px solid var(--n90-carbon); outline-offset: 2px; }
+
+  /* Tablet 768–1024: 2-column pages */
+  @media screen and (max-width: 1024px) {
+    .n90-lk__page { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+  }
+  /* Mobile < 768: image on top, swipeable single row */
+  @media screen and (max-width: 767px) {
+    .n90-lk { padding: min(var(--lk-pt), 64px) 0 min(var(--lk-pb), 64px); }
+    .n90-lk__head { margin-bottom: 28px; }
+    .n90-lk__layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .n90-lk__track { gap: 12px; }
+    .n90-lk__page-wrap, .n90-lk__page { display: contents; }
+    .n90-lk__card { flex: 0 0 68%; scroll-snap-align: start; }
+    .n90-lk__arrow { display: none; }
+    .n90-lk__progress { margin-top: 24px; }
+    .n90-lk__tip { font-size: 11px; }
+  }
+  @media (hover: none) {
+    .n90-lk__qv { opacity: 1; transform: none; min-height: 36px; font-size: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .n90-lk__pin-dot::before, .n90-lk__card.is-flash .n90-lk__card-media { animation: none; }
+    .roster-quick-drawer, .roster-quick-overlay, .btn-volt-add { transition: none; }
+    .n90-lk__track { scroll-behavior: auto; }
+    .n90-lk__card-media img, .n90-lk__qv, .n90-lk__tip, .n90-lk__pin-dot, .n90-lk__progress span { transition: none; }
+  }
+</style>
+
+<section
+  class="n90-lk{% if s.show_rule %} n90-lk--rule{% endif %}{% unless has_grid %} n90-lk--solo{% endunless %}"
+  id="n90-lk-{{ section.id }}"
+  aria-labelledby="n90-lk-title-{{ section.id }}"
+  data-n90-lk
+>
+  <div class="page-width">
+    <div class="n90-lk__head" data-n90-reveal>
+      {%- if s.eyebrow != blank -%}
+        <p class="n90-lk__eyebrow">{{ s.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h2 class="n90-lk__heading" id="n90-lk-title-{{ section.id }}">{{ s.heading | escape }}</h2>
+      {%- if s.subheading != blank -%}
+        <p class="n90-lk__sub">{{ s.subheading | escape }}</p>
+      {%- endif -%}
+    </div>
+
+    <div class="n90-lk__layout">
+      {%- comment -%} ── Editorial image + pins ── {%- endcomment -%}
+      <div class="n90-lk__media" data-n90-reveal>
+        <div class="n90-lk__frame">
+          {%- if s.lifestyle_image != blank -%}
+            {%- assign look_alt = s.lifestyle_image.alt | default: s.heading -%}
+            {{
+              s.lifestyle_image
+              | image_url: width: 1400
+              | image_tag:
+                widths: '400, 600, 800, 1000, 1200, 1400',
+                sizes: '(min-width: 1025px) 40vw, 100vw',
+                loading: 'lazy',
+                decoding: 'async',
+                alt: look_alt
+            }}
+          {%- else -%}
+            <svg class="n90-lk__ph" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <rect x="40" y="40" width="520" height="720"/><line x1="40" y1="400" x2="560" y2="400"/><circle cx="300" cy="400" r="80"/><circle cx="300" cy="400" r="4" fill="currentColor"/><rect x="160" y="40" width="280" height="120"/><rect x="160" y="640" width="280" height="120"/>
+            </svg>
+          {%- endif -%}
+        </div>
+
+        {%- for block in spots -%}
+          {%- liquid
+            assign sp = block.settings.product
+            assign pin_label = block.settings.label | default: sp.title
+            if sp != blank
+              assign pin_key = sp.id
+            else
+              assign pin_key = 'pos-' | append: forloop.index
+            endif
+          -%}
+          <button
+            type="button"
+            class="n90-lk__pin{% if block.settings.x_pos > 60 %} n90-lk__pin--flip{% endif %}"
+            style="left: {{ block.settings.x_pos }}%; top: {{ block.settings.y_pos }}%;"
+            aria-label="{{ 'n90.a11y.show_hotspot' | t: title: pin_label | escape }}"
+            data-lk-pin="{{ pin_key }}"
+            {{ block.shopify_attributes }}
+          >
+            <span class="n90-lk__pin-dot"></span>
+            {%- if pin_label != blank -%}
+              <span class="n90-lk__tip" aria-hidden="true">{{ pin_label | escape }}</span>
+            {%- endif -%}
+          </button>
+        {%- endfor -%}
+      </div>
+
+      {%- comment -%} ── Curated product pages (6 per page) ── {%- endcomment -%}
+      {%- if has_grid -%}
+        <div class="n90-lk__products" data-lk-products>
+          <ul class="n90-lk__track" role="list" data-lk-track>
+            {%- if source == 'none' -%}
+              {%- comment -%} Theme editor only: placeholders until Product card blocks are added {%- endcomment -%}
+              <li class="n90-lk__page-wrap">
+                <ul class="n90-lk__page" role="list">
+                  {%- for i in (1..6) -%}
+                    <li class="n90-lk__card" data-lk-pos="pos-{{ i }}">
+                      <span class="n90-lk__card-media">{{ 'product-' | append: i | placeholder_svg_tag: 'n90-pc__ph' }}</span>
+                      <p class="n90-lk__badge">{{ shop.name | escape }}</p>
+                      <p class="n90-lk__title">{{ 'n90.onboarding.product_title' | t }}</p>
+                      <p class="n90-lk__price">{{ 1999 | money }}</p>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              </li>
+            {%- else -%}
+              {%- assign page_count = card_count | plus: 5 | divided_by: 6 -%}
+              {%- for page in (1..page_count) -%}
+                {%- assign page_start = page | minus: 1 | times: 6 -%}
+                {%- assign page_end = page_start | plus: 6 -%}
+                <li class="n90-lk__page-wrap">
+                  <ul class="n90-lk__page" role="list">
+                    {%- assign pos = 0 -%}
+                    {%- if source == 'cards' -%}
+                      {%- for block in cards -%}
+                        {%- capture stream -%}{%- if block.settings.product != blank -%}{%- render 'n90-product-stream', product: block.settings.product -%}{%- endif -%}{%- endcapture -%}
+                        {%- if block.settings.product != blank and stream != 'custom' -%}
+                          {%- assign pos = pos | plus: 1 -%}
+                          {%- if pos > page_start and pos <= page_end -%}
+                            {%- render 'n90-look-card', product: block.settings.product, badge: block.settings.custom_badge, pos: pos, attrs: block.shopify_attributes -%}
+                          {%- endif -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                    {%- else -%}
+                      {%- for block in spots -%}
+                        {%- capture stream -%}{%- if block.settings.product != blank -%}{%- render 'n90-product-stream', product: block.settings.product -%}{%- endif -%}{%- endcapture -%}
+                        {%- if block.settings.product != blank and stream != 'custom' -%}
+                          {%- assign pos = pos | plus: 1 -%}
+                          {%- if pos > page_start and pos <= page_end -%}
+                            {%- render 'n90-look-card', product: block.settings.product, badge: blank, pos: pos, attrs: blank -%}
+                          {%- endif -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                    {%- endif -%}
+                  </ul>
+                </li>
+              {%- endfor -%}
+            {%- endif -%}
+          </ul>
+          <button type="button" class="n90-lk__arrow n90-lk__arrow--prev" data-lk-prev aria-label="{{ 'n90.ui.previous' | t }}" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="n90-lk__arrow n90-lk__arrow--next" data-lk-next aria-label="{{ 'n90.ui.next' | t }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <div class="n90-lk__progress" aria-hidden="true"><span data-lk-bar></span></div>
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- if s.link_label != blank -%}
+      <div class="n90-lk__foot">
+        <a href="{{ s.link_url | default: routes.all_products_collection_url }}" class="n90-lk__tlink">{{ s.link_label | escape }}</a>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} ── Quick view drawer (filled by assets/n90-shop-the-look.js) ── {%- endcomment -%}
+  <div class="roster-quick-overlay" data-lk-overlay data-lk-close></div>
+  <aside
+    class="roster-quick-drawer"
+    id="RosterQuickDrawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="RosterQuickDrawer-title"
+    aria-hidden="true"
+    tabindex="-1"
+    inert
+    data-lk-drawer
+    data-money-format="{{ shop.money_format | strip_html | escape }}"
+    data-root="{{ routes.root_url }}"
+    data-t-add="{{ 'products.product.add_to_cart' | t | escape }}"
+    data-t-adding="{{ 'n90.look.adding' | t | escape }}"
+    data-t-added="{{ 'n90.look.added' | t | escape }}"
+    data-t-sold="{{ 'products.product.sold_out' | t | escape }}"
+    data-t-unavailable="{{ 'products.product.unavailable' | t | escape }}"
+    data-t-in-stock="{{ 'n90.quick_view.in_stock' | t | escape }}"
+    data-t-out-stock="{{ 'n90.quick_view.out_of_stock' | t | escape }}"
+    data-t-decrease="{{ 'products.product.quantity.decrease' | t: product: '' | escape }}"
+    data-t-increase="{{ 'products.product.quantity.increase' | t: product: '' | escape }}"
+    data-t-quantity="{{ 'products.product.quantity.label' | t | escape }}"
+    data-t-error="{{ 'sections.cart.cart_error' | t | escape }}"
+  >
+    <header class="quick-view-header">
+      <span class="quick-view-heading" id="RosterQuickDrawer-title">{{ 'n90.a11y.quick_view' | t }}</span>
+      <button type="button" class="quick-view-close-circle" data-lk-close aria-label="{{ 'accessibility.close' | t }}">✕</button>
+    </header>
+    <div class="quick-view-body" data-lk-body aria-live="polite"></div>
+    <a href="#" class="quick-view-full-details-bar" data-lk-pdp hidden>
+      {{- 'n90.look.view_full' | t }} <span class="arrow" aria-hidden="true">&rarr;</span>
+    </a>
+  </aside>
+</section>
+
+<script src="{{ 'n90-shop-the-look.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Shop the look",
+  "tag": "div",
+  "class": "section-shop-the-look",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 26,
+  "settings": [
+    { "type": "image_picker", "id": "lifestyle_image", "label": "Lifestyle image", "info": "Shown in a 3:4 frame so pins stay on target. Without one, a placeholder shows." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Shop the Look" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Urban Camo" },
+    { "type": "text", "id": "subheading", "label": "Subheading" },
+    { "type": "header", "content": "Product cards" },
+    { "type": "paragraph", "content": "Add Product card blocks to curate the grid — 6 per page, further pages slide in. Without them, the products on your hotspots are used." },
+    {
+      "type": "select", "id": "image_fit", "label": "Card image fit",
+      "options": [
+        { "value": "contain", "label": "Fit (packshots)" },
+        { "value": "cover", "label": "Fill (crop)" }
+      ],
+      "default": "contain"
+    },
+    { "type": "header", "content": "Footer" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "Shop the full look" },
+    { "type": "url", "id": "link_url", "label": "Link", "info": "Defaults to all products." },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select", "id": "background", "label": "Background",
+      "options": [
+        { "value": "ash", "label": "Minimal Ash (#F4F4F5)" },
+        { "value": "canvas", "label": "Canvas (white)" }
+      ],
+      "default": "ash"
+    },
+    { "type": "checkbox", "id": "show_rule", "label": "Show top divider", "default": true },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 112 }
+  ],
+  "blocks": [
+    {
+      "type": "hotspot",
+      "name": "Hotspot",
+      "limit": 8,
+      "settings": [
+        { "type": "range", "id": "x_pos", "label": "Horizontal Position Left %", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+        { "type": "range", "id": "y_pos", "label": "Vertical Position Top %", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+        { "type": "text", "id": "label", "label": "Pin label / tooltip", "info": "Defaults to the product title." },
+        { "type": "product", "id": "product", "label": "Linked retail product", "info": "Clicking the pin highlights this product's card. Without one, it highlights the card in the same position." }
+      ]
+    },
+    {
+      "type": "product_card",
+      "name": "Product card",
+      "limit": 18,
+      "settings": [
+        { "type": "product", "id": "product", "label": "Select store product" },
+        { "type": "text", "id": "custom_badge", "label": "Badge", "info": "Small label above the title, e.g. WHITE LABEL. Defaults to the product vendor." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shop the look",
+      "blocks": [
+        { "type": "hotspot", "settings": { "x_pos": 54, "y_pos": 42, "label": "Match shirt" } },
+        { "type": "hotspot", "settings": { "x_pos": 30, "y_pos": 70, "label": "Training shorts" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

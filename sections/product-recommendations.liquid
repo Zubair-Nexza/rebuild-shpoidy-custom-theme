@@ -1,0 +1,31 @@
+{%- comment -%}
+  sections/product-recommendations.liquid
+  Data endpoint for the PDP "Complete the look" strip (sections/n90-main-product.liquid,
+  block "complete_kit"). The PDP fetches:
+    {{ routes.product_recommendations_url }}?product_id=…&limit=…&intent=complementary&section_id=product-recommendations
+  and swaps [data-n90-ck-items] into its strip. Empty output → the strip keeps its
+  same-collection fallback. Not added to templates directly.
+{%- endcomment -%}
+
+<div class="n90-ck-result">
+  {%- if recommendations.performed and recommendations.products_count > 0 -%}
+    <ul class="n90-ck__list" role="list" data-n90-ck-items data-intent="{{ recommendations.intent | escape }}">
+      {%- for rec in recommendations.products -%}
+        {%- capture stream -%}{%- render 'n90-product-stream', product: rec -%}{%- endcapture -%}{%- if stream == 'custom' -%}{%- continue -%}{%- endif -%}
+        {%- if rec.available -%}
+          {%- render 'n90-kit-item', product: rec -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Complete the look data",
+  "tag": "section",
+  "class": "section-product-recommendations",
+  "enabled_on": { "templates": ["product"] },
+  "settings": []
+}
+{% endschema %}

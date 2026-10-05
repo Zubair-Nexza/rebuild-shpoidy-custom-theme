@@ -1,0 +1,143 @@
+{%- comment -%}
+  snippets/header-sport.liquid
+  Sport data + links for the header (reference SP table and MegaMenu · sport template).
+
+  Accepts:
+  - block: {Object} header "sport" block (settings: sport, menu, landing_url, feature_image, feature_caption)
+  - mode: {String} 'panel' → desktop mega panel · 'drawer' → mobile accordion body
+  - quote_url: {String} "Get a free kit mockup" destination
+  - panel_id: {String} id for the panel element
+
+  Links: the block's menu if set, otherwise the reference items (they open search
+  results so they work before the collections exist). "All <sport>" goes to
+  landing_url or /collections/<sport>.
+{%- endcomment -%}
+
+{%- liquid
+  assign s = block.settings
+  assign sport = s.sport
+  assign sport_name = sport | capitalize
+  case sport
+    when 'football'
+      assign kits = 'Match Kits'
+      assign train = 'Training Wear'
+      assign special = 'Footballs & Goalkeeper Gloves'
+      assign feat = 'Photo: first team in home kit, match day'
+    when 'rugby'
+      assign kits = 'Match Kits'
+      assign train = 'Training Wear'
+      assign special = 'Rugby Balls & Protection'
+      assign feat = 'Photo: rugby team huddle in home kit'
+    when 'cricket'
+      assign kits = 'Match Kits'
+      assign train = 'Training Wear'
+      assign special = 'Cricket Whites & Caps'
+      assign feat = 'Photo: batter walking out to bat'
+    when 'golf'
+      assign kits = 'Team Polos'
+      assign train = 'Midlayers'
+      assign special = 'Caps & Towels'
+      assign feat = 'Photo: golf team in matching polos'
+    when 'darts'
+      assign kits = 'Match Shirts'
+      assign train = 'Team Polos'
+      assign special = 'Names & Nicknames'
+      assign feat = 'Photo: darts player at the oche, back print'
+    else
+      assign kits = 'Match Shirts'
+      assign train = 'Team Polos'
+      assign special = 'Bowls Whites'
+      assign feat = 'Photo: bowls rink in matching shirts'
+  endcase
+  assign labels = kits | append: '|' | append: train | append: '|Outerwear|Accessories|' | append: special | append: '|Bundles' | split: '|'
+  assign hints = 'From 10 pieces||Track & rain jackets|||' | split: '|'
+  assign landing = s.landing_url
+  if landing == blank
+    assign sport_collection = collections[sport]
+    if sport_collection != blank
+      assign landing = sport_collection.url
+    else
+      assign landing = routes.all_products_collection_url
+    endif
+  endif
+  assign use_menu = false
+  if s.menu != blank and s.menu.links.size > 0
+    assign use_menu = true
+  endif
+-%}
+
+{%- if mode == 'drawer' -%}
+  <div class="n90-hdr__macc-body">
+    <a class="n90-hdr__msub n90-hdr__msub--all" href="{{ landing }}">{{ 'n90.header.all_sport' | t: sport: sport_name }}</a>
+    {%- if use_menu -%}
+      {%- for link in s.menu.links -%}
+        <a class="n90-hdr__msub" href="{{ link.url }}">{{ link.title | escape }}</a>
+      {%- endfor -%}
+    {%- else -%}
+      {%- for label in labels -%}
+        {%- assign q = sport | append: ' ' | append: label -%}
+        <a class="n90-hdr__msub" href="{{ routes.search_url }}?q={{ q | url_encode }}">{{ label | escape }}</a>
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+{%- else -%}
+  <div class="n90-hdr__mega" id="{{ panel_id }}" data-hdr-panel="{{ sport }}" hidden>
+    <div class="n90-hdr__mega-in page-width">
+      {%- comment -%} ref .mega-list {%- endcomment -%}
+      <div class="n90-hdr__mega-list">
+        <p class="n90-hdr__eyebrow">{{ sport_name }}</p>
+        {%- if use_menu -%}
+          {%- for link in s.menu.links -%}
+            <a class="n90-hdr__mega-link" href="{{ link.url }}"><span>{{ link.title | escape }}</span></a>
+          {%- endfor -%}
+        {%- else -%}
+          {%- for label in labels -%}
+            {%- assign q = sport | append: ' ' | append: label -%}
+            <a class="n90-hdr__mega-link" href="{{ routes.search_url }}?q={{ q | url_encode }}">
+              <span>{{ label | escape }}</span>
+              {%- if hints[forloop.index0] != blank -%}<span class="n90-hdr__mega-hint">{{ hints[forloop.index0] }}</span>{%- endif -%}
+            </a>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ref .mega-side {%- endcomment -%}
+      <div class="n90-hdr__mega-side">
+        {%- assign promo_title = s.promo_title | replace: '[sport]', sport -%}
+        {%- if promo_title != blank -%}<p class="n90-hdr__eyebrow">{{ promo_title | escape }}</p>{%- endif -%}
+        {%- assign facts = s.promo_facts | newline_to_br | split: '<br />' -%}
+        {%- if s.promo_facts != blank -%}
+          <ul class="n90-hdr__facts" role="list">
+            {%- for fact in facts -%}
+              {%- assign fact = fact | strip -%}
+              {%- if fact != blank -%}<li>{{ fact | escape }}</li>{%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+        <a class="n90-hdr__tlink" href="{{ landing }}">{{ 'n90.header.all_sport' | t: sport: sport_name }}</a>
+      </div>
+
+      {%- comment -%} ref .mega-feat {%- endcomment -%}
+      <div class="n90-hdr__mega-feat">
+        <a class="n90-hdr__slot" href="{{ landing }}" tabindex="-1" aria-hidden="true">
+          {%- if s.feature_image != blank -%}
+            {{
+              s.feature_image
+              | image_url: width: 1200
+              | image_tag: widths: '600, 900, 1200', sizes: '40vw', loading: 'lazy', decoding: 'async', alt: ''
+            }}
+          {%- else -%}
+            <span class="n90-hdr__slot-label">
+              {%- render 'header-camera' -%}
+              <span>{{ s.feature_caption | default: feat | escape }}</span>
+            </span>
+          {%- endif -%}
+        </a>
+        <a class="n90-hdr__tlink" href="{{ quote_url }}">
+          {{ s.promo_cta | escape }}
+          {%- render 'icon', name: 'arrow' -%}
+        </a>
+      </div>
+    </div>
+  </div>
+{%- endif -%}

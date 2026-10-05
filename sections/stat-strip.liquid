@@ -1,0 +1,184 @@
+{%- comment -%}
+  sections/stat-strip.liquid
+  Stat counter / metric strip — add to any template. Up to 4 stats separated by hairlines;
+  the leading number in each value counts up when the strip scrolls into view
+  ("100%", "3–4 wk", "1,200+" …). Canvas, Surface or Carbon background.
+{%- endcomment -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} .n90-ss {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<style>
+  .n90-ss { --ss-bg: var(--n90-canvas); --ss-fg: var(--n90-carbon); --ss-muted: var(--n90-muted); --ss-line: rgba(0, 0, 0, .08); background: var(--ss-bg); color: var(--ss-fg); font-family: var(--n90-font-body); }
+  .n90-ss--surface { --ss-bg: var(--n90-surface); }
+  .n90-ss--carbon { --ss-bg: var(--n90-carbon); --ss-fg: var(--n90-canvas); --ss-muted: var(--n90-muted-on-dark); --ss-line: rgba(255, 255, 255, .12); }
+  .n90-ss__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 40px; }
+  .n90-ss__eyebrow { margin: 0 0 12px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--ss-muted); }
+  .n90-ss__heading { margin: 0; font-family: var(--n90-font-display); font-weight: 700; font-size: clamp(36px, 4.2vw, 60px); line-height: .95; text-transform: uppercase; }
+  .n90-ss__list {
+    display: grid;
+    grid-template-columns: repeat(var(--ss-cols, 4), minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--ss-line);
+    border-bottom: 1px solid var(--ss-line);
+  }
+  .n90-ss__item { padding: 40px 24px; border-left: 1px solid var(--ss-line); }
+  .n90-ss__item:first-child { border-left: 0; padding-left: 0; }
+  .n90-ss__v {
+    display: block;
+    font-family: var(--n90-font-display);
+    font-weight: 700;
+    font-size: clamp(48px, 5.6vw, 88px);
+    line-height: .95;
+    letter-spacing: .005em;
+    font-variant-numeric: tabular-nums;
+    text-transform: uppercase;
+  }
+  .n90-ss__v em { font-style: normal; color: var(--n90-volt); }
+  .n90-ss:not(.n90-ss--carbon) .n90-ss__v em { color: inherit; box-shadow: inset 0 -.24em 0 var(--n90-volt); }
+  .n90-ss__l { display: block; margin-top: 10px; font-family: var(--n90-font-display); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--ss-muted); }
+
+  @media screen and (max-width: 1023px) {
+    .n90-ss__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .n90-ss__item:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .n90-ss__item:nth-child(n + 3) { border-top: 1px solid var(--ss-line); }
+  }
+  @media screen and (max-width: 767px) {
+    .n90-ss__item { padding: 28px 12px; }
+    .n90-ss__head { flex-direction: column; align-items: flex-start; margin-bottom: 28px; }
+  }
+</style>
+
+<div class="n90-ss n90-ss--{{ section.settings.scheme }}" data-n90-ss data-count-up="{{ section.settings.count_up }}">
+  <div class="page-width">
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank -%}
+      <div class="n90-ss__head" data-n90-reveal>
+        <div>
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="n90-ss__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="n90-ss__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <ul class="n90-ss__list" role="list" style="--ss-cols: {{ section.blocks.size | at_most: 4 }};" data-n90-stagger>
+        {%- for block in section.blocks -%}
+          <li class="n90-ss__item" {{ block.shopify_attributes }}>
+            <span class="n90-ss__v" data-n90-count>{{ block.settings.value | escape }}</span>
+            <span class="n90-ss__l">{{ block.settings.label | escape }}</span>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.querySelector('#shopify-section-' + {{ section.id | json }} + ' [data-n90-ss]');
+    if (!root || root.dataset.ready || root.dataset.countUp !== 'true') return;
+    root.dataset.ready = 'true';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+
+    var items = Array.prototype.slice.call(root.querySelectorAll('[data-n90-count]')).map(function (el) {
+      var text = el.textContent.trim();
+      var m = text.match(/^(\D*?)(\d[\d,]*(?:\.\d+)?)([\s\S]*)$/);
+      if (!m) return null;
+      var raw = m[2];
+      return {
+        el: el,
+        text: text,
+        before: m[1],
+        after: m[3],
+        target: parseFloat(raw.replace(/,/g, '')),
+        decimals: (raw.split('.')[1] || '').length,
+        commas: raw.indexOf(',') > -1
+      };
+    }).filter(Boolean);
+    if (!items.length) return;
+
+    function format(item, n) {
+      var s = n.toFixed(item.decimals);
+      if (item.commas) s = Number(s).toLocaleString('en-GB', { minimumFractionDigits: item.decimals, maximumFractionDigits: item.decimals });
+      return item.before + s + item.after;
+    }
+    function run() {
+      var start = null;
+      var duration = 1400;
+      function frame(ts) {
+        if (start === null) start = ts;
+        var p = Math.min(1, (ts - start) / duration);
+        var eased = 1 - Math.pow(1 - p, 3);
+        items.forEach(function (item) {
+          item.el.textContent = p === 1 ? item.text : format(item, item.target * eased);
+        });
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    items.forEach(function (item) { item.el.textContent = format(item, 0); });
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      run();
+    }, { threshold: 0.4 });
+    io.observe(root);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Stat strip",
+  "tag": "section",
+  "class": "section-n90-stat-strip",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 4,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "text", "id": "heading", "label": "Heading" },
+    { "type": "checkbox", "id": "count_up", "label": "Count numbers up on scroll", "default": true },
+    {
+      "type": "select", "id": "scheme", "label": "Background",
+      "options": [
+        { "value": "canvas", "label": "Canvas" },
+        { "value": "surface", "label": "Surface" },
+        { "value": "carbon", "label": "Carbon" }
+      ],
+      "default": "canvas"
+    },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 160, "step": 8, "unit": "px", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "settings": [
+        { "type": "text", "id": "value", "label": "Value", "default": "100%", "info": "The first number counts up, e.g. 100%, 3–4 wk, 1,200+" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Bespoke kits" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Stat strip",
+      "blocks": [
+        { "type": "stat", "settings": { "value": "100%", "label": "Bespoke kits" } },
+        { "type": "stat", "settings": { "value": "3–4 wk", "label": "Delivery" } },
+        { "type": "stat", "settings": { "value": "0", "label": "Middlemen" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

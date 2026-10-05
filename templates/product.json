@@ -1,0 +1,146 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "n90-main-product",
+      "blocks": {
+        "eyebrow": {
+          "type": "eyebrow",
+          "settings": {
+            "text": "",
+            "badge": "",
+            "badge_tag": "",
+            "show_vendor": true
+          }
+        },
+        "title": {
+          "type": "title",
+          "settings": {}
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "team_label": "Team price",
+            "team_price": "",
+            "turnaround": ""
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "colour_swatches": true,
+            "size_guide_label": "Size guide",
+            "size_guide_enable": true,
+            "size_guide_source": "table",
+            "size_guide_unit": "cm"
+          }
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_quantity": true,
+            "show_dynamic_checkout": false,
+            "show_notify": true
+          }
+        },
+        "delivery": {
+          "type": "delivery",
+          "settings": {
+            "line_1": "Order before 1pm for express next working day delivery",
+            "line_2": "Free UK shipping over £50",
+            "whatsapp_label": "Ask about this on WhatsApp",
+            "whatsapp_url": ""
+          }
+        },
+        "description": {
+          "type": "description",
+          "settings": {}
+        },
+        "acc_delivery": {
+          "type": "accordion",
+          "settings": {
+            "title": "Delivery & returns",
+            "content": "<p>In-stock items ship the next working day when ordered before 1pm. Free UK shipping on orders over £50.</p>",
+            "open": false
+          }
+        },
+        "acc_fit": {
+          "type": "accordion",
+          "settings": {
+            "title": "Material & fit",
+            "content": "<p>Lightweight, breathable performance fabric. See the size guide for measurements.</p>",
+            "open": false
+          }
+        },
+        "acc_care": {
+          "type": "accordion",
+          "settings": {
+            "title": "Care instructions",
+            "content": "<p>Wash inside out at 30°C with similar colours. Do not tumble dry, iron or dry clean. Sublimated prints will not crack or peel.</p>",
+            "open": false
+          }
+        },
+        "complete_kit": {
+          "type": "complete_kit",
+          "settings": {
+            "heading": "Complete the look",
+            "subheading": "Match gear",
+            "limit": 4,
+            "fallback": true
+          }
+        }
+      },
+      "block_order": [
+        "eyebrow",
+        "title",
+        "price",
+        "variant_picker",
+        "buy_buttons",
+        "delivery",
+        "complete_kit",
+        "description",
+        "acc_delivery",
+        "acc_fit",
+        "acc_care"
+      ],
+      "settings": {
+        "show_breadcrumbs": true,
+        "sticky_bar": true,
+        "padding_top": 8,
+        "padding_bottom": 88
+      }
+    },
+    "disclosures": {
+      "type": "disclosures",
+      "settings": {
+        "padding_top": 36,
+        "padding_bottom": 0
+      }
+    },
+    "complete_the_set": {
+      "type": "n90-product-recommendations",
+      "settings": {
+        "eyebrow": "Goes with",
+        "heading": "Complete the set",
+        "intent": "related",
+        "products_to_show": 4,
+        "show_quick_add": true,
+        "padding_top": 112,
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main",
+    "disclosures",
+    "complete_the_set"
+  ]
+}

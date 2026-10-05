@@ -1,0 +1,19 @@
+{%- comment -%}
+  snippets/n90-custom-price.liquid
+  Custom kit price line: "Team pricing from £X (Min order 10 pieces)" — wording, minimum order
+  in Theme settings → ROSTER catalog. Products priced at 0 read "on request".
+
+  Accepts:
+  - product: {Object}
+{%- endcomment -%}
+{%- liquid
+  assign min_order = settings.n90_custom_min_order | default: 10
+  if product.price > 0
+    assign team_price = product.price | money
+  else
+    assign team_price = 'n90.catalog.on_request' | t
+  endif
+  assign line = settings.n90_custom_price_text | default: 'Team pricing from [price] (Min order [min] pieces)'
+  assign line = line | replace: '[price]', team_price | replace: '[min]', min_order
+  echo line
+-%}

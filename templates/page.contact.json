@@ -1,0 +1,40 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-contact",
+      "settings": {
+        "eyebrow": "Get in touch // Teamwear desk",
+        "heading": "Start your kit / Contact us",
+        "subheading": "Tell us about your club and we’ll come back with a free design mockup and quote — no commitment.",
+        "whatsapp_url": "",
+        "whatsapp_label": "Direct WhatsApp line",
+        "whatsapp_display": "Message the team",
+        "whatsapp_hours": "Mon–Fri, 9am–5pm. We usually reply within the hour.",
+        "email": "",
+        "hub_label": "Production & dispatch hub",
+        "hub_title": "Made & shipped in the UK",
+        "hub_text": "<p>Add your production and dispatch address here.</p>",
+        "guarantee": "3–4 week turnaround • Free design mockup • Zero commitment",
+        "form_heading": "Kit enquiry",
+        "form_text": "Takes two minutes. We reply within one working day.",
+        "button_label": "Request my free mockup",
+        "fine_print": "We’ll only use your details for this quote.",
+        "success_message": "Thanks — your enquiry is in. We’ll send your free mockup and quote within one working day.",
+        "padding_top": 48,
+        "padding_bottom": 112
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

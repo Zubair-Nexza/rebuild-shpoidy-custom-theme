@@ -1,0 +1,45 @@
+{%- comment -%}
+  snippets/quick-view-modal.liquid
+  Quick view / quick buy dialog shell — render once per page (collection, search).
+  Any [data-n90-qv-open="<product url>"] opens it; assets/quick-view.js fetches
+  sections/n90-quick-view.liquid for that product and injects it here.
+  Styles: assets/n90-quick-view.css
+{%- endcomment -%}
+
+{{ 'n90-quick-view.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'quick-view.js' | asset_url }}" defer="defer"></script>
+
+<dialog
+  class="n90-qv"
+  id="n90-quick-view"
+  aria-label="{{ 'n90.a11y.quick_view' | t }}"
+  data-n90-qv
+  data-strings='{
+    "add": {{ 'products.product.add_to_cart' | t | json | escape }},
+    "soldOut": {{ 'products.product.sold_out' | t | json | escape }},
+    "unavailable": {{ 'products.product.unavailable' | t | json | escape }},
+    "regular": {{ 'products.product.price.regular_price' | t | json | escape }},
+    "inStock": {{ 'n90.quick_view.in_stock' | t | json | escape }},
+    "lowStock": {{ 'n90.quick_view.low_stock' | t | json | escape }},
+    "outStock": {{ 'n90.quick_view.out_of_stock' | t | json | escape }},
+    "error": {{ 'sections.cart.cart_error' | t | json | escape }}
+  }'
+>
+  <button type="button" class="n90-qv__close" data-n90-qv-close aria-label="{{ 'accessibility.close' | t }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <div class="n90-qv__body" data-n90-qv-body></div>
+</dialog>
+
+<template id="n90-qv-skeleton">
+  <div class="n90-qv__grid n90-qv__grid--loading" aria-hidden="true">
+    <div class="n90-qv__media"><div class="n90-qv__main n90-qv__sk"></div></div>
+    <div class="n90-qv__info">
+      <span class="n90-qv__sk n90-qv__sk--line" style="width: 30%;"></span>
+      <span class="n90-qv__sk n90-qv__sk--title"></span>
+      <span class="n90-qv__sk n90-qv__sk--line" style="width: 40%;"></span>
+      <span class="n90-qv__sk n90-qv__sk--block"></span>
+      <span class="n90-qv__sk n90-qv__sk--btn"></span>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,48 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "composite-bundle-builder",
+      "blocks": {
+        "apex": {
+          "type": "bundle_option",
+          "settings": {
+            "tab_label": "APEX",
+            "bundle_title": "APEX MATCH BUNDLE"
+          }
+        }
+      },
+      "block_order": [
+        "apex"
+      ],
+      "settings": {
+        "subheading": "MATCH BUNDLES",
+        "heading": "ONE BUNDLE. WHOLE KIT.",
+        "tab_label": "Pulse",
+        "bundle_title": "PULSE MATCH BUNDLE",
+        "team_label": "Team price",
+        "button_label": "Shop the bundle",
+        "quote_label": "Get a team quote",
+        "addons_heading": "Add to your order",
+        "padding_top": 48,
+        "padding_bottom": 112
+      }
+    },
+    "recommendations": {
+      "type": "n90-product-recommendations",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "recommendations"
+  ]
+}

@@ -1,0 +1,1088 @@
+{%- comment -%}
+  sections/community-grid.liquid
+  ROSTER — Direction C "Clean Sport · Motion"
+  Clean Sport Social Reels — Immersive 9:16 reel carousel + fullscreen modal
+{%- endcomment -%}
+
+{%- liquid
+  assign bg      = section.settings.color_background
+  assign ink     = section.settings.color_text
+  assign muted   = section.settings.color_muted
+  assign accent  = section.settings.color_accent
+  assign line_col = section.settings.color_line
+  assign surface = section.settings.color_surface
+  assign pt      = section.settings.padding_top
+  assign pb      = section.settings.padding_bottom
+  assign ppv     = section.settings.cards_per_view | default: 3
+-%}
+
+{%- comment -%} Brand defaults follow the theme colour preset {%- endcomment -%}
+{%- capture bg -%}{%- render 'n90-color-token', value: bg -%}{%- endcapture -%}
+{%- capture ink -%}{%- render 'n90-color-token', value: ink -%}{%- endcapture -%}
+{%- capture muted -%}{%- render 'n90-color-token', value: muted -%}{%- endcapture -%}
+{%- capture accent -%}{%- render 'n90-color-token', value: accent -%}{%- endcapture -%}
+{%- capture line_col -%}{%- render 'n90-color-token', value: line_col -%}{%- endcapture -%}
+{%- capture surface -%}{%- render 'n90-color-token', value: surface -%}{%- endcapture -%}
+
+{%- style -%}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   N90 Community Reels — scoped CSS custom properties
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#shopify-section-{{ section.id }} {
+  --nn-bg:      {{ bg }};
+  --nn-ink:     {{ ink }};
+  --nn-muted:   {{ muted }};
+  --nn-accent:  {{ accent }};
+  --nn-line:    {{ line_col }};
+  --nn-surface: {{ surface }};
+  --nn-ease:    cubic-bezier(.2,.7,.2,1);
+  --nn-spring:  cubic-bezier(.2,1.25,.35,1);
+  --nn-gap:     16px;
+  --nn-ppv:     {{ ppv }};
+  --nn-card-w:  calc((100% - ((var(--nn-ppv) - 1) * var(--nn-gap))) / var(--nn-ppv));
+  --nn-radius:  16px;
+}
+@media screen and (max-width:1023px) {
+  #shopify-section-{{ section.id }} { --nn-ppv: 2; }
+}
+@media screen and (max-width:749px) {
+  #shopify-section-{{ section.id }} { --nn-ppv: 1.15; --nn-gap: 12px; }
+}
+
+/* ── Section shell ─────────────────────────────── */
+.n90-cg {
+  padding-top:    {{ pt }}px;
+  padding-bottom: {{ pb }}px;
+  background: var(--nn-bg);
+  color: var(--nn-ink);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Header ────────────────────────────────────── */
+.n90-cg__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.n90-cg__eyebrow {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .18em;
+  color: var(--nn-accent); margin-bottom: 10px;
+}
+.n90-cg__heading {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: clamp(28px,3.2vw,52px); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .01em;
+  line-height: 1.05; margin: 0; color: var(--nn-ink);
+}
+.n90-cg__sub { font-size: 15px; color: var(--nn-muted); margin-top: 8px; max-width: 440px; }
+
+/* ── Carousel controls ─────────────────────────── */
+.n90-cg__controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.n90-cg__arrow {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1.5px solid var(--nn-line); background: transparent;
+  color: var(--nn-ink); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .2s var(--nn-ease), border-color .2s;
+}
+.n90-cg__arrow:hover { background: var(--nn-surface); border-color: var(--nn-ink); }
+.n90-cg__arrow[disabled] { opacity: .3; cursor: not-allowed; }
+.n90-cg__arrow svg { width: 18px; height: 18px; pointer-events: none; }
+.n90-cg__fraction {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: .06em;
+  min-width: 52px; text-align: center; color: var(--nn-ink);
+}
+
+/* ── Dot pills ─────────────────────────────────── */
+.n90-cg__dots { display: flex; gap: 6px; align-items: center; }
+.n90-cg__dot {
+  height: 4px; width: 20px; border-radius: 99px;
+  background: var(--nn-line); cursor: pointer;
+  border: none; padding: 0;
+  transition: width .35s var(--nn-spring), background .35s;
+}
+.n90-cg__dot.is-active { width: 36px; background: var(--nn-accent); }
+
+/* ── Track ─────────────────────────────────────── */
+.n90-cg__track {
+  display: flex; gap: var(--nn-gap);
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.n90-cg__track::-webkit-scrollbar { display: none; }
+
+/* ━━━━ REEL CARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.n90-cg__card {
+  flex: 0 0 var(--nn-card-w);
+  scroll-snap-align: start;
+  position: relative; border-radius: var(--nn-radius);
+  overflow: hidden; aspect-ratio: 9 / 16;
+  background: var(--nn-surface); cursor: pointer;
+  opacity: 0; transform: translateY(20px) scale(.98);
+  transition: opacity .7s var(--nn-ease), transform .7s var(--nn-ease), box-shadow .3s;
+}
+.n90-cg__card.n90-is-visible { opacity: 1; transform: none; }
+.n90-cg__card:hover { box-shadow: 0 16px 48px rgba(0,0,0,.28); }
+
+/* Media fills card */
+.n90-cg__video, .n90-cg__poster {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.n90-cg__poster { z-index: 1; transition: opacity .4s; }
+.n90-cg__card.is-playing .n90-cg__poster { opacity: 0; }
+.n90-cg__video { z-index: 0; }
+
+/* Gradients */
+.n90-cg__grad-top {
+  position: absolute; inset: 0 0 auto 0; height: 120px;
+  background: linear-gradient(to bottom,rgba(0,0,0,.55),transparent);
+  z-index: 2; pointer-events: none;
+}
+.n90-cg__grad-bot {
+  position: absolute; inset: auto 0 0 0; height: 210px;
+  background: linear-gradient(to top,rgba(0,0,0,.78),transparent);
+  z-index: 2; pointer-events: none;
+}
+
+/* Sport badge — top left */
+.n90-cg__badge {
+  position: absolute; top: 14px; left: 14px; z-index: 4;
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  background: var(--nn-accent); color: #0e1b33;
+  padding: 3px 10px; border-radius: 99px; line-height: 1.6;
+}
+
+/* Play pill — centre */
+.n90-cg__play-pill {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.n90-cg__play-pill-inner {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.14);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.28); border-radius: 99px;
+  padding: 8px 18px 8px 14px;
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em; color: #fff;
+  transition: opacity .3s, transform .3s var(--nn-spring);
+}
+.n90-cg__card.is-playing .n90-cg__play-pill-inner { opacity: 0; transform: scale(.85); }
+.n90-cg__play-pill-inner svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Creator info — bottom overlay */
+.n90-cg__info {
+  position: absolute; bottom: 60px; left: 14px; right: 14px; z-index: 4;
+}
+.n90-cg__handle {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: #fff; margin-bottom: 4px;
+}
+.n90-cg__tick {
+  width: 14px; height: 14px; background: var(--nn-accent); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.n90-cg__tick svg { width: 8px; height: 8px; color: #0e1b33; }
+.n90-cg__caption {
+  font-size: 12px; color: rgba(255,255,255,.8); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Product quick chip — bottom */
+.n90-cg__chip {
+  position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 5;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.2); border-radius: 12px;
+  padding: 8px 12px; cursor: pointer; transition: background .2s;
+}
+.n90-cg__chip:hover { background: rgba(255,255,255,.22); }
+.n90-cg__chip-img {
+  width: 36px; height: 36px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0; background: var(--nn-surface);
+}
+.n90-cg__chip-img-ph {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: rgba(255,255,255,.15); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.n90-cg__chip-img-ph svg { width: 18px; height: 18px; color: rgba(255,255,255,.5); }
+.n90-cg__chip-info { flex: 1; min-width: 0; }
+.n90-cg__chip-title {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.n90-cg__chip-price { font-size: 11px; color: rgba(255,255,255,.7); }
+.n90-cg__chip-cta {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: #0e1b33; background: var(--nn-accent);
+  border: none; border-radius: 8px; padding: 5px 10px;
+  cursor: pointer; flex-shrink: 0; transition: opacity .2s; line-height: 1.4;
+}
+.n90-cg__chip-cta:hover { opacity: .85; }
+
+/* Reduced-motion + responsive */
+@media (prefers-reduced-motion:reduce) {
+  #shopify-section-{{ section.id }} *,
+  #shopify-section-{{ section.id }} *::before,
+  #shopify-section-{{ section.id }} *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+  .n90-cg__card { opacity: 1; transform: none; }
+}
+@media screen and (max-width:749px) {
+  .n90-cg { padding-top: {{ pt | at_most: 64 }}px; padding-bottom: {{ pb | at_most: 64 }}px; }
+  .n90-cg__head { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+  .n90-cg__controls { align-self: flex-end; }
+  .n90-cg__dots { display: none; }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   FULLSCREEN MODAL
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.n90-cg-modal {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--nn-ease);
+}
+.n90-cg-modal.is-open { opacity: 1; pointer-events: all; }
+
+/* 9:16 pane */
+.n90-cg-modal__pane {
+  position: relative; height: 92vh; max-height: 900px;
+  aspect-ratio: 9 / 16; border-radius: 20px;
+  overflow: hidden; background: #111; flex-shrink: 0;
+}
+@media screen and (max-width:749px) {
+  .n90-cg-modal__pane {
+    height: 100dvh; max-height: none; border-radius: 0; width: 100vw;
+  }
+}
+
+.n90-cg-modal__media-wrap {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.n90-cg-modal__media-wrap video,
+.n90-cg-modal__media-wrap img,
+.n90-cg-modal__media-wrap iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; border: none;
+}
+
+/* Modal gradients */
+.n90-cg-modal__grad-top {
+  position: absolute; inset: 0 0 auto 0; height: 140px;
+  background: linear-gradient(to bottom,rgba(0,0,0,.65),transparent);
+  z-index: 2; pointer-events: none;
+}
+.n90-cg-modal__grad-bot {
+  position: absolute; inset: auto 0 0 0; height: 280px;
+  background: linear-gradient(to top,rgba(0,0,0,.9),transparent);
+  z-index: 2; pointer-events: none;
+}
+
+/* Close / mute buttons */
+.n90-cg-modal__close,
+.n90-cg-modal__mute {
+  position: absolute; top: 16px; z-index: 10;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.2); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .2s;
+}
+.n90-cg-modal__close { right: 16px; }
+.n90-cg-modal__mute  { left:  16px; }
+.n90-cg-modal__close:hover,
+.n90-cg-modal__mute:hover { background: rgba(255,255,255,.26); }
+.n90-cg-modal__close svg,
+.n90-cg-modal__mute svg { width: 18px; height: 18px; pointer-events: none; }
+
+/* Modal nav — flanking the pane */
+.n90-cg-modal__nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.18); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .2s;
+}
+.n90-cg-modal__nav:hover { background: rgba(255,255,255,.22); }
+.n90-cg-modal__nav[disabled] { opacity: .25; cursor: not-allowed; }
+.n90-cg-modal__nav svg { width: 20px; height: 20px; pointer-events: none; }
+.n90-cg-modal__nav--prev { right: calc(100% + 20px); }
+.n90-cg-modal__nav--next { left:  calc(100% + 20px); }
+@media screen and (max-width:749px) { .n90-cg-modal__nav { display: none; } }
+
+/* Modal badge */
+.n90-cg-modal__badge {
+  position: absolute; top: 64px; left: 14px; z-index: 5;
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  background: var(--nn-accent); color: #0e1b33;
+  padding: 3px 10px; border-radius: 99px; line-height: 1.6;
+}
+
+/* Modal creator info */
+.n90-cg-modal__info {
+  position: absolute; bottom: 230px; left: 14px; right: 14px; z-index: 5;
+}
+.n90-cg-modal__handle {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: #fff; margin-bottom: 6px;
+}
+.n90-cg-modal__caption { font-size: 13px; color: rgba(255,255,255,.85); line-height: 1.45; }
+
+/* Product drawer */
+.n90-cg-modal__drawer {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 6;
+  padding: 16px 16px 28px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.n90-cg-modal__product { display: flex; align-items: center; gap: 12px; }
+.n90-cg-modal__prod-img {
+  width: 52px; height: 52px; border-radius: 8px;
+  object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,.1);
+}
+.n90-cg-modal__prod-img-ph {
+  width: 52px; height: 52px; border-radius: 8px;
+  background: rgba(255,255,255,.08); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.n90-cg-modal__prod-img-ph svg { width: 24px; height: 24px; color: rgba(255,255,255,.35); }
+.n90-cg-modal__prod-info { flex: 1; min-width: 0; }
+.n90-cg-modal__prod-title {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: #fff; line-height: 1.2; margin-bottom: 2px;
+}
+.n90-cg-modal__prod-price { font-size: 13px; color: rgba(255,255,255,.65); }
+.n90-cg-modal__actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.n90-cg-modal__atc {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  background: var(--nn-accent); color: #0e1b33;
+  border: none; border-radius: 10px; padding: 12px 16px;
+  cursor: pointer; transition: opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.n90-cg-modal__atc:hover { opacity: .88; }
+.n90-cg-modal__atc:disabled { opacity: .45; cursor: not-allowed; }
+.n90-cg-modal__checkout {
+  font-family: 'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  background: rgba(255,255,255,.12); color: #fff;
+  border: 1.5px solid rgba(255,255,255,.25); border-radius: 10px;
+  padding: 12px 18px; cursor: pointer; transition: background .2s;
+  text-decoration: none;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
+}
+.n90-cg-modal__checkout:hover { background: rgba(255,255,255,.2); }
+{%- endstyle -%}
+
+{%- comment -%}━━━━━━━━━━━ SECTION HTML ━━━━━━━━━━━{%- endcomment -%}
+<section
+  class="n90-cg"
+  id="n90-cg-{{ section.id }}"
+  data-section="CommunityReels"
+  aria-label="{{ section.settings.heading | default: 'Community Reels' | escape }}"
+>
+  <div class="page-width">
+
+    {%- comment -%}── Header ──{%- endcomment -%}
+    <div class="n90-cg__head">
+      <div>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="n90-cg__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="n90-cg__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.description != blank -%}
+          <p class="n90-cg__sub">{{ section.settings.description | escape }}</p>
+        {%- endif -%}
+      </div>
+      <div class="n90-cg__controls" aria-label="{{ 'n90.ui.carousel_controls' | t }}">
+        <div class="n90-cg__dots" id="cg-dots-{{ section.id }}" aria-hidden="true">
+          {%- for block in section.blocks -%}
+            <button class="n90-cg__dot{% if forloop.first %} is-active{% endif %}" data-dot-index="{{ forloop.index0 }}" tabindex="-1"></button>
+          {%- endfor -%}
+        </div>
+        <button class="n90-cg__arrow" id="cg-prev-{{ section.id }}" aria-label="{{ 'n90.ui.previous_reels' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="n90-cg__fraction" id="cg-frac-{{ section.id }}" aria-live="polite">
+          01 / {%- assign tot = section.blocks.size | at_least: 1 -%}{{ tot | prepend: '00' | slice: -2, 2 }}
+        </span>
+        <button class="n90-cg__arrow" id="cg-next-{{ section.id }}" aria-label="{{ 'n90.ui.next_reels' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    {%- comment -%}── Reel track ──{%- endcomment -%}
+    <div class="n90-cg__track" id="cg-track-{{ section.id }}" role="list">
+
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign idx0        = forloop.index0
+            assign b           = block.settings
+            assign has_product = false
+            if b.product != blank
+              assign has_product = true
+              assign prod = b.product
+              assign pv   = prod.selected_or_first_available_variant
+            endif
+
+            comment
+              Native HTML5 source: MP4 file URL of the uploaded video
+            endcomment
+            assign video_src = blank
+            if b.video != blank
+              for source in b.video.sources
+                if source.format == 'mp4'
+                  assign video_src = source.url
+                endif
+              endfor
+              if video_src == blank and b.video.sources.size > 0
+                assign video_src = b.video.sources[0].url
+              endif
+            endif
+          -%}
+
+          <article
+            class="n90-cg__card{% if video_src != blank %} is-playing{% endif %}"
+            role="listitem"
+            id="cg-card-{{ section.id }}-{{ idx0 }}"
+            data-card-index="{{ idx0 }}"
+            data-reveal-delay="{{ idx0 | times: 70 }}"
+            aria-label="{{ b.handle | default: 'Reel' | escape }}"
+            {{ block.shopify_attributes }}
+          >
+            {%- comment -%}── Video ──{%- endcomment -%}
+            {%- if video_src != blank -%}
+              <video
+                class="n90-cg__video"
+                src="{{ video_src }}"
+                autoplay
+                loop
+                muted
+                playsinline
+                webkit-playsinline
+                preload="auto"
+                aria-hidden="true"
+                data-cg-autoplay
+                style="width: 100%; height: 100%; object-fit: cover; display: block;"
+              ></video>
+            {%- endif -%}
+
+            {%- comment -%}── Cover image: only when there is no video to play ──{%- endcomment -%}
+            {%- if video_src != blank -%}
+            {%- elsif b.poster != blank -%}
+              <img
+                class="n90-cg__poster"
+                src="{{ b.poster | image_url: width: 600 }}"
+                srcset="{{ b.poster | image_url: width: 400 }} 400w, {{ b.poster | image_url: width: 600 }} 600w, {{ b.poster | image_url: width: 900 }} 900w"
+                sizes="(max-width:749px) 90vw, {{ 100 | divided_by: ppv }}vw"
+                width="{{ b.poster.width }}" height="{{ b.poster.height }}"
+                alt="{{ b.handle | default: 'Reel poster' | escape }}"
+                decoding="async" loading="{% if idx0 < 2 %}eager{% else %}lazy{% endif %}"
+              >
+            {%- elsif has_product and prod.featured_media != blank -%}
+              <img class="n90-cg__poster" src="{{ prod.featured_media.preview_image | image_url: width: 600 }}" width="{{ prod.featured_media.preview_image.width }}" height="{{ prod.featured_media.preview_image.height }}" alt="{{ prod.title | escape }}" decoding="async" loading="lazy">
+            {%- else -%}
+              <div class="n90-cg__poster" style="background:var(--nn-surface);display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1" width="56" height="56" aria-hidden="true"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </div>
+            {%- endif -%}
+
+            <div class="n90-cg__grad-top" aria-hidden="true"></div>
+            <div class="n90-cg__grad-bot" aria-hidden="true"></div>
+
+            {%- if b.badge != blank -%}
+              <span class="n90-cg__badge">{{ b.badge | escape }}</span>
+            {%- endif -%}
+
+            <div class="n90-cg__play-pill" aria-hidden="true">
+              <div class="n90-cg__play-pill-inner">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                {{ 'n90.ui.watch' | t }}
+              </div>
+            </div>
+
+            <div class="n90-cg__info">
+              {%- if b.handle != blank -%}
+                <div class="n90-cg__handle">
+                  <span>{{ b.handle | escape }}</span>
+                  <span class="n90-cg__tick" aria-label="{{ 'n90.ui.verified' | t }}">
+                    <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5l2 2 4-4"/></svg>
+                  </span>
+                </div>
+              {%- endif -%}
+              {%- if b.caption != blank -%}
+                <p class="n90-cg__caption">{{ b.caption | escape }}</p>
+              {%- endif -%}
+            </div>
+
+            {%- if has_product -%}
+              <div class="n90-cg__chip" role="button" tabindex="0"
+                   data-open-modal="{{ section.id }}" data-modal-index="{{ idx0 }}"
+                   aria-label="{{ 'n90.ui.view_product_title' | t: title: prod.title | escape }}">
+                {%- if prod.featured_media != blank -%}
+                  <img class="n90-cg__chip-img" src="{{ prod.featured_media.preview_image | image_url: width: 72 }}" alt="{{ prod.title | escape }}" width="36" height="36" decoding="async" loading="lazy">
+                {%- else -%}
+                  <div class="n90-cg__chip-img-ph">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1zM16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                  </div>
+                {%- endif -%}
+                <div class="n90-cg__chip-info">
+                  <div class="n90-cg__chip-title">{{ prod.title | escape | truncate: 28 }}</div>
+                  <div class="n90-cg__chip-price">
+                    {%- if prod.price_varies -%}{%- assign cg_min = prod.price_min | money -%}{{ 'products.product.price.from_price_html' | t: price: cg_min }}{%- else -%}{{ pv.price | money }}{%- endif -%}
+                  </div>
+                </div>
+                <button class="n90-cg__chip-cta" data-open-modal="{{ section.id }}" data-modal-index="{{ idx0 }}" aria-label="{{ 'n90.ui.add_product' | t: title: prod.title | escape }}">{{ 'n90.ui.add' | t }}</button>
+              </div>
+            {%- endif -%}
+          </article>
+
+        {%- endfor -%}
+      {%- else -%}
+        {%- comment -%}── Onboarding placeholders ──{%- endcomment -%}
+        {%- for i in (1..5) -%}
+          <article class="n90-cg__card n90-is-visible" role="listitem" aria-label="{{ 'n90.ui.reel' | t: number: i }}" data-card-index="{{ forloop.index0 }}">
+            <div class="n90-cg__poster" style="background:var(--nn-surface);display:flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1" width="56" height="56" aria-hidden="true"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="n90-cg__grad-top" aria-hidden="true"></div>
+            <div class="n90-cg__grad-bot" aria-hidden="true"></div>
+            <span class="n90-cg__badge">{{ 'n90.onboarding.reel_badge' | t }}</span>
+            <div class="n90-cg__play-pill" aria-hidden="true">
+              <div class="n90-cg__play-pill-inner">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                {{ 'n90.ui.watch' | t }}
+              </div>
+            </div>
+            <div class="n90-cg__info">
+              <div class="n90-cg__handle">
+                <span>{{ 'n90.onboarding.reel_handle' | t }}</span>
+                <span class="n90-cg__tick" aria-label="{{ 'n90.ui.verified' | t }}">
+                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5l2 2 4-4"/></svg>
+                </span>
+              </div>
+              <p class="n90-cg__caption">{{ 'n90.onboarding.reel_caption' | t }}</p>
+            </div>
+          </article>
+        {%- endfor -%}
+      {%- endif -%}
+
+    </div>{{- '' -}}{%- comment -%}/track{%- endcomment -%}
+  </div>{{- '' -}}{%- comment -%}/page-width{%- endcomment -%}
+</section>
+
+{%- comment -%}━━━━ FULLSCREEN MODAL ━━━━{%- endcomment -%}
+<div
+  class="n90-cg-modal"
+  id="cg-modal-{{ section.id }}"
+  role="dialog"
+  aria-modal="true"
+  aria-label="{{ 'n90.ui.reel_viewer' | t }}"
+  tabindex="-1"
+  hidden
+>
+  <button class="n90-cg-modal__nav n90-cg-modal__nav--prev" id="cg-mprev-{{ section.id }}" aria-label="{{ 'n90.ui.previous_reel' | t }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="n90-cg-modal__nav n90-cg-modal__nav--next" id="cg-mnext-{{ section.id }}" aria-label="{{ 'n90.ui.next_reel' | t }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+
+  <div class="n90-cg-modal__pane" id="cg-mpane-{{ section.id }}">
+    <div class="n90-cg-modal__media-wrap" id="cg-mmedia-{{ section.id }}"></div>
+    <div class="n90-cg-modal__grad-top" aria-hidden="true"></div>
+    <div class="n90-cg-modal__grad-bot" aria-hidden="true"></div>
+
+    <button class="n90-cg-modal__close" id="cg-mclose-{{ section.id }}" aria-label="{{ 'n90.ui.close_reel' | t }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <button class="n90-cg-modal__mute" id="cg-mmute-{{ section.id }}" aria-label="{{ 'n90.ui.toggle_mute' | t }}">
+      <svg id="cg-mute-icon-{{ section.id }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>
+      </svg>
+    </button>
+
+    <span class="n90-cg-modal__badge" id="cg-mbadge-{{ section.id }}"></span>
+
+    <div class="n90-cg-modal__info">
+      <div class="n90-cg-modal__handle" id="cg-mhandle-{{ section.id }}"></div>
+      <p class="n90-cg-modal__caption" id="cg-mcaption-{{ section.id }}"></p>
+    </div>
+
+    <div class="n90-cg-modal__drawer">
+      <div class="n90-cg-modal__product" id="cg-mprod-{{ section.id }}"></div>
+      <div class="n90-cg-modal__actions" id="cg-mactions-{{ section.id }}"></div>
+    </div>
+  </div>{{- '' -}}{%- comment -%}/pane{%- endcomment -%}
+</div>{{- '' -}}{%- comment -%}/modal{%- endcomment -%}
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Reel data from Liquid ─────────────────────────────────────── */
+  var REELS = [
+    {%- for block in section.blocks -%}
+    {%- liquid
+      assign bs      = block.settings
+      assign has_vid = false
+      if bs.video != blank
+        assign has_vid = true
+      endif
+      assign has_prod = false
+      if bs.product != blank
+        assign has_prod = true
+        assign p   = bs.product
+        assign pv2 = p.selected_or_first_available_variant
+      endif
+    -%}
+    {
+      index:    {{ forloop.index0 | json }},
+      badge:    {{ bs.badge   | default: '' | json }},
+      handle:   {{ bs.handle  | default: '' | json }},
+      caption:  {{ bs.caption | default: '' | json }},
+      hasVideo: {{ has_vid | json }},
+      videoUrl: {{ bs.video_url | default: '' | json }},
+      posterSrc: {% if bs.poster != blank %}{{ bs.poster | image_url: width: 900 | json }}{% elsif has_prod and p.featured_media != blank %}{{ p.featured_media.preview_image | image_url: width: 900 | json }}{% else %}null{% endif %},
+      hasProd:  {{ has_prod | json }},
+      {%- if has_prod -%}
+      prodTitle:      {{ p.title | json }},
+      prodPrice:      {{ pv2.price | money | json }},
+      prodPriceVaries:{{ p.price_varies | json }},
+      prodPriceMin:   {{ p.price_min | money | json }},
+      prodUrl:        {{ p.url | json }},
+      prodVariantId:  {{ pv2.id | json }},
+      prodImgSrc: {% if p.featured_media != blank %}{{ p.featured_media.preview_image | image_url: width: 104 | json }}{% else %}null{% endif %},
+      prodAvailable:  {{ p.available | json }}
+      {%- else -%}
+      prodTitle:null, prodPrice:null, prodPriceVaries:false,
+      prodPriceMin:null, prodUrl:null, prodVariantId:null,
+      prodImgSrc:null, prodAvailable:false
+      {%- endif -%}
+    }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ];
+
+  /* ─── DOM refs ───────────────────────────────────────────────────── */
+  var sid      = {{ section.id | json }};
+  var CG_T = {
+    from: {{ 'n90.ui.from' | t | json }},
+    add: {{ 'n90.ui.add_to_cart' | t | json }},
+    soldOut: {{ 'products.product.sold_out' | t | json }},
+    view: {{ 'n90.ui.view' | t | json }},
+    adding: {{ 'n90.ui.adding' | t | json }},
+    added: {{ 'n90.ui.added' | t | json }}
+  };
+  var track    = document.getElementById('cg-track-'  + sid);
+  if (!track) return;
+
+  var btnPrev  = document.getElementById('cg-prev-'   + sid);
+  var btnNext  = document.getElementById('cg-next-'   + sid);
+  var frac     = document.getElementById('cg-frac-'   + sid);
+  var dotsWrap = document.getElementById('cg-dots-'   + sid);
+  var modal    = document.getElementById('cg-modal-'  + sid);
+  var mPane    = document.getElementById('cg-mpane-'  + sid);
+  var mMedia   = document.getElementById('cg-mmedia-' + sid);
+  var mClose   = document.getElementById('cg-mclose-' + sid);
+  var mMute    = document.getElementById('cg-mmute-'  + sid);
+  var mMuteIco = document.getElementById('cg-mute-icon-' + sid);
+  var mBadge   = document.getElementById('cg-mbadge-' + sid);
+  var mHandle  = document.getElementById('cg-mhandle-'  + sid);
+  var mCaption = document.getElementById('cg-mcaption-' + sid);
+  var mProd    = document.getElementById('cg-mprod-'  + sid);
+  var mActions = document.getElementById('cg-mactions-' + sid);
+  var mNavPrev = document.getElementById('cg-mprev-'  + sid);
+  var mNavNext = document.getElementById('cg-mnext-'  + sid);
+
+  var cards      = Array.from(track.querySelectorAll('.n90-cg__card'));
+  var totalCards = cards.length;
+  var activeIdx  = 0;
+  var modalIdx   = 0;
+  var modalOpen  = false;
+  var isMuted    = false;
+
+  /* ─── Scroll-reveal ─────────────────────────────────────────────── */
+  var safeTimer = setTimeout(function () {
+    cards.forEach(function (c) { c.classList.add('n90-is-visible'); });
+  }, 900);
+
+  if ('IntersectionObserver' in window) {
+    var revCount = 0;
+    var revObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var c = entry.target;
+        var d = parseInt(c.dataset.revealDelay, 10) || 0;
+        setTimeout(function () { c.classList.add('n90-is-visible'); }, d);
+        revObs.unobserve(c);
+        if (++revCount >= totalCards) clearTimeout(safeTimer);
+      });
+    }, { threshold: 0.08 });
+    cards.forEach(function (c) { revObs.observe(c); });
+  } else {
+    clearTimeout(safeTimer);
+    cards.forEach(function (c) { c.classList.add('n90-is-visible'); });
+  }
+
+  /* ─── Pagination helpers ─────────────────────────────────────────── */
+  var dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.n90-cg__dot')) : [];
+
+  function setFrac(idx) {
+    if (!frac) return;
+    frac.textContent = pad(idx + 1) + ' / ' + pad(totalCards);
+  }
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function setDots(idx) {
+    dots.forEach(function (d, i) { d.classList.toggle('is-active', i === idx); });
+  }
+
+  function setBtns(idx) {
+    if (btnPrev) btnPrev.disabled = idx === 0;
+    if (btnNext) btnNext.disabled = idx >= totalCards - 1;
+  }
+
+  function findActive() {
+    var tr = track.getBoundingClientRect();
+    var best = 0, bestVis = -1;
+    cards.forEach(function (c, i) {
+      var r = c.getBoundingClientRect();
+      var vis = Math.min(r.right, tr.right) - Math.max(r.left, tr.left);
+      if (vis > bestVis) { bestVis = vis; best = i; }
+    });
+    return best;
+  }
+
+  function scrollTo(idx) {
+    if (!cards[idx]) return;
+    var gap = parseInt(window.getComputedStyle(track).gap) || 16;
+    track.scrollTo({ left: idx * (cards[idx].offsetWidth + gap), behavior: 'smooth' });
+  }
+
+  track.addEventListener('scroll', function () {
+    var idx = findActive();
+    if (idx !== activeIdx) {
+      activeIdx = idx;
+      setFrac(idx); setDots(idx); setBtns(idx);
+    }
+  }, { passive: true });
+
+  if (btnPrev) btnPrev.addEventListener('click', function () { scrollTo(Math.max(0, activeIdx - 1)); });
+  if (btnNext) btnNext.addEventListener('click', function () { scrollTo(Math.min(totalCards - 1, activeIdx + 1)); });
+  dots.forEach(function (d, i) { d.addEventListener('click', function () { scrollTo(i); }); });
+
+  setFrac(0); setDots(0); setBtns(0);
+
+  /* ─── Continuous muted autoplay ─────────────────────────────────────
+     Every card video plays muted on a loop. Muted is forced in JS as well as
+     the attribute so mobile browsers allow autoplay; if a browser still refuses
+     (e.g. Low Power Mode), playback starts on the first tap or scroll. ─── */
+  var cardVideos = Array.from(track.querySelectorAll('video[data-cg-autoplay]'));
+  function playAll() {
+    cardVideos.forEach(function (v) {
+      v.muted = true;
+      v.defaultMuted = true;
+      if (!v.paused) return;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    });
+  }
+  if (cardVideos.length) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', playAll);
+    else playAll();
+    ['touchstart', 'pointerdown', 'scroll'].forEach(function (evt) {
+      window.addEventListener(evt, playAll, { once: true, passive: true });
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) playAll(); });
+  }
+
+  /* ─── Modal open/close ───────────────────────────────────────────── */
+  function openModal(idx) {
+    if (!modal || !REELS.length) return;
+    modalIdx = Math.max(0, Math.min(idx, REELS.length - 1));
+    modal.removeAttribute('hidden');
+    requestAnimationFrame(function () { modal.classList.add('is-open'); });
+    document.body.style.overflow = 'hidden';
+    modalOpen = true;
+    renderModal(modalIdx);
+    modal.focus();
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+    modalOpen = false;
+    var mv = mMedia && mMedia.querySelector('video');
+    if (mv) mv.pause();
+    setTimeout(function () {
+      if (!modalOpen) { modal.setAttribute('hidden', ''); if (mMedia) mMedia.innerHTML = ''; }
+    }, 320);
+  }
+
+  /* ─── Modal render ───────────────────────────────────────────────── */
+  var ICON_ON  = '<path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
+  var ICON_OFF = '<path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>';
+  var TICK_SVG = '<span class="n90-cg__tick" aria-label="{{ 'n90.ui.verified' | t }}"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5l2 2 4-4"/></svg></span>';
+
+  function renderModal(idx) {
+    var reel = REELS[idx];
+    if (!reel) return;
+
+    var oldVid = mMedia && mMedia.querySelector('video');
+    if (oldVid) oldVid.pause();
+    if (mMedia) mMedia.innerHTML = '';
+
+    /* Clone video from card, or show poster / iframe */
+    var cardEl  = document.getElementById('cg-card-' + sid + '-' + idx);
+    var cardVid = cardEl ? cardEl.querySelector('video') : null;
+
+    if (cardVid) {
+      var mv = cardVid.cloneNode(true);
+      mv.className = '';
+      mv.muted     = isMuted;
+      mv.autoplay  = true;
+      mv.controls  = false;
+      mv.loop      = true;
+      mv.playsInline = true;
+      mv.removeAttribute('preload');
+      mv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+      mMedia.appendChild(mv);
+      mv.play().catch(function () {});
+    } else if (reel.posterSrc) {
+      var img = document.createElement('img');
+      img.src   = reel.posterSrc;
+      img.alt   = reel.handle || 'Reel';
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+      mMedia.appendChild(img);
+    } else if (reel.videoUrl) {
+      var ifr = document.createElement('iframe');
+      ifr.src   = reel.videoUrl + '?autoplay=1&mute=' + (isMuted ? '1' : '0');
+      ifr.allow = 'autoplay; fullscreen';
+      ifr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
+      mMedia.appendChild(ifr);
+    }
+
+    if (mMuteIco) mMuteIco.innerHTML = isMuted ? ICON_OFF : ICON_ON;
+    if (mBadge) { mBadge.textContent = reel.badge || ''; mBadge.style.display = reel.badge ? '' : 'none'; }
+    if (mHandle)  mHandle.innerHTML  = reel.handle  ? (esc(reel.handle)  + ' ' + TICK_SVG) : '';
+    if (mCaption) mCaption.textContent = reel.caption || '';
+
+    renderDrawer(reel);
+
+    if (mNavPrev) mNavPrev.disabled = idx === 0;
+    if (mNavNext) mNavNext.disabled = idx >= REELS.length - 1;
+  }
+
+  function renderDrawer(reel) {
+    if (!reel.hasProd) { if (mProd) mProd.innerHTML = ''; if (mActions) mActions.innerHTML = ''; return; }
+
+    var priceStr = reel.prodPriceVaries ? (CG_T.from + ' ' + reel.prodPriceMin) : reel.prodPrice;
+    var imgHtml  = reel.prodImgSrc
+      ? ('<img class="n90-cg-modal__prod-img" src="' + esc(reel.prodImgSrc) + '" alt="' + esc(reel.prodTitle) + '" decoding="async" loading="lazy">')
+      : ('<div class="n90-cg-modal__prod-img-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1zM16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>');
+
+    if (mProd) mProd.innerHTML = imgHtml +
+      '<div class="n90-cg-modal__prod-info">' +
+        '<div class="n90-cg-modal__prod-title">' + esc(reel.prodTitle) + '</div>' +
+        '<div class="n90-cg-modal__prod-price">' + priceStr + '</div>' +
+      '</div>';
+
+    var dis = reel.prodAvailable ? '' : ' disabled';
+    var lbl = esc(reel.prodAvailable ? CG_T.add : CG_T.soldOut);
+    if (mActions) {
+      mActions.innerHTML =
+        '<button class="n90-cg-modal__atc" data-vid="' + esc(reel.prodVariantId) + '"' + dis + '>' + lbl + '</button>' +
+        '<a href="' + esc(reel.prodUrl) + '" class="n90-cg-modal__checkout">' + esc(CG_T.view) + '</a>';
+
+      var atc = mActions.querySelector('.n90-cg-modal__atc');
+      if (atc && reel.prodAvailable) {
+        atc.addEventListener('click', function () {
+          var btn  = this;
+          var orig = btn.innerHTML;
+          btn.textContent = CG_T.adding; btn.disabled = true;
+          fetch('/cart/add.js', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ items: [{ id: parseInt(btn.dataset.vid, 10), quantity: 1 }] })
+          })
+          .then(function (r) { return r.json(); })
+          .then(function () {
+            btn.textContent = '✓ ' + CG_T.added;
+            setTimeout(function () { btn.innerHTML = orig; btn.disabled = false; }, 2200);
+            var cd = document.querySelector('cart-drawer');
+            if (cd && typeof cd.open === 'function') cd.open();
+          })
+          .catch(function (err) { console.error('[CommunityReels]', err); btn.innerHTML = orig; btn.disabled = false; });
+        });
+      }
+    }
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  /* ─── Card click → open modal ────────────────────────────────────── */
+  cards.forEach(function (card, i) {
+    card.setAttribute('tabindex', '0');
+    card.addEventListener('click', function (e) {
+      if (e.target.closest('.n90-cg__chip')) return; /* chip handled separately */
+      openModal(i);
+    });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(i); }
+    });
+  });
+
+  /* Chip & chip-cta → open modal */
+  document.querySelectorAll('[data-open-modal="' + sid + '"]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openModal(parseInt(el.dataset.modalIndex, 10) || 0);
+    });
+  });
+
+  /* Close */
+  if (mClose) mClose.addEventListener('click', closeModal);
+  if (modal)  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+  /* Mute */
+  if (mMute) {
+    mMute.addEventListener('click', function () {
+      isMuted = !isMuted;
+      var mv = mMedia && mMedia.querySelector('video');
+      if (mv) mv.muted = isMuted;
+      if (mMuteIco) mMuteIco.innerHTML = isMuted ? ICON_OFF : ICON_ON;
+    });
+  }
+
+  /* Modal navigation */
+  if (mNavPrev) mNavPrev.addEventListener('click', function () { if (modalIdx > 0) renderModal(--modalIdx); });
+  if (mNavNext) mNavNext.addEventListener('click', function () { if (modalIdx < REELS.length - 1) renderModal(++modalIdx); });
+
+  /* Keyboard */
+  document.addEventListener('keydown', function (e) {
+    if (!modalOpen) return;
+    if (e.key === 'Escape') { closeModal(); return; }
+    if ((e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   && modalIdx > 0)               renderModal(--modalIdx);
+    if ((e.key === 'ArrowRight' || e.key === 'ArrowDown')  && modalIdx < REELS.length - 1) renderModal(++modalIdx);
+  });
+
+  /* Touch swipe in modal */
+  var swipeX = 0;
+  if (mPane) {
+    mPane.addEventListener('touchstart', function (e) { swipeX = e.touches[0].clientX; }, { passive: true });
+    mPane.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - swipeX;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0 && modalIdx < REELS.length - 1) renderModal(++modalIdx);
+      if (dx > 0 && modalIdx > 0)                renderModal(--modalIdx);
+    }, { passive: true });
+  }
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Community Reels",
+  "tag": "section",
+  "class": "section-community-reels",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    { "type": "header", "content": "Colour scheme" },
+    { "type": "color", "id": "color_background", "label": "Section background", "default": "#0E1B33" },
+    { "type": "color", "id": "color_text",       "label": "Text / ink",         "default": "#FFFFFF" },
+    { "type": "color", "id": "color_muted",      "label": "Muted text",         "default": "#8E9DB4" },
+    { "type": "color", "id": "color_accent",     "label": "Accent",             "default": "#D4FF3A" },
+    { "type": "color", "id": "color_line",       "label": "Border / divider",   "default": "#1E2E4A" },
+    { "type": "color", "id": "color_surface",    "label": "Card surface fill",  "default": "#1A2B48" },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top",    "label": "Padding top",    "min": 0, "max": 200, "step": 8, "unit": "px", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 200, "step": 8, "unit": "px", "default": 96 },
+    { "type": "header", "content": "Section header" },
+    { "type": "text",     "id": "eyebrow",     "label": "Eyebrow",     "default": "Community" },
+    { "type": "text",     "id": "heading",     "label": "Heading",     "default": "Worn on the pitch" },
+    { "type": "textarea","id": "description",  "label": "Description", "default": "Real clubs. Real kit. See how teams wear it on match day." },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "cards_per_view", "label": "Cards per view (desktop)", "min": 2, "max": 5, "step": 1, "default": 3 }
+  ],
+  "blocks": [
+    {
+      "type": "reel_card",
+      "name": "Reel",
+      "settings": [
+        { "type": "header", "content": "Video" },
+        { "type": "video",     "id": "video",     "label": "Shopify-hosted video", "info": "Upload a vertical 9:16 video for best results." },
+        { "type": "video_url", "id": "video_url", "label": "External video URL (YouTube / Vimeo)", "accept": ["youtube", "vimeo"], "info": "Fallback if no Shopify video is set." },
+        { "type": "image_picker", "id": "poster", "label": "Poster / cover image", "info": "Shown before video plays. Recommended: 9:16 portrait." },
+        { "type": "header", "content": "Creator info" },
+        { "type": "text",     "id": "handle",  "label": "Creator handle", "default": "@roster.teamwear", "placeholder": "@athlete" },
+        { "type": "text",     "id": "badge",   "label": "Sport badge",    "default": "TRAINING",        "placeholder": "MATCH DAY" },
+        { "type": "textarea", "id": "caption", "label": "Reel caption",   "default": "Game-ready kit from just 10 pieces. Custom sublimation, free design." },
+        { "type": "header", "content": "Tagged product" },
+        { "type": "product", "id": "product", "label": "Tagged product" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Community Reels",
+      "blocks": [
+        { "type": "reel_card", "settings": { "handle": "@roster.teamwear",  "badge": "MATCH DAY", "caption": "Full sublimated match kit, custom crests, squad numbers — from 10 pieces." } },
+        { "type": "reel_card", "settings": { "handle": "@grassroots_fc",   "badge": "TRAINING",  "caption": "Training tops in club colours delivered in under 4 weeks." } },
+        { "type": "reel_card", "settings": { "handle": "@urbanrugby",      "badge": "RUGBY",     "caption": "Custom sublimated rugby jerseys — built tough, looks elite." } },
+        { "type": "reel_card", "settings": { "handle": "@cricketclub_uk",  "badge": "CRICKET",   "caption": "Club whites with embroidered crests. Pro finish, grassroots price." } },
+        { "type": "reel_card", "settings": { "handle": "@darts_kings",     "badge": "DARTS",     "caption": "Custom darts shirts for your team — bold prints, quick turnaround." } }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
